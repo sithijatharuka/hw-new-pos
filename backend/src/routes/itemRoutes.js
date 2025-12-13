@@ -1,0 +1,387 @@
+import express from "express";
+import mongoose from "mongoose";
+import { protect } from "../middleware/authMiddleware.js";
+import { Item } from "../models/Item.js";
+import { StockMovement } from "../models/StockMovement.js";
+
+const router = express.Router();
+
+const pick = (obj, allowed = []) => {
+  const out = {};
+  for (const k of allowed) {
+    if (obj?.[k] !== undefined) out[k] = obj[k];
+  }
+  return out;
+};
+
+/**
+ * ✅ MASTER fields only (NO inventory/batches changes via items endpoints)
+ * Add Product modal can call these safely.
+ */
+const sanitizeItemPayload = (body = {}) => {
+  const allowed = [
+    "sku",
+    "name",
+    "barcode",
+    "category",
+    "description",
+
+    "baseUnit",
+    "units",
+
+    "sellingPrice",
+    "costPrice",
+
+    "taxApplicable",
+    "taxRate",
+    "taxCode",
+
+    "defaultSupplier",
+    "isBatchTracked",
+    "isSerialTracked",
+    "isActive",
+  ];
+
+  const safe = pick(body, allowed);
+
+  // Normalize strings
+  if (safe.sku !== undefined)
+    safe.sku = String(safe.sku || "")
+      .trim()
+      .toUpperCase();
+  if (safe.name !== undefined) safe.name = String(safe.name || "").trim();
+  if (safe.category !== undefined)
+    safe.category = String(safe.category || "").trim();
+  if (safe.description !== undefined)
+    safe.description = String(safe.description || "").trim();
+  if (safe.barcode !== undefined)
+    safe.barcode = String(safe.barcode || "").trim();
+
+  // Tax safety (extra guard – your model also enforces)
+  if (safe.taxApplicable === false) safe.taxRate = 0;
+
+  return safe;
+};
+
+const isValidId = (id) => mongoose.isValidObjectId(id);
+
+/**
+ * ----------------------------
+ * LOOKUPS / LISTING
+ * ----------------------------
+ */
+
+// Categories list
+router.get("/categories/list", protect, async (req, res) => {
+  try {
+    const categories = await Item.distinct("category");
+    res.json(categories.filter(Boolean).sort());
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Base Units list
+router.get("/units/list", protect, async (req, res) => {
+  try {
+    const units = await Item.distinct("baseUnit");
+    res.json(units.filter(Boolean).sort());
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// List items (search + lowStock + category + isActive)
+router.get("/", protect, async (req, res) => {
+  try {
+    const { q, lowStock, category, isActive } = req.query;
+
+    const filter = {};
+    if (category) filter.category = category;
+
+    if (isActive === "true") filter.isActive = true;
+    if (isActive === "false") filter.isActive = false;
+
+    if (q) {
+      const qq = String(q).trim();
+      filter.$or = [
+        { $text: { $search: qq } },
+        { barcode: qq },
+        { sku: qq.toUpperCase() },
+        { name: new RegExp(qq, "i") },
+      ];
+    }
+
+    if (lowStock === "true") {
+      filter.$expr = {
+        $lte: ["$inventory.onHand", "$inventory.lowStockLevel"],
+      };
+    }
+
+    // Keep list light; batches are fetched via /:id/batches
+    const items = await Item.find(filter)
+      .select(
+        "sku name barcode category brand baseUnit sellingPrice inventory isActive isBatchTracked"
+      )
+      .limit(300)
+      .sort({ name: 1 });
+
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * BARCODE LOOKUP
+ * ----------------------------
+ */
+
+// Barcode lookup (exact match) -> fast for POS scanning
+router.get("/barcode/:code", protect, async (req, res) => {
+  try {
+    const code = String(req.params.code || "").trim();
+    const item = await Item.findOne({ barcode: code }).select(
+      "sku name barcode category brand baseUnit sellingPrice inventory isActive isBatchTracked taxApplicable taxRate"
+    );
+
+    if (!item)
+      return res
+        .status(404)
+        .json({ message: "Item not found for this barcode" });
+    if (item.isActive === false) {
+      return res.status(400).json({ message: "Item is inactive" });
+    }
+
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * ITEM BATCHES (optimized for scan → show item + batches)
+ * ----------------------------
+ */
+router.get("/:id/batches", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    // Only fetch what's needed for "show item + batches"
+    const item = await Item.findById(id).select(
+      "sku name barcode baseUnit isActive isBatchTracked inventory.onHand inventory.reserved batches"
+    );
+
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    const batches = Array.isArray(item.batches) ? item.batches : [];
+    const cleaned = batches
+      .map((b) => ({
+        _id: b._id,
+        batchNumber: b.batchNumber || "",
+        expiryDate: b.expiryDate || null,
+        qtyOnHand: Number(b.qtyOnHand || 0),
+        reserved: Number(b.reserved || 0),
+        available: Math.max(
+          0,
+          Number(b.qtyOnHand || 0) - Number(b.reserved || 0)
+        ),
+      }))
+      // FEFO-ish sort (earliest expiry first), then batchNumber
+      .sort((a, b) => {
+        const ax = a.expiryDate
+          ? new Date(a.expiryDate).getTime()
+          : Number.MAX_SAFE_INTEGER;
+        const bx = b.expiryDate
+          ? new Date(b.expiryDate).getTime()
+          : Number.MAX_SAFE_INTEGER;
+        if (ax !== bx) return ax - bx;
+        return String(a.batchNumber).localeCompare(String(b.batchNumber));
+      });
+
+    res.json({
+      item: {
+        _id: item._id,
+        sku: item.sku,
+        name: item.name,
+        barcode: item.barcode,
+        baseUnit: item.baseUnit,
+        isActive: item.isActive,
+        isBatchTracked: item.isBatchTracked,
+        inventory: item.inventory,
+      },
+      batches: item.isBatchTracked ? cleaned : [],
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * CREATE / UPDATE (MASTER ONLY)
+ * ----------------------------
+ */
+
+// Create item (MASTER ONLY, always zero stock)
+router.post("/", protect, async (req, res) => {
+  try {
+    const payload = sanitizeItemPayload(req.body);
+
+    if (!payload.sku || !payload.name || !payload.baseUnit) {
+      return res
+        .status(400)
+        .json({ message: "sku, name, and baseUnit are required" });
+    }
+
+    // Optional business rule: unique name + category
+    const existing = await Item.findOne({
+      name: new RegExp(`^${payload.name}$`, "i"),
+      category: payload.category || "",
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message: `Product "${payload.name}" already exists in "${
+          payload.category || "Uncategorized"
+        }" category`,
+      });
+    }
+
+    const item = await Item.create({
+      ...payload,
+      // enforce clean stock state
+      openingStock: 0,
+      inventory: {
+        onHand: 0,
+        reserved: 0,
+        lowStockLevel: 0,
+        reorderQuantity: 0,
+      },
+      batches: [],
+      isActive: payload.isActive !== undefined ? payload.isActive : true,
+    });
+
+    res.status(201).json(item);
+  } catch (err) {
+    if (err?.code === 11000) {
+      const key = Object.keys(err.keyPattern || {})[0] || "field";
+      return res.status(400).json({ message: `Duplicate value for ${key}` });
+    }
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update item (MASTER ONLY)
+router.put("/:id", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    const payload = sanitizeItemPayload(req.body);
+
+    const item = await Item.findById(id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    Object.assign(item, payload);
+    await item.save();
+
+    res.json(item);
+  } catch (err) {
+    if (err?.code === 11000) {
+      const key = Object.keys(err.keyPattern || {})[0] || "field";
+      return res.status(400).json({ message: `Duplicate value for ${key}` });
+    }
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * ACTIVATE / DEACTIVATE (preferred over delete)
+ * ----------------------------
+ */
+
+router.patch("/:id/activate", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    const item = await Item.findById(id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    item.isActive = true;
+    await item.save();
+
+    res.json({ message: "Item activated", item });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.patch("/:id/deactivate", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    const item = await Item.findById(id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    item.isActive = false;
+    await item.save();
+
+    res.json({ message: "Item deactivated", item });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * DELETE (keep as-is)
+ * ----------------------------
+ */
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    const item = await Item.findByIdAndDelete(id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    res.json({ message: "Item deleted", id });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
+ * STOCK HISTORY (read-only)
+ * ----------------------------
+ */
+router.get("/:id/stock-history", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidId(id))
+      return res.status(400).json({ message: "Invalid item id" });
+
+    const history = await StockMovement.find({ item: id })
+      .sort({ createdAt: -1 })
+      .limit(200);
+
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+export default router;
