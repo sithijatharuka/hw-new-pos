@@ -26,9 +26,6 @@ const supplierSchema = new mongoose.Schema(
       },
     },
 
-    vatNo: String,
-    brn: String,
-
     notes: String,
 
     status: {

@@ -25,6 +25,7 @@ const AddNewItem = ({
 
   onCategoryAdd,
   onBaseUnitAdd,
+  onBaseUnitDelete,
   onCategoryDelete,
 
   mode = "default",
@@ -38,7 +39,7 @@ const AddNewItem = ({
       category: "",
       description: "",
 
-      baseUnit: baseUnits?.[0] || "pcs",
+      baseUnit: "",
       units: [], // { fromUnit, toUnit, multiplier }
 
       sellingPrice: "",
@@ -66,7 +67,13 @@ const AddNewItem = ({
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [customBaseUnits, setCustomBaseUnits] = useState([]);
+  const CUSTOM_CATEGORIES_KEY = "pos_custom_item_categories";
+  const CUSTOM_UNITS_KEY = "pos_custom_item_units";
 
   // ---------- init ----------
   useEffect(() => {
@@ -132,8 +139,35 @@ const AddNewItem = ({
     }
 
     setErrs({});
+    setHasSubmitted(false);
     setShowCategoryDropdown(false);
+    setShowBaseUnitDropdown(false);
   }, [open, existingItem, emptyForm, defaultSupplierId]);
+
+  useEffect(() => {
+    try {
+      const storedCats = JSON.parse(
+        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]"
+      );
+      const storedUnits = JSON.parse(
+        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]"
+      );
+      if (Array.isArray(storedCats)) setCustomCategories(storedCats);
+      if (Array.isArray(storedUnits)) setCustomBaseUnits(storedUnits);
+    } catch (err) {
+      console.error("Failed to load custom lists", err);
+    }
+  }, []);
+
+  const categoryOptions = useMemo(
+    () => Array.from(new Set([...(categories || []), ...customCategories])),
+    [categories, customCategories]
+  );
+
+  const baseUnitOptions = useMemo(
+    () => Array.from(new Set([...(baseUnits || []), ...customBaseUnits])),
+    [baseUnits, customBaseUnits]
+  );
 
   const setError = (k, v) => setErrs((p) => ({ ...p, [k]: v }));
 
@@ -150,16 +184,32 @@ const AddNewItem = ({
     return "";
   };
 
-  const validate = (next = form) => {
+  const validate = (next = form, { silent = false } = {}) => {
     const e = {};
 
     // required
-    if (!String(next.sku || "").trim()) e.sku = "SKU is required";
-    if (!String(next.name || "").trim()) e.name = "Item name is required";
-    if (!String(next.baseUnit || "").trim())
-      e.baseUnit = "Base unit is required";
+    const sku = String(next.sku || "").trim();
+    if (!sku) e.sku = "SKU is required";
+    else if (sku.length > 50) e.sku = "SKU must be 50 characters or less";
+    else if (!/[a-zA-Z]/.test(sku))
+      e.sku = "SKU must contain at least one letter";
+
+    const name = String(next.name || "").trim();
+    if (!name) e.name = "Item name is required";
+    else if (name.length < 2)
+      e.name = "Item name must be at least 2 characters";
+    else if (name.length > 120)
+      e.name = "Item name must be 120 characters or less";
+    else if (!/[a-zA-Z]/.test(name))
+      e.name = "Item name must contain at least one letter";
+    const baseUnitValue = String(next.baseUnit || "").trim();
+    if (!baseUnitValue) e.baseUnit = "Base unit is required";
     if (!String(next.category || "").trim())
       e.category = "Category is required";
+
+    const barcode = String(next.barcode || "").trim();
+    if (barcode.length > 0 && barcode.length > 64)
+      e.barcode = "Barcode must be 64 characters or less";
 
     // pricing
     {
@@ -184,6 +234,9 @@ const AddNewItem = ({
     // tracking mode safety
     if (next.isBatchTracked && next.isSerialTracked) {
       e.tracking = "Item cannot be both batch-tracked and serial-tracked.";
+    }
+    if (!next.isBatchTracked && !next.isSerialTracked) {
+      e.tracking = "Select a tracking mode: batch or serial.";
     }
 
     // unit conversions
@@ -223,7 +276,7 @@ const AddNewItem = ({
     // thresholds (optional but must be valid if provided)
     {
       const msg = validateNumber(next.lowStockLevel, {
-        required: false,
+        required: true,
         min: 0,
       });
       if (msg) e.lowStockLevel = `Low stock level ${msg.toLowerCase()}`;
@@ -236,7 +289,7 @@ const AddNewItem = ({
       if (msg) e.reorderQuantity = `Reorder quantity ${msg.toLowerCase()}`;
     }
 
-    setErrs(e);
+    if (!silent) setErrs(e);
     return Object.keys(e).length === 0;
   };
 
@@ -271,10 +324,75 @@ const AddNewItem = ({
         next.isBatchTracked = false;
       }
 
-      // validate as you type (light)
-      validate(next);
+      // validate only after the first submit
+      validate(next, { silent: !hasSubmitted });
       return next;
     });
+  };
+
+  const handleAddCategoryClick = async () => {
+    if (onCategoryAdd) return onCategoryAdd();
+
+    const name = window.prompt("Enter new category name");
+    const trimmed = (name || "").trim();
+    if (!trimmed) return;
+
+    const exists = categoryOptions.some(
+      (c) => (c || "").toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      setError("category", "Category already exists.");
+      return;
+    }
+
+    setCustomCategories((prev) => {
+      const next = [...prev, trimmed];
+      localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+      return next;
+    });
+    updateField("category", trimmed);
+    setError("category", "");
+    toast.success("Category added");
+  };
+
+  const handleAddBaseUnitClick = async () => {
+    if (onBaseUnitAdd) return onBaseUnitAdd();
+
+    const name = window.prompt("Enter new base unit (e.g., box)");
+    const trimmed = (name || "").trim();
+    if (!trimmed) return;
+
+    const exists = baseUnitOptions.some(
+      (u) => (u || "").toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      setError("baseUnit", "Base unit already exists.");
+      return;
+    }
+
+    setCustomBaseUnits((prev) => {
+      const next = [...prev, trimmed];
+      localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+      return next;
+    });
+    updateField("baseUnit", trimmed);
+    setError("baseUnit", "");
+    toast.success("Base unit added");
+  };
+
+  const handleDeleteBaseUnit = (unit) => {
+    const isCustom = customBaseUnits.includes(unit);
+    if (isCustom) {
+      setCustomBaseUnits((prev) => {
+        const next = prev.filter((u) => u !== unit);
+        localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+        return next;
+      });
+      if (form.baseUnit === unit) updateField("baseUnit", "");
+      return;
+    }
+
+    onBaseUnitDelete?.(unit);
   };
 
   const addUnitRow = () => {
@@ -286,7 +404,7 @@ const AddNewItem = ({
           { fromUnit: "", toUnit: prev.baseUnit, multiplier: "" },
         ],
       };
-      validate(next);
+      validate(next, { silent: !hasSubmitted });
       return next;
     });
   };
@@ -296,7 +414,7 @@ const AddNewItem = ({
       const units = [...(prev.units || [])];
       units[idx] = { ...(units[idx] || {}), ...patch, toUnit: prev.baseUnit };
       const next = { ...prev, units };
-      validate(next);
+      validate(next, { silent: !hasSubmitted });
       return next;
     });
   };
@@ -306,16 +424,14 @@ const AddNewItem = ({
       const units = [...(prev.units || [])];
       units.splice(idx, 1);
       const next = { ...prev, units };
-      validate(next);
+      validate(next, { silent: !hasSubmitted });
       return next;
     });
   };
 
   const handleSave = async () => {
-    if (!validate(form)) {
-      toast.error("Please fix validation errors");
-      return;
-    }
+    setHasSubmitted(true);
+    if (!validate(form)) return;
 
     setSaving(true);
     try {
@@ -424,12 +540,6 @@ const AddNewItem = ({
               Essential Information
             </h3>
 
-            {errs.tracking && (
-              <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
-                {errs.tracking}
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* SKU */}
               <div className="space-y-2">
@@ -471,11 +581,18 @@ const AddNewItem = ({
                   Barcode (unique)
                 </label>
                 <input
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all ${
+                    errs.barcode
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   value={form.barcode}
                   onChange={(e) => updateField("barcode", e.target.value)}
                   placeholder="Optional barcode"
                 />
+                {errs.barcode && (
+                  <p className="text-xs text-red-600">{errs.barcode}</p>
+                )}
               </div>
 
               {/* Category */}
@@ -487,7 +604,7 @@ const AddNewItem = ({
                   <button
                     type="button"
                     className="text-sm text-primary hover:underline"
-                    onClick={() => onCategoryAdd?.()}
+                    onClick={handleAddCategoryClick}
                   >
                     + Add New
                   </button>
@@ -518,12 +635,12 @@ const AddNewItem = ({
 
                 {showCategoryDropdown && (
                   <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg text-sm">
-                    {categories.length === 0 ? (
+                    {categoryOptions.length === 0 ? (
                       <div className="px-4 py-3 text-gray-500">
                         No categories. Click + Add New to create one.
                       </div>
                     ) : (
-                      categories.map((cat) => (
+                      categoryOptions.map((cat) => (
                         <div
                           key={cat}
                           className="group flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
@@ -552,7 +669,7 @@ const AddNewItem = ({
               </div>
 
               {/* Base Unit */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700">
                     Base Unit <span className="text-red-500">*</span>
@@ -560,30 +677,67 @@ const AddNewItem = ({
                   <button
                     type="button"
                     className="text-sm text-primary hover:underline"
-                    onClick={() => onBaseUnitAdd?.()}
+                    onClick={handleAddBaseUnitClick}
                   >
                     + Add New
                   </button>
                 </div>
 
-                <select
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all ${
+                <button
+                  type="button"
+                  className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl text-left text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
                     errs.baseUnit
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300"
-                  }`}
-                  value={form.baseUnit}
-                  onChange={(e) => updateField("baseUnit", e.target.value)}
+                  } ${showBaseUnitDropdown ? "border-primary" : ""}`}
+                  onClick={() => setShowBaseUnitDropdown((p) => !p)}
                 >
-                  <option value="">Select unit</option>
-                  {baseUnits.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
+                  <span
+                    className={
+                      form.baseUnit ? "text-gray-900" : "text-gray-400"
+                    }
+                  >
+                    {form.baseUnit || "Select unit"}
+                  </span>
+                  <span className="text-gray-500 text-sm">▾</span>
+                </button>
+
                 {errs.baseUnit && (
                   <p className="text-xs text-red-600">{errs.baseUnit}</p>
+                )}
+
+                {showBaseUnitDropdown && (
+                  <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg text-sm">
+                    {baseUnitOptions.length === 0 ? (
+                      <div className="px-4 py-3 text-gray-500">
+                        No base units. Click + Add New to create one.
+                      </div>
+                    ) : (
+                      baseUnitOptions.map((u) => (
+                        <div
+                          key={u}
+                          className="group flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={() => {
+                            updateField("baseUnit", u);
+                            setShowBaseUnitDropdown(false);
+                          }}
+                        >
+                          <span className="text-gray-900">{u}</span>
+                          <button
+                            type="button"
+                            className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteBaseUnit(u);
+                            }}
+                            title="Delete base unit"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -667,7 +821,7 @@ const AddNewItem = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Low Stock Level
+                  Low Stock Level <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -779,8 +933,14 @@ const AddNewItem = ({
           {/* Tracking */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-              Tracking Mode
+              Tracking Mode <span className="text-red-500">*</span>
             </h3>
+
+            {errs.tracking && (
+              <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                {errs.tracking}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl">

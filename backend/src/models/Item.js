@@ -218,7 +218,7 @@ itemSchema.pre("validate", function (next) {
     }
   }
 
-  next();
+  if (typeof next === "function") next();
 });
 
 /**
@@ -238,7 +238,7 @@ itemSchema.pre("save", function (next) {
     this.inventory.onHand = totalOnHand;
     this.inventory.reserved = totalReserved;
   }
-  next();
+  if (typeof next === "function") next();
 });
 
 /**
@@ -268,7 +268,7 @@ itemSchema.pre("findOneAndUpdate", function (next) {
     );
   }
 
-  next();
+  if (typeof next === "function") next();
 });
 
 export const Item = mongoose.model("Item", itemSchema);

@@ -28,11 +28,7 @@ function GRNForm({
   baseUnits = [],
 }) {
   const [form, setForm] = useState({
-    grnNo: "",
     grnDate: new Date().toISOString().substring(0, 10),
-    poNumber: "",
-    supplierInvoiceNo: "",
-    supplierInvoiceDate: "",
     remarks: "",
     lines: [
       { item: "", batchNumber: "", expiryDate: "", qty: "", unitCost: "" },
@@ -57,17 +53,9 @@ function GRNForm({
     if (!existingGRN) return;
 
     setForm({
-      grnNo: existingGRN.grnNo || "",
       grnDate: existingGRN.grnDate
         ? new Date(existingGRN.grnDate).toISOString().substring(0, 10)
         : new Date().toISOString().substring(0, 10),
-      poNumber: existingGRN.poNumber || "",
-      supplierInvoiceNo: existingGRN.supplierInvoiceNo || "",
-      supplierInvoiceDate: existingGRN.supplierInvoiceDate
-        ? new Date(existingGRN.supplierInvoiceDate)
-            .toISOString()
-            .substring(0, 10)
-        : "",
       remarks: existingGRN.remarks || "",
       lines: (existingGRN.lines || []).length
         ? existingGRN.lines.map((l) => ({
@@ -165,7 +153,7 @@ function GRNForm({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!form.grnNo?.trim()) newErrors.grnNo = "GRN No is required";
+    // No need to validate grnNo - it's auto-generated
     if (!supplier?._id) newErrors.supplier = "Supplier is required";
     if (!form.lines?.length) newErrors.lines = "At least one item is required";
 
@@ -227,14 +215,8 @@ function GRNForm({
 
       // ✅ Clean payload: GRN drives stock movement; server recomputes totals & batches.
       const payload = {
-        grnNo: form.grnNo.trim(),
         grnDate: form.grnDate
           ? new Date(form.grnDate).toISOString()
-          : undefined,
-        poNumber: form.poNumber?.trim() || undefined,
-        supplierInvoiceNo: form.supplierInvoiceNo?.trim() || undefined,
-        supplierInvoiceDate: form.supplierInvoiceDate
-          ? new Date(form.supplierInvoiceDate).toISOString()
           : undefined,
         remarks: form.remarks?.trim() || undefined,
         supplier: supplier._id,
@@ -304,28 +286,29 @@ function GRNForm({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GRN No <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="grnNo"
-                value={form.grnNo}
-                onChange={handleHeaderChange}
-                disabled={!!existingGRN}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 text-sm transition ${
-                  errors.grnNo
-                    ? "border-red-300 bg-red-50 focus:ring-red-200"
-                    : "border-gray-200 focus:ring-primary/20"
-                } ${existingGRN ? "bg-gray-50 cursor-not-allowed" : ""}`}
-                placeholder="GRN-001"
-              />
-              {errors.grnNo && (
-                <p className="text-xs text-red-600 mt-1">{errors.grnNo}</p>
-              )}
+          {!existingGRN && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                ℹ️ GRN Number will be automatically generated when you save this
+                GRN
+              </p>
             </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {existingGRN && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  GRN No
+                </label>
+                <input
+                  type="text"
+                  value={existingGRN.grnNo || "Auto-generated"}
+                  disabled
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed text-sm text-gray-600"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -335,47 +318,6 @@ function GRNForm({
                 type="date"
                 name="grnDate"
                 value={form.grnDate}
-                onChange={handleHeaderChange}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                PO Number
-              </label>
-              <input
-                type="text"
-                name="poNumber"
-                value={form.poNumber}
-                onChange={handleHeaderChange}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                placeholder="PO-001"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Supplier Invoice No
-              </label>
-              <input
-                type="text"
-                name="supplierInvoiceNo"
-                value={form.supplierInvoiceNo}
-                onChange={handleHeaderChange}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                placeholder="INV-001"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Supplier Invoice Date
-              </label>
-              <input
-                type="date"
-                name="supplierInvoiceDate"
-                value={form.supplierInvoiceDate}
                 onChange={handleHeaderChange}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
               />

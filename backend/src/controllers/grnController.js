@@ -8,25 +8,61 @@ const asNumber = (v) =>
   v === null || v === undefined || v === "" ? NaN : Number(v);
 
 /**
+ * Generate GRN number for a supplier: SUPPLIERCODE-GRN####
+ */
+const generateGRNNumber = async (supplierId) => {
+  const supplier = await Supplier.findById(supplierId);
+  if (!supplier) throw new Error("Supplier not found");
+
+  const supplierCode =
+    supplier.supplierCode || `SUP${String(supplier._id).slice(-6)}`;
+
+  // Find the last GRN for this supplier to get the next sequence number
+  const lastGRN = await GRN.findOne({
+    supplier: supplierId,
+    grnNo: new RegExp(`^${supplierCode}-GRN\\d+$`),
+  })
+    .sort({ grnNo: -1 })
+    .limit(1);
+
+  let nextNum = 1;
+  if (lastGRN) {
+    const match = lastGRN.grnNo.match(/GRN(\d+)$/);
+    if (match) {
+      nextNum = parseInt(match[1], 10) + 1;
+    }
+  }
+
+  return `${supplierCode}-GRN${String(nextNum).padStart(4, "0")}`;
+};
+
+/**
  * CREATE GRN (DRAFT only) - no stock changes here
  */
 export const createGRN = async (req, res) => {
   try {
-    const { grnNo, supplier, lines } = req.body;
+    const { supplier, lines } = req.body;
+    let { grnNo } = req.body;
 
-    if (!grnNo || !supplier || !Array.isArray(lines) || lines.length === 0) {
+    if (!supplier || !Array.isArray(lines) || lines.length === 0) {
       return res
         .status(400)
-        .json({ message: "GRN No, Supplier, and Items are required" });
+        .json({ message: "Supplier and Items are required" });
     }
-
-    const exists = await GRN.findOne({ grnNo: String(grnNo).trim() });
-    if (exists)
-      return res.status(400).json({ message: "GRN No already exists" });
 
     const supplierExists = await Supplier.findById(supplier);
     if (!supplierExists)
       return res.status(404).json({ message: "Supplier not found" });
+
+    // Auto-generate GRN number if not provided
+    if (!grnNo || !grnNo.trim()) {
+      grnNo = await generateGRNNumber(supplier);
+    } else {
+      grnNo = String(grnNo).trim();
+      const exists = await GRN.findOne({ grnNo });
+      if (exists)
+        return res.status(400).json({ message: "GRN No already exists" });
+    }
 
     // Validate items exist + batch requirements (but do not change stock)
     const itemIds = lines.map((l) => l.item);
@@ -67,7 +103,7 @@ export const createGRN = async (req, res) => {
 
     const grn = await GRN.create({
       ...req.body,
-      grnNo: String(grnNo).trim(),
+      grnNo,
       status: "draft",
       createdBy: req.user?._id,
     });
@@ -79,6 +115,8 @@ export const createGRN = async (req, res) => {
   } catch (err) {
     if (err?.code === 11000)
       return res.status(400).json({ message: "GRN No already exists" });
+    console.log(err);
+    console.log(err.message);
     res.status(500).json({ message: err.message || "Failed to create GRN" });
   }
 };

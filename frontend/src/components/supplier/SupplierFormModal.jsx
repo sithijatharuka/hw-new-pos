@@ -19,8 +19,6 @@ const empty = {
   openingBalance: 0,
   creditLimit: 0,
   paymentTerms: { type: "CASH", days: 0 },
-  vatNo: "",
-  brn: "",
   notes: "",
   status: "active",
 };
@@ -65,8 +63,6 @@ export default function SupplierFormModal({
           ? editingSupplier.creditLimit
           : 0,
       paymentTerms: normalizePaymentTerms(editingSupplier.paymentTerms),
-      vatNo: editingSupplier.vatNo || "",
-      brn: editingSupplier.brn || "",
       notes: editingSupplier.notes || "",
       status: editingSupplier.status || "active",
     });
@@ -147,8 +143,6 @@ export default function SupplierFormModal({
       openingBalance: Number(form.openingBalance || 0),
       creditLimit: Number(form.creditLimit || 0),
       paymentTerms: normalizePaymentTerms(form.paymentTerms),
-      vatNo: form.vatNo?.trim() || undefined,
-      brn: form.brn?.trim() || undefined,
       notes: form.notes?.trim() || undefined,
       status: form.status,
     };
@@ -355,35 +349,6 @@ export default function SupplierFormModal({
                 {errors.address && (
                   <p className="mt-2 text-xs text-red-600">{errors.address}</p>
                 )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    VAT No
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                    value={form.vatNo}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, vatNo: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    BRN
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                    value={form.brn}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, brn: e.target.value }))
-                    }
-                  />
-                </div>
               </div>
 
               {/* ✅ Payment Terms dropdown */}

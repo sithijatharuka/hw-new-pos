@@ -130,10 +130,40 @@ grnSchema.index({ supplier: 1, grnDate: -1 });
 grnSchema.index({ supplier: 1, status: 1, grnDate: -1 });
 grnSchema.index({ supplier: 1, paymentStatus: 1, dueDate: 1 });
 
+// ✅ Transform Decimal128 to number in JSON responses
+grnSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    // Convert Decimal128 fields to numbers
+    if (ret.amountPaid?.$numberDecimal)
+      ret.amountPaid = parseFloat(ret.amountPaid.$numberDecimal);
+    if (ret.balanceDue?.$numberDecimal)
+      ret.balanceDue = parseFloat(ret.balanceDue.$numberDecimal);
+    if (ret.grandTotal?.$numberDecimal)
+      ret.grandTotal = parseFloat(ret.grandTotal.$numberDecimal);
+
+    // Convert line items
+    if (Array.isArray(ret.lines)) {
+      ret.lines = ret.lines.map((line) => {
+        if (line.unitCost?.$numberDecimal)
+          line.unitCost = parseFloat(line.unitCost.$numberDecimal);
+        if (line.lineTotal?.$numberDecimal)
+          line.lineTotal = parseFloat(line.lineTotal.$numberDecimal);
+        return line;
+      });
+    }
+
+    return ret;
+  },
+});
+
 /**
  * Always compute totals + due date server-side
  */
-grnSchema.pre("validate", function (next) {
+/**
+ * Always compute totals + due date server-side
+ * Promise-style middleware (no next)
+ */
+grnSchema.pre("validate", function () {
   let totalQty = 0;
   let grand = 0;
 
@@ -155,12 +185,8 @@ grnSchema.pre("validate", function (next) {
   const baseDate = this.grnDate || new Date();
   const terms = this.paymentTerms || { type: "CASH", days: 0 };
 
-  if (terms.type === "NET") {
-    this.dueDate = addDays(baseDate, terms.days);
-  } else {
-    // CASH/COD/ADVANCE: due immediately
-    this.dueDate = baseDate;
-  }
+  this.dueDate =
+    terms.type === "NET" ? addDays(baseDate, terms.days) : baseDate;
 
   // ✅ compute balance + payment status
   const paid = this.amountPaid ? Number(this.amountPaid.toString()) : 0;
@@ -172,8 +198,6 @@ grnSchema.pre("validate", function (next) {
   if (total > 0 && bal === 0) this.paymentStatus = "paid";
   else if (paid > 0 && bal > 0) this.paymentStatus = "partial";
   else this.paymentStatus = "unpaid";
-
-  next();
 });
 
 export const GRN = mongoose.model("GRN", grnSchema);

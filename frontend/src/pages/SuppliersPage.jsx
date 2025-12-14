@@ -226,6 +226,114 @@ const SuppliersPage = () => {
     }
   };
 
+  // ---------- Show Supplier Details ----------
+  const showSupplierDetails = (supplier) => {
+    const detailsContent = (
+      <div className="space-y-4 text-sm">
+        <div>
+          <span className="font-semibold text-gray-700">Supplier Code:</span>
+          <p className="text-gray-600">{supplier.supplierCode || "—"}</p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Name:</span>
+          <p className="text-gray-600">{supplier.name}</p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Contact Person:</span>
+          <p className="text-gray-600">{supplier.contactPerson || "—"}</p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Phone(s):</span>
+          <p className="text-gray-600">
+            {supplier.phones && supplier.phones.length > 0
+              ? supplier.phones.join(", ")
+              : "—"}
+          </p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Email:</span>
+          <p className="text-gray-600">{supplier.email || "—"}</p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Address:</span>
+          <p className="text-gray-600">{supplier.address || "—"}</p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Payment Terms:</span>
+          <p className="text-gray-600">
+            {formatPaymentTerms(supplier.paymentTerms)}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div>
+            <span className="font-semibold text-gray-700">
+              Opening Balance:
+            </span>
+            <p className="text-gray-600">
+              Rs. {Number(supplier.openingBalance || 0).toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <span className="font-semibold text-gray-700">
+              Current Balance:
+            </span>
+            <p
+              className={
+                Number(supplier.currentBalance || 0) > 0
+                  ? "text-red-600 font-semibold"
+                  : "text-green-600 font-semibold"
+              }
+            >
+              Rs. {Number(supplier.currentBalance || 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Credit Limit:</span>
+          <p className="text-gray-600">
+            Rs. {Number(supplier.creditLimit || 0).toFixed(2)}
+          </p>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700">Status:</span>
+          <p
+            className={
+              supplier.status === "active"
+                ? "text-green-600 font-semibold"
+                : "text-gray-600"
+            }
+          >
+            {supplier.status === "active" ? "Active" : "Inactive"}
+          </p>
+        </div>
+        {supplier.notes && (
+          <div>
+            <span className="font-semibold text-gray-700">Notes:</span>
+            <p className="text-gray-600">{supplier.notes}</p>
+          </div>
+        )}
+      </div>
+    );
+
+    toast.custom(
+      (t) => (
+        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+          <div className="flex items-start justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900">{supplier.name}</h3>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="max-h-96 overflow-y-auto">{detailsContent}</div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-6">
       <Toaster position="top-right" />
@@ -282,7 +390,10 @@ const SuppliersPage = () => {
           <EntityCardList
             items={filtered}
             renderCard={(s) => (
-              <div className="p-4 border-b border-gray-100">
+              <div
+                className="p-4 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
+                onClick={() => showSupplierDetails(s)}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-semibold text-gray-900">{s.name}</div>
@@ -309,33 +420,48 @@ const SuppliersPage = () => {
 
                 <div className="flex flex-wrap gap-2 mt-3">
                   <button
-                    className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs"
-                    onClick={() => openReceiveGoods(s)}
+                    className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs cursor-pointer hover:bg-orange-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openReceiveGoods(s);
+                    }}
                   >
                     Receive Goods
                   </button>
                   <button
-                    className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs"
-                    onClick={() => openViewGRNs(s)}
+                    className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs cursor-pointer hover:bg-purple-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openViewGRNs(s);
+                    }}
                   >
                     View GRNs
                   </button>
                   <button
-                    className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs disabled:opacity-50"
-                    onClick={() => openPay(s)}
+                    className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs disabled:opacity-50 cursor-pointer hover:bg-green-100 disabled:cursor-not-allowed"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openPay(s);
+                    }}
                     disabled={Number(s.currentBalance || 0) <= 0}
                   >
                     Pay
                   </button>
                   <button
-                    className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs"
-                    onClick={() => openEdit(s)}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs cursor-pointer hover:bg-blue-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEdit(s);
+                    }}
                   >
                     Edit
                   </button>
                   <button
-                    className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs"
-                    onClick={() => handleDeleteSupplier(s)}
+                    className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs cursor-pointer hover:bg-red-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSupplier(s);
+                    }}
                   >
                     Delete
                   </button>
@@ -366,7 +492,11 @@ const SuppliersPage = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map((s) => (
-                <tr key={s._id} className="hover:bg-gray-50/70">
+                <tr
+                  key={s._id}
+                  className="hover:bg-blue-50 cursor-pointer transition-colors"
+                  onClick={() => showSupplierDetails(s)}
+                >
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{s.name}</div>
                     <div className="text-xs text-gray-500">
@@ -390,33 +520,48 @@ const SuppliersPage = () => {
                   <td className="py-4 px-6">
                     <div className="flex flex-wrap gap-2">
                       <button
-                        className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs"
-                        onClick={() => openReceiveGoods(s)}
+                        className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs cursor-pointer hover:bg-orange-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openReceiveGoods(s);
+                        }}
                       >
                         Receive Goods
                       </button>
                       <button
-                        className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs"
-                        onClick={() => openViewGRNs(s)}
+                        className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs cursor-pointer hover:bg-purple-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openViewGRNs(s);
+                        }}
                       >
                         View GRNs
                       </button>
                       <button
-                        className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs disabled:opacity-50"
-                        onClick={() => openPay(s)}
+                        className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs disabled:opacity-50 cursor-pointer hover:bg-green-100 disabled:cursor-not-allowed"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPay(s);
+                        }}
                         disabled={Number(s.currentBalance || 0) <= 0}
                       >
                         Pay
                       </button>
                       <button
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs"
-                        onClick={() => openEdit(s)}
+                        className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs cursor-pointer hover:bg-blue-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(s);
+                        }}
                       >
                         Edit
                       </button>
                       <button
-                        className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs"
-                        onClick={() => handleDeleteSupplier(s)}
+                        className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs cursor-pointer hover:bg-red-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSupplier(s);
+                        }}
                       >
                         Delete
                       </button>
