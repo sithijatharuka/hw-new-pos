@@ -93,11 +93,9 @@ export const createGRN = async (req, res) => {
     if (!supplier) {
       return res.status(400).json({ message: "Supplier is required" });
     }
-    
+
     if (!Array.isArray(lines) || lines.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "At least one item is required" });
+      return res.status(400).json({ message: "At least one item is required" });
     }
 
     const supplierExists = await Supplier.findById(supplier);
@@ -165,7 +163,9 @@ export const postGRN = async (req, res) => {
     if (!Array.isArray(grn.lines) || grn.lines.length === 0) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(400).json({ message: "GRN must have at least one line" });
+      return res
+        .status(400)
+        .json({ message: "GRN must have at least one line" });
     }
 
     // Fetch all items involved in the GRN
@@ -526,5 +526,3 @@ export const deleteGRN = async (req, res) => {
     res.status(500).json({ message: err.message || "Failed to delete GRN" });
   }
 };
-
-
