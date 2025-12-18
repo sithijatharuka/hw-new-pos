@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createGRN, updateGRN } from "./grnApi";
 
-// ✅ product modal (must NOT allow any stock fields; master-only)
+// Product modal (must NOT allow any stock fields; master-only)
 import AddNewItem from "../product/AddNewItem";
 
 /**
@@ -30,13 +30,13 @@ function GRNForm({
   const [form, setForm] = useState({
     grnDate: new Date().toISOString().substring(0, 10),
     remarks: "",
-    lines: [
-      { item: "", batchNumber: "", expiryDate: "", qty: "", unitCost: "" },
-    ],
+    lines: [{ item: "", batchNumber: "", qty: "", unitCost: "" }],
   });
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const isEditable = !existingGRN || existingGRN.status === "draft";
+  const fieldsDisabled = saving || !isEditable;
 
   // Add Product modal state
   const [showAddItem, setShowAddItem] = useState(false);
@@ -61,9 +61,6 @@ function GRNForm({
         ? existingGRN.lines.map((l) => ({
             item: l.item?._id || l.item || "",
             batchNumber: l.batchNumber || "",
-            expiryDate: l.expiryDate
-              ? new Date(l.expiryDate).toISOString().substring(0, 10)
-              : "",
             qty: l.qty ?? "",
             unitCost: l.unitCost === 0 || l.unitCost ? String(l.unitCost) : "",
           }))
@@ -71,7 +68,6 @@ function GRNForm({
             {
               item: "",
               batchNumber: "",
-              expiryDate: "",
               qty: "",
               unitCost: "",
             },
@@ -104,7 +100,6 @@ function GRNForm({
       // If item changes, clear batch fields (safest)
       if (name === "item") {
         nextLine.batchNumber = "";
-        nextLine.expiryDate = "";
       }
 
       lines[index] = nextLine;
@@ -119,7 +114,7 @@ function GRNForm({
       ...prev,
       lines: [
         ...prev.lines,
-        { item: "", batchNumber: "", expiryDate: "", qty: "", unitCost: "" },
+        { item: "", batchNumber: "", qty: "", unitCost: "" },
       ],
     }));
   };
@@ -177,14 +172,12 @@ function GRNForm({
       )
         newErrors[`line_${idx}_unitCost`] = "Unit Cost is required";
       if (Number.isNaN(Number(line.unitCost)) || Number(line.unitCost) < 0)
-        newErrors[`line_${idx}_unitCost`] = "Unit Cost must be ≥ 0";
+        newErrors[`line_${idx}_unitCost`] = "Unit Cost must be >= 0";
 
       // ✅ batch fields required only for batch-tracked
       if (isBatchTracked) {
         if (!line.batchNumber?.trim())
           newErrors[`line_${idx}_batchNumber`] = "Batch number is required";
-        if (!line.expiryDate)
-          newErrors[`line_${idx}_expiryDate`] = "Expiry date is required";
       }
     });
 
@@ -205,6 +198,11 @@ function GRNForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!isEditable && existingGRN) {
+      toast.error("Posted GRNs cannot be edited");
+      return;
+    }
+
     if (!validateForm()) {
       toast.error("Please fix validation errors");
       return;
@@ -213,7 +211,7 @@ function GRNForm({
     try {
       setSaving(true);
 
-      // ✅ Clean payload: GRN drives stock movement; server recomputes totals & batches.
+      // Clean payload: GRN drives stock movement; server recomputes totals & batches.
       const payload = {
         grnDate: form.grnDate
           ? new Date(form.grnDate).toISOString()
@@ -223,23 +221,21 @@ function GRNForm({
         lines: form.lines.map((l) => ({
           item: l.item,
           batchNumber: l.batchNumber?.trim() || undefined,
-          expiryDate: l.expiryDate
-            ? new Date(l.expiryDate).toISOString()
-            : undefined,
           qty: Number(l.qty),
           unitCost: Number(l.unitCost),
         })),
       };
 
+      let saved;
       if (existingGRN) {
-        await updateGRN(existingGRN._id, payload);
+        saved = await updateGRN(existingGRN._id, payload);
         toast.success("GRN updated successfully");
       } else {
-        await createGRN(payload);
+        saved = await createGRN(payload);
         toast.success("GRN created successfully");
       }
 
-      onSuccess && onSuccess();
+      onSuccess && onSuccess(saved);
       onClose && onClose();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to save GRN");
@@ -289,8 +285,7 @@ function GRNForm({
           {!existingGRN && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-blue-800">
-                ℹ️ GRN Number will be automatically generated when you save this
-                GRN
+                GRN Number will be automatically generated when you save this GRN
               </p>
             </div>
           )}
@@ -319,6 +314,7 @@ function GRNForm({
                 name="grnDate"
                 value={form.grnDate}
                 onChange={handleHeaderChange}
+                disabled={fieldsDisabled}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
               />
             </div>
@@ -333,6 +329,7 @@ function GRNForm({
             <button
               type="button"
               onClick={addLine}
+              disabled={!isEditable}
               className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
             >
               + Add Line Item
@@ -351,9 +348,6 @@ function GRNForm({
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                     Batch No
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                    Expiry
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                     Qty
@@ -385,12 +379,13 @@ function GRNForm({
                         <div className="flex gap-2 items-start">
                           <div className="flex-1">
                             <select
-                              name="item"
-                              value={line.item}
-                              onChange={(e) => handleLineChange(index, e)}
-                              className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                                errors[`line_${index}_item`]
-                                  ? "border-red-300 bg-red-50"
+                            name="item"
+                            value={line.item}
+                            onChange={(e) => handleLineChange(index, e)}
+                            disabled={fieldsDisabled}
+                            className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                              errors[`line_${index}_item`]
+                                ? "border-red-300 bg-red-50"
                                   : "border-gray-200"
                               }`}
                             >
@@ -411,7 +406,7 @@ function GRNForm({
 
                             {it?.isBatchTracked && (
                               <p className="text-[11px] text-gray-500 mt-1">
-                                Batch tracked ✅ (batch + expiry required)
+                                Batch tracked (batch number required)
                               </p>
                             )}
                           </div>
@@ -419,6 +414,7 @@ function GRNForm({
                           <button
                             type="button"
                             onClick={() => openAddProductForLine(index)}
+                            disabled={fieldsDisabled}
                             className="px-3 py-2 text-xs font-semibold bg-primary/10 text-primary rounded-lg hover:bg-primary/15"
                             title="Add new item"
                           >
@@ -433,7 +429,7 @@ function GRNForm({
                           name="batchNumber"
                           value={line.batchNumber}
                           onChange={(e) => handleLineChange(index, e)}
-                          disabled={!isBatchTracked}
+                          disabled={!isBatchTracked || fieldsDisabled}
                           className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                             errors[`line_${index}_batchNumber`]
                               ? "border-red-300 bg-red-50"
@@ -454,36 +450,13 @@ function GRNForm({
 
                       <td className="px-4 py-3">
                         <input
-                          type="date"
-                          name="expiryDate"
-                          value={line.expiryDate}
-                          onChange={(e) => handleLineChange(index, e)}
-                          disabled={!isBatchTracked}
-                          className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                            errors[`line_${index}_expiryDate`]
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200"
-                          } ${
-                            !isBatchTracked
-                              ? "bg-gray-50 cursor-not-allowed"
-                              : ""
-                          }`}
-                        />
-                        {errors[`line_${index}_expiryDate`] && (
-                          <p className="text-xs text-red-600 mt-1">
-                            {errors[`line_${index}_expiryDate`]}
-                          </p>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <input
                           type="number"
                           name="qty"
                           min="0"
                           step="0.01"
                           value={line.qty}
                           onChange={(e) => handleLineChange(index, e)}
+                          disabled={fieldsDisabled}
                           className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                             errors[`line_${index}_qty`]
                               ? "border-red-300 bg-red-50"
@@ -506,6 +479,7 @@ function GRNForm({
                           step="0.01"
                           value={line.unitCost}
                           onChange={(e) => handleLineChange(index, e)}
+                          disabled={fieldsDisabled}
                           className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                             errors[`line_${index}_unitCost`]
                               ? "border-red-300 bg-red-50"
@@ -528,10 +502,10 @@ function GRNForm({
                         <button
                           type="button"
                           onClick={() => removeLine(index)}
-                          disabled={form.lines.length === 1}
+                          disabled={form.lines.length === 1 || !isEditable}
                           className="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          ✕
+                          Remove
                         </button>
                       </td>
                     </tr>
@@ -585,7 +559,7 @@ function GRNForm({
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !isEditable}
             className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {saving ? "Saving..." : existingGRN ? "Update GRN" : "Save GRN"}
@@ -615,3 +589,12 @@ function GRNForm({
 }
 
 export default GRNForm;
+
+
+
+
+
+
+
+
+

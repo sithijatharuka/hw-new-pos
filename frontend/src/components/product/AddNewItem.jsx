@@ -37,6 +37,7 @@ const AddNewItem = ({
       name: "",
       barcode: "",
       category: "",
+      brand: "",
       description: "",
 
       baseUnit: "",
@@ -90,6 +91,7 @@ const AddNewItem = ({
         name: existingItem.name || "",
         barcode: existingItem.barcode || "",
         category: existingItem.category || "",
+        brand: existingItem.brand || "",
         description: existingItem.description || "",
 
         baseUnit: existingItem.baseUnit || emptyForm.baseUnit,
@@ -121,15 +123,9 @@ const AddNewItem = ({
         isSerialTracked: Boolean(existingItem.isSerialTracked),
 
         lowStockLevel:
-          existingItem.inventory?.lowStockLevel === 0 ||
-          existingItem.inventory?.lowStockLevel
-            ? String(existingItem.inventory.lowStockLevel)
-            : "",
-        reorderQuantity:
-          existingItem.inventory?.reorderQuantity === 0 ||
-          existingItem.inventory?.reorderQuantity
-            ? String(existingItem.inventory.reorderQuantity)
-            : "",
+          existingItem.lowStockLevel === 0 || existingItem.lowStockLevel
+            ? String(existingItem.lowStockLevel)
+            : "10",
 
         isActive: existingItem.isActive ?? true,
       });
@@ -435,7 +431,7 @@ const AddNewItem = ({
 
     setSaving(true);
     try {
-      // ✅ MASTER ONLY payload (no openingStock, no inventory.onHand/reserved, no batches)
+      // MASTER ONLY payload (no openingStock, no inventory.onHand/reserved, no batches)
       const payload = {
         sku: String(form.sku || "")
           .trim()
@@ -443,6 +439,7 @@ const AddNewItem = ({
         name: String(form.name || "").trim(),
         barcode: String(form.barcode || "").trim() || undefined,
         category: String(form.category || "").trim(),
+        brand: String(form.brand || "").trim() || undefined,
         description: String(form.description || "").trim() || undefined,
 
         baseUnit: String(form.baseUnit || "").trim(),
@@ -459,23 +456,17 @@ const AddNewItem = ({
         taxRate: form.taxApplicable ? Number(form.taxRate || 0) : 0,
         taxCode: String(form.taxCode || "").trim() || undefined,
 
+        // lowStockLevel is a top-level field in the Item model
+        lowStockLevel:
+          form.lowStockLevel === "" || form.lowStockLevel === null
+            ? 10
+            : Number(form.lowStockLevel),
+
         defaultSupplier: form.defaultSupplier || undefined,
 
         isBatchTracked: Boolean(form.isBatchTracked),
         isSerialTracked: Boolean(form.isSerialTracked),
         isActive: Boolean(form.isActive),
-
-        // ✅ thresholds only (safe)
-        inventory: {
-          lowStockLevel:
-            form.lowStockLevel === "" || form.lowStockLevel === null
-              ? 0
-              : Number(form.lowStockLevel),
-          reorderQuantity:
-            form.reorderQuantity === "" || form.reorderQuantity === null
-              ? 0
-              : Number(form.reorderQuantity),
-        },
       };
 
       if (editingId) {

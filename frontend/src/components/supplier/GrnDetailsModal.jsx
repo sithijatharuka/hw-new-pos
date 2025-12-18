@@ -1,4 +1,4 @@
-// GrnDetailsModal.jsx
+﻿// GrnDetailsModal.jsx
 import React from "react";
 
 const formatDate = (value) => {
@@ -17,11 +17,12 @@ const formatMoney = (value) => {
   return `Rs. ${n.toFixed(2)}`;
 };
 
-function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
+function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete, onPost }) {
   if (!open || !grn) return null;
 
   const {
     grnNo,
+    status,
     supplier,
     grnDate,
     poNumber,
@@ -34,6 +35,12 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
     createdAt,
   } = grn;
 
+  const isDraft = status === "draft";
+  const statusStyles = isDraft
+    ? { background: "#fef3c7", color: "#b45309" }
+    : status === "posted"
+    ? { background: "#dcfce7", color: "#15803d" }
+    : { background: "#e5e7eb", color: "#374151" };
   const calcLineTotal = (line) => {
     const qty = Number(line.qty) || 0;
     const cost = Number(line.unitCost) || 0;
@@ -41,7 +48,7 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
   };
 
   const handleDelete = () => {
-    if (!onDelete) return;
+    if (!onDelete || !isDraft) return;
     if (
       window.confirm(
         "Are you sure you want to delete this GRN? This should reverse stock on server."
@@ -109,6 +116,21 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
             >
               {grnNo}
             </p>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                marginTop: "0.4rem",
+                padding: "0.25rem 0.65rem",
+                borderRadius: "999px",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                letterSpacing: "0.3px",
+                ...statusStyles,
+              }}
+            >
+              {status ? status.toUpperCase() : "DRAFT"}
+            </div>
           </div>
           <button
             type="button"
@@ -128,7 +150,7 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
               borderRadius: "6px",
             }}
           >
-            ✕
+            X
           </button>
         </div>
 
@@ -351,16 +373,6 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
                     <th
                       style={{
                         padding: "0.75rem",
-                        textAlign: "left",
-                        fontWeight: "600",
-                        color: "#666",
-                      }}
-                    >
-                      Expiry
-                    </th>
-                    <th
-                      style={{
-                        padding: "0.75rem",
                         textAlign: "right",
                         fontWeight: "600",
                         color: "#666",
@@ -406,9 +418,6 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
                         </td>
                         <td style={{ padding: "0.75rem", color: "#666" }}>
                           {line.batchNumber || "-"}
-                        </td>
-                        <td style={{ padding: "0.75rem", color: "#666" }}>
-                          {formatDate(line.expiryDate)}
                         </td>
                         <td
                           style={{
@@ -484,9 +493,31 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
             display: "flex",
             gap: "0.75rem",
             justifyContent: "flex-end",
+            flexWrap: "wrap",
           }}
         >
-          {onEdit && (
+          {isDraft && onPost && (
+            <button
+              onClick={() => {
+                onPost();
+                onClose();
+              }}
+              style={{
+                padding: "0.625rem 1rem",
+                background: "#dcfce7",
+                color: "#15803d",
+                border: "1px solid #bbf7d0",
+                borderRadius: "6px",
+                fontSize: "0.875rem",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Post GRN
+            </button>
+          )}
+
+          {isDraft && onEdit && (
             <button
               onClick={() => {
                 onEdit();
@@ -507,7 +538,7 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
             </button>
           )}
 
-          {onDelete && (
+          {isDraft && onDelete && (
             <button
               onClick={handleDelete}
               style={{
@@ -523,6 +554,20 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
             >
               Delete GRN
             </button>
+          )}
+
+          {!isDraft && (
+            <div
+              style={{
+                alignSelf: "center",
+                fontSize: "0.85rem",
+                color: "#6b7280",
+                fontWeight: 500,
+                marginRight: "auto",
+              }}
+            >
+              Posted GRNs cannot be edited or deleted.
+            </div>
           )}
 
           <button
@@ -547,3 +592,11 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete }) {
 }
 
 export default GrnDetailsModal;
+
+
+
+
+
+
+
+

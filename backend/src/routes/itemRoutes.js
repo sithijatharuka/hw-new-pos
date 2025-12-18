@@ -24,6 +24,7 @@ const sanitizeItemPayload = (body = {}) => {
     "name",
     "barcode",
     "category",
+    "brand",
     "description",
 
     "baseUnit",
@@ -36,6 +37,7 @@ const sanitizeItemPayload = (body = {}) => {
     "taxRate",
     "taxCode",
 
+    "lowStockLevel",
     "defaultSupplier",
     "isBatchTracked",
     "isSerialTracked",
@@ -56,6 +58,15 @@ const sanitizeItemPayload = (body = {}) => {
     safe.description = String(safe.description || "").trim();
   if (safe.barcode !== undefined)
     safe.barcode = String(safe.barcode || "").trim();
+  if (safe.brand !== undefined) safe.brand = String(safe.brand || "").trim();
+
+  // Numeric safety
+  if (safe.lowStockLevel !== undefined) {
+    safe.lowStockLevel = Math.max(0, Number(safe.lowStockLevel) || 0);
+  }
+  if (safe.taxRate !== undefined) {
+    safe.taxRate = Math.min(1, Math.max(0, Number(safe.taxRate) || 0));
+  }
 
   // Tax safety (extra guard – your model also enforces)
   if (safe.taxApplicable === false) safe.taxRate = 0;
@@ -114,14 +125,14 @@ router.get("/", protect, async (req, res) => {
 
     if (lowStock === "true") {
       filter.$expr = {
-        $lte: ["$inventory.onHand", "$inventory.lowStockLevel"],
+        $lte: ["$inventory.onHand", "$lowStockLevel"],
       };
     }
 
     // Keep list light; batches are fetched via /:id/batches
     const items = await Item.find(filter)
       .select(
-        "sku name barcode category brand baseUnit sellingPrice inventory isActive isBatchTracked"
+        "sku name barcode category brand baseUnit sellingPrice costPrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate lastPurchasePrice"
       )
       .limit(300)
       .sort({ name: 1 });
@@ -143,7 +154,7 @@ router.get("/barcode/:code", protect, async (req, res) => {
   try {
     const code = String(req.params.code || "").trim();
     const item = await Item.findOne({ barcode: code }).select(
-      "sku name barcode category brand baseUnit sellingPrice inventory isActive isBatchTracked taxApplicable taxRate"
+      "sku name barcode category brand baseUnit sellingPrice costPrice lastPurchasePrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate batches"
     );
 
     if (!item)
@@ -255,14 +266,12 @@ router.post("/", protect, async (req, res) => {
     const item = await Item.create({
       ...payload,
       // enforce clean stock state
-      openingStock: 0,
       inventory: {
         onHand: 0,
         reserved: 0,
-        lowStockLevel: 0,
-        reorderQuantity: 0,
       },
-      batches: [],
+      // batches default to undefined per model
+      batches: undefined,
       isActive: payload.isActive !== undefined ? payload.isActive : true,
     });
 

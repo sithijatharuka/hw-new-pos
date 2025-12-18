@@ -1,47 +1,40 @@
+// models/GRN.v1.model.js
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+/**
+ * Money helpers (Decimal128 in DB, numbers in API)
+ */
 const toDecimal = (v) => {
   if (v === null || v === undefined || v === "") return undefined;
   return mongoose.Types.Decimal128.fromString(String(v));
 };
-
-const addDays = (date, days) => {
-  const d = new Date(date);
-  d.setDate(d.getDate() + Number(days || 0));
-  return d;
-};
-
-const paymentTermsSchema = new Schema(
-  {
-    type: {
-      type: String,
-      enum: ["CASH", "COD", "ADVANCE", "NET"],
-      default: "CASH",
-    },
-    days: { type: Number, default: 0, min: 0 }, // used when type="NET"
-  },
-  { _id: false }
-);
+const decimalGetter = (v) => (v ? parseFloat(v.toString()) : 0);
 
 const grnLineSchema = new Schema(
   {
     item: { type: Schema.Types.ObjectId, ref: "Item", required: true },
 
+    // Batch tracking fields (enforced in post GRN for batch-tracked items)
     batchNumber: { type: String, trim: true },
-    expiryDate: { type: Date },
 
     qty: { type: Number, required: true, min: 0.000001 },
 
-    unitCost: { type: Schema.Types.Decimal128, required: true, set: toDecimal },
+    unitCost: {
+      type: Schema.Types.Decimal128,
+      required: true,
+      set: toDecimal,
+      get: decimalGetter,
+    },
 
     lineTotal: {
       type: Schema.Types.Decimal128,
       default: () => toDecimal(0),
       set: toDecimal,
+      get: decimalGetter,
     },
   },
-  { _id: false }
+  { _id: false, toJSON: { getters: true }, toObject: { getters: true } }
 );
 
 const grnSchema = new Schema(
@@ -63,36 +56,6 @@ const grnSchema = new Schema(
 
     grnDate: { type: Date, default: Date.now, index: true },
 
-    // ✅ v1: GRN acts as Purchase Invoice
-    paymentTerms: {
-      type: paymentTermsSchema,
-      default: () => ({ type: "CASH", days: 0 }),
-    },
-
-    // ✅ due date is calculated from grnDate + terms.days (if NET)
-    dueDate: { type: Date, index: true },
-
-    // ✅ v1 simple partial payments (single total paid)
-    amountPaid: {
-      type: Schema.Types.Decimal128,
-      default: () => toDecimal(0),
-      set: toDecimal,
-    },
-
-    balanceDue: {
-      type: Schema.Types.Decimal128,
-      default: () => toDecimal(0),
-      set: toDecimal,
-    },
-
-    paymentStatus: {
-      type: String,
-      enum: ["unpaid", "partial", "paid"],
-      default: "unpaid",
-      index: true,
-    },
-
-    // LOCKING fields
     status: {
       type: String,
       enum: ["draft", "posted", "cancelled"],
@@ -100,7 +63,6 @@ const grnSchema = new Schema(
       index: true,
     },
     postedAt: { type: Date },
-    cancelledAt: { type: Date },
 
     lines: {
       type: [grnLineSchema],
@@ -112,56 +74,28 @@ const grnSchema = new Schema(
     },
 
     totalQty: { type: Number, default: 0 },
-
     grandTotal: {
       type: Schema.Types.Decimal128,
       default: () => toDecimal(0),
       set: toDecimal,
+      get: decimalGetter,
     },
 
     remarks: { type: String, trim: true },
-
-    createdBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { getters: true, virtuals: true },
+    toObject: { getters: true, virtuals: true },
+  }
 );
 
 grnSchema.index({ supplier: 1, grnDate: -1 });
 grnSchema.index({ supplier: 1, status: 1, grnDate: -1 });
-grnSchema.index({ supplier: 1, paymentStatus: 1, dueDate: 1 });
-
-// ✅ Transform Decimal128 to number in JSON responses
-grnSchema.set("toJSON", {
-  transform: (doc, ret) => {
-    // Convert Decimal128 fields to numbers
-    if (ret.amountPaid?.$numberDecimal)
-      ret.amountPaid = parseFloat(ret.amountPaid.$numberDecimal);
-    if (ret.balanceDue?.$numberDecimal)
-      ret.balanceDue = parseFloat(ret.balanceDue.$numberDecimal);
-    if (ret.grandTotal?.$numberDecimal)
-      ret.grandTotal = parseFloat(ret.grandTotal.$numberDecimal);
-
-    // Convert line items
-    if (Array.isArray(ret.lines)) {
-      ret.lines = ret.lines.map((line) => {
-        if (line.unitCost?.$numberDecimal)
-          line.unitCost = parseFloat(line.unitCost.$numberDecimal);
-        if (line.lineTotal?.$numberDecimal)
-          line.lineTotal = parseFloat(line.lineTotal.$numberDecimal);
-        return line;
-      });
-    }
-
-    return ret;
-  },
-});
 
 /**
- * Always compute totals + due date server-side
- */
-/**
- * Always compute totals + due date server-side
- * Promise-style middleware (no next)
+ * v1: Always compute totals server-side
  */
 grnSchema.pre("validate", function () {
   let totalQty = 0;
@@ -180,24 +114,6 @@ grnSchema.pre("validate", function () {
 
   this.totalQty = totalQty;
   this.grandTotal = toDecimal(grand);
-
-  // ✅ compute dueDate (v1 uses grnDate only)
-  const baseDate = this.grnDate || new Date();
-  const terms = this.paymentTerms || { type: "CASH", days: 0 };
-
-  this.dueDate =
-    terms.type === "NET" ? addDays(baseDate, terms.days) : baseDate;
-
-  // ✅ compute balance + payment status
-  const paid = this.amountPaid ? Number(this.amountPaid.toString()) : 0;
-  const total = this.grandTotal ? Number(this.grandTotal.toString()) : 0;
-
-  const bal = Math.max(total - paid, 0);
-  this.balanceDue = toDecimal(bal);
-
-  if (total > 0 && bal === 0) this.paymentStatus = "paid";
-  else if (paid > 0 && bal > 0) this.paymentStatus = "partial";
-  else this.paymentStatus = "unpaid";
 });
 
 export const GRN = mongoose.model("GRN", grnSchema);

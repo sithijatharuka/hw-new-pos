@@ -7,6 +7,51 @@ import { StockMovement } from "../models/StockMovement.js";
 const asNumber = (v) =>
   v === null || v === undefined || v === "" ? NaN : Number(v);
 
+const validateGrnLines = async (lines) => {
+  if (!Array.isArray(lines) || lines.length === 0) {
+    throw new Error("GRN must have at least one item line");
+  }
+
+  const itemIds = lines.map((l) => l.item);
+  const items = await Item.find({ _id: { $in: itemIds } });
+  const itemMap = new Map(items.map((it) => [String(it._id), it]));
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const it = itemMap.get(String(line.item));
+
+    if (!it) {
+      throw new Error(`Item not found in line ${i + 1}`);
+    }
+
+    if (!it.isActive) {
+      throw new Error(`Item "${it.name}" is inactive (line ${i + 1})`);
+    }
+
+    const qty = asNumber(line.qty);
+    const unitCost = asNumber(line.unitCost);
+
+    if (!qty || qty <= 0 || !Number.isFinite(qty)) {
+      throw new Error(`Qty must be > 0 (line ${i + 1})`);
+    }
+
+    if (Number.isNaN(unitCost) || unitCost < 0 || !Number.isFinite(unitCost)) {
+      throw new Error(`Unit cost must be >= 0 (line ${i + 1})`);
+    }
+
+    if (it.isBatchTracked) {
+      const bn = String(line.batchNumber || "").trim();
+      if (!bn) {
+        throw new Error(
+          `Batch number required for "${it.name}" (line ${i + 1})`
+        );
+      }
+    }
+  }
+
+  return itemMap;
+};
+
 /**
  * Generate GRN number for a supplier: SUPPLIERCODE-GRN####
  */
@@ -44,15 +89,21 @@ export const createGRN = async (req, res) => {
     const { supplier, lines } = req.body;
     let { grnNo } = req.body;
 
-    if (!supplier || !Array.isArray(lines) || lines.length === 0) {
+    // Validate supplier and lines
+    if (!supplier) {
+      return res.status(400).json({ message: "Supplier is required" });
+    }
+    
+    if (!Array.isArray(lines) || lines.length === 0) {
       return res
         .status(400)
-        .json({ message: "Supplier and Items are required" });
+        .json({ message: "At least one item is required" });
     }
 
     const supplierExists = await Supplier.findById(supplier);
-    if (!supplierExists)
+    if (!supplierExists) {
       return res.status(404).json({ message: "Supplier not found" });
+    }
 
     // Auto-generate GRN number if not provided
     if (!grnNo || !grnNo.trim()) {
@@ -65,40 +116,10 @@ export const createGRN = async (req, res) => {
     }
 
     // Validate items exist + batch requirements (but do not change stock)
-    const itemIds = lines.map((l) => l.item);
-    const items = await Item.find({ _id: { $in: itemIds } });
-    const itemMap = new Map(items.map((it) => [String(it._id), it]));
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const it = itemMap.get(String(line.item));
-      if (!it)
-        return res
-          .status(404)
-          .json({ message: `Item not found in line ${i + 1}` });
-
-      const qty = asNumber(line.qty);
-      const unitCost = asNumber(line.unitCost);
-
-      if (!qty || qty <= 0)
-        return res
-          .status(400)
-          .json({ message: `Qty must be > 0 (line ${i + 1})` });
-      if (Number.isNaN(unitCost) || unitCost < 0)
-        return res
-          .status(400)
-          .json({ message: `Unit cost must be ≥ 0 (line ${i + 1})` });
-
-      if (it.isBatchTracked) {
-        if (!line.batchNumber?.trim())
-          return res.status(400).json({
-            message: `Batch number required for "${it.name}" (line ${i + 1})`,
-          });
-        if (!line.expiryDate)
-          return res.status(400).json({
-            message: `Expiry date required for "${it.name}" (line ${i + 1})`,
-          });
-      }
+    try {
+      await validateGrnLines(lines);
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
     }
 
     const grn = await GRN.create({
@@ -115,8 +136,7 @@ export const createGRN = async (req, res) => {
   } catch (err) {
     if (err?.code === 11000)
       return res.status(400).json({ message: "GRN No already exists" });
-    console.log(err);
-    console.log(err.message);
+    console.error("Error in createGRN:", err);
     res.status(500).json({ message: err.message || "Failed to create GRN" });
   }
 };
@@ -130,73 +150,126 @@ export const postGRN = async (req, res) => {
 
   try {
     const grn = await GRN.findById(req.params.id).session(session);
-    if (!grn) return res.status(404).json({ message: "GRN not found" });
+    if (!grn) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: "GRN not found" });
+    }
 
     if (grn.status !== "draft") {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: "Only DRAFT GRNs can be posted" });
     }
 
+    if (!Array.isArray(grn.lines) || grn.lines.length === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: "GRN must have at least one line" });
+    }
+
+    // Fetch all items involved in the GRN
     const itemIds = grn.lines.map((l) => l.item);
     const items = await Item.find({ _id: { $in: itemIds } }).session(session);
     const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
+    // Process each line
     for (let i = 0; i < grn.lines.length; i++) {
       const line = grn.lines[i];
-      const it = itemMap.get(String(line.item));
-      if (!it)
-        return res
-          .status(404)
-          .json({ message: `Item not found in line ${i + 1}` });
+      const item = itemMap.get(String(line.item));
+
+      if (!item) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({
+          message: `Item not found in line ${i + 1}`,
+        });
+      }
+
+      if (!item.isActive) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: `Item "${item.name}" is inactive (line ${i + 1})`,
+        });
+      }
 
       const qty = Number(line.qty);
-      const unitCostNum = line.unitCost
-        ? Number(line.unitCost.toString())
-        : NaN;
+      const unitCost = line.unitCost ? Number(line.unitCost.toString()) : 0;
 
-      if (!qty || qty <= 0)
-        return res.status(400).json({ message: `Invalid qty (line ${i + 1})` });
-      if (Number.isNaN(unitCostNum) || unitCostNum < 0)
-        return res
-          .status(400)
-          .json({ message: `Invalid unitCost (line ${i + 1})` });
+      // Validate quantities
+      if (!qty || qty <= 0 || !Number.isFinite(qty)) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: `Invalid qty (line ${i + 1})`,
+        });
+      }
 
-      // Update lastPurchasePrice (Decimal setter in Item will handle)
-      it.lastPurchasePrice = unitCostNum;
+      if (
+        Number.isNaN(unitCost) ||
+        unitCost < 0 ||
+        !Number.isFinite(unitCost)
+      ) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: `Invalid unitCost (line ${i + 1})`,
+        });
+      }
 
-      if (it.isBatchTracked) {
-        const bn = String(line.batchNumber || "").trim();
-        const exp = new Date(line.expiryDate);
+      // Update last purchase price
+      item.lastPurchasePrice = unitCost;
 
-        const existingBatch = (it.batches || []).find(
-          (b) =>
-            b.batchNumber === bn &&
-            b.expiryDate &&
-            new Date(b.expiryDate).getTime() === exp.getTime()
+      // Handle batch-tracked items
+      if (item.isBatchTracked) {
+        const batchNumber = String(line.batchNumber || "").trim();
+
+        if (!batchNumber) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            message: `Batch number required for "${item.name}" (line ${i + 1})`,
+          });
+        }
+
+        // Ensure batches array is initialized
+        if (!Array.isArray(item.batches)) {
+          item.batches = [];
+        }
+
+        // Find existing batch or create new one
+        const existingBatch = item.batches.find(
+          (b) => b.batchNumber === batchNumber
         );
 
         if (existingBatch) {
+          // Update existing batch quantity
           existingBatch.qtyOnHand = Number(existingBatch.qtyOnHand || 0) + qty;
         } else {
-          it.batches.push({
-            batchNumber: bn,
-            expiryDate: exp,
+          // Create new batch
+          item.batches.push({
+            batchNumber: batchNumber,
             qtyOnHand: qty,
             reserved: 0,
           });
         }
 
-        // Do NOT set inventory.onHand; item pre-save derives totals from batches
+        // Note: inventory.onHand will be calculated by pre-save hook
       } else {
-        it.inventory = it.inventory || {};
-        it.inventory.onHand = Number(it.inventory.onHand || 0) + qty;
+        // Handle non-batch-tracked items
+        item.inventory = item.inventory || {};
+        item.inventory.onHand = Number(item.inventory.onHand || 0) + qty;
       }
 
-      await it.save({ session });
+      // Save the item
+      await item.save({ session });
 
+      // Create stock movement record
       await StockMovement.create(
         [
           {
-            item: it._id,
+            item: item._id,
             type: "grn",
             direction: "in",
             qty,
@@ -208,6 +281,7 @@ export const postGRN = async (req, res) => {
       );
     }
 
+    // Mark GRN as posted
     grn.status = "posted";
     grn.postedAt = new Date();
     await grn.save({ session });
@@ -222,6 +296,7 @@ export const postGRN = async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
+    console.error("Error in postGRN:", err);
     res.status(500).json({ message: err.message || "Failed to post GRN" });
   }
 };
@@ -259,20 +334,25 @@ export const cancelGRN = async (req, res) => {
 
       if (it.isBatchTracked) {
         const bn = String(line.batchNumber || "").trim();
-        const exp = new Date(line.expiryDate);
+        if (!bn) {
+          return res.status(400).json({
+            message: `Batch number missing for "${it.name}" (line ${i + 1})`,
+          });
+        }
 
-        const batch = (it.batches || []).find(
-          (b) =>
-            b.batchNumber === bn &&
-            b.expiryDate &&
-            new Date(b.expiryDate).getTime() === exp.getTime()
-        );
+        const batch = (it.batches || []).find((b) => b.batchNumber === bn);
 
-        if (!batch || Number(batch.qtyOnHand || 0) < qty) {
+        if (!batch) {
+          return res.status(400).json({
+            message: `Batch "${bn}" not found for "${it.name}" (line ${i + 1})`,
+          });
+        }
+
+        if (Number(batch.qtyOnHand || 0) < qty) {
           return res.status(400).json({
             message: `Cannot cancel: insufficient batch stock for "${
               it.name
-            }" (line ${i + 1})`,
+            }" batch "${bn}" (line ${i + 1})`,
           });
         }
 
@@ -327,6 +407,7 @@ export const cancelGRN = async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
+    console.error("Error in cancelGRN:", err);
     res.status(500).json({ message: err.message || "Failed to cancel GRN" });
   }
 };
@@ -342,6 +423,7 @@ export const getAllGRNs = async (req, res) => {
       .sort({ grnDate: -1 });
     res.json(grns);
   } catch (err) {
+    console.error("Error in getAllGRNs:", err);
     res.status(500).json({ message: err.message || "Failed to fetch GRNs" });
   }
 };
@@ -357,6 +439,7 @@ export const getGRN = async (req, res) => {
     if (!grn) return res.status(404).json({ message: "GRN not found" });
     res.json(grn);
   } catch (err) {
+    console.error("Error in getGRN:", err);
     res.status(500).json({ message: err.message || "Failed to fetch GRN" });
   }
 };
@@ -379,6 +462,7 @@ export const getSupplierGRNs = async (req, res) => {
 
     res.json(grns);
   } catch (err) {
+    console.error("Error in getSupplierGRNs:", err);
     res.status(500).json({ message: err.message || "Failed to fetch GRNs" });
   }
 };
@@ -400,6 +484,12 @@ export const updateGRN = async (req, res) => {
     // Prevent changing status via update
     const { status, postedAt, cancelledAt, ...safe } = req.body;
 
+    try {
+      await validateGrnLines(safe.lines || grn.lines || []);
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
+    }
+
     Object.assign(grn, safe);
     grn.status = "draft";
 
@@ -410,6 +500,7 @@ export const updateGRN = async (req, res) => {
       .populate("lines.item");
     res.json(populated);
   } catch (err) {
+    console.error("Error in updateGRN:", err);
     res.status(500).json({ message: err.message || "Failed to update GRN" });
   }
 };
@@ -431,6 +522,9 @@ export const deleteGRN = async (req, res) => {
     await GRN.findByIdAndDelete(req.params.id);
     res.json({ message: "Draft GRN deleted successfully" });
   } catch (err) {
+    console.error("Error in deleteGRN:", err);
     res.status(500).json({ message: err.message || "Failed to delete GRN" });
   }
 };
+
+

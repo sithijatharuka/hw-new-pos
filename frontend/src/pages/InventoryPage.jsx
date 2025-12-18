@@ -575,6 +575,9 @@ const InventoryPage = () => {
                 const onHand = Number(inv.onHand || 0);
                 const reserved = Number(inv.reserved || 0);
                 const low = Number(inv.lowStockLevel || 0);
+                const openingStock = Number(
+                  selectedItem.openingStock ?? inv.onHand ?? 0
+                );
 
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -613,6 +616,12 @@ const InventoryPage = () => {
                           <span className="text-gray-600">On-hand</span>
                           <span className="font-bold text-gray-900">
                             {onHand} {selectedItem.baseUnit}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-gray-600">Opening Stock</span>
+                          <span className="font-medium text-gray-900">
+                            {openingStock} {selectedItem.baseUnit}
                           </span>
                         </div>
                         <div className="flex justify-between gap-4">

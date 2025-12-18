@@ -6,7 +6,7 @@ import EntityCardList from "../components/common/EntityCardList";
 
 import GRNForm from "../components/supplier/GRNForm";
 import GrnDetailsModal from "../components/supplier/GrnDetailsModal";
-import { getSupplierGRNs, deleteGRN } from "../components/supplier/grnApi";
+import { getSupplierGRNs, deleteGRN, postGRN } from "../components/supplier/grnApi";
 
 import SupplierFormModal from "../components/supplier/SupplierFormModal";
 import SupplierPayModal from "../components/supplier/SupplierPayModal";
@@ -38,6 +38,7 @@ const SuppliersPage = () => {
   const [showGRNForm, setShowGRNForm] = useState(false);
   const [grnSupplier, setGrnSupplier] = useState(null);
   const [items, setItems] = useState([]);
+  const [editingGRN, setEditingGRN] = useState(null);
 
   const [categories, setCategories] = useState([]);
   const [baseUnits, setBaseUnits] = useState([
@@ -188,15 +189,44 @@ const SuppliersPage = () => {
 
   const openReceiveGoods = async (supplier) => {
     setGrnSupplier(supplier);
+    setEditingGRN(null);
     if (items.length === 0) await fetchItems();
     if (categories.length === 0) await fetchCategories();
     setShowGRNForm(true);
   };
 
-  const handleGRNSuccess = () => {
+  const handleGRNSuccess = (savedGrn) => {
+    const wasEditing = Boolean(editingGRN);
+    const activeSupplierId = grnSupplier?._id || grnSupplier?.id || grnSupplier;
+
     setShowGRNForm(false);
+    setEditingGRN(null);
     setGrnSupplier(null);
-    toast.success("GRN created successfully");
+
+    if (savedGrn?._id) {
+      setGrnsList((prev) => {
+        const exists = prev.some((g) => g._id === savedGrn._id);
+        if (exists) {
+          return prev.map((g) => (g._id === savedGrn._id ? savedGrn : g));
+        }
+
+        const savedSupplierId = savedGrn.supplier?._id || savedGrn.supplier;
+        if (
+          activeSupplierId &&
+          savedSupplierId &&
+          String(savedSupplierId) === String(activeSupplierId)
+        ) {
+          return [savedGrn, ...prev];
+        }
+        return prev;
+      });
+    }
+
+    toast.success(
+      savedGrn && savedGrn._id && wasEditing
+        ? "GRN updated successfully"
+        : "GRN created successfully"
+    );
   };
 
   const openViewGRNs = async (supplier) => {
@@ -213,8 +243,30 @@ const SuppliersPage = () => {
     }
   };
 
+  const openEditGRN = async (grn) => {
+    if (!grn || grn.status !== "draft") {
+      toast.error("Only draft GRNs can be edited");
+      return;
+    }
+
+    const supplierRef =
+      grn.supplier && typeof grn.supplier === "object"
+        ? grn.supplier
+        : suppliers.find((s) => String(s._id) === String(grn.supplier));
+
+    setEditingGRN(grn);
+    setGrnSupplier(supplierRef || grnSupplier);
+    if (items.length === 0) await fetchItems();
+    if (categories.length === 0) await fetchCategories();
+    setShowGRNForm(true);
+  };
+
   const handleDeleteGRN = async () => {
     if (!selectedGRN) return;
+    if (selectedGRN.status !== "draft") {
+      toast.error("Only draft GRNs can be deleted");
+      return;
+    }
     try {
       await deleteGRN(selectedGRN._id);
       setGrnsList((prev) => prev.filter((g) => g._id !== selectedGRN._id));
@@ -223,6 +275,26 @@ const SuppliersPage = () => {
       toast.success("GRN deleted successfully");
     } catch {
       toast.error("Failed to delete GRN");
+    }
+  };
+
+  const handlePostGRN = async () => {
+    if (!selectedGRN) return;
+    if (selectedGRN.status !== "draft") {
+      toast.error("Only draft GRNs can be posted");
+      return;
+    }
+
+    try {
+      const posted = await postGRN(selectedGRN._id);
+      setGrnsList((prev) =>
+        prev.map((g) => (g._id === posted._id ? posted : g))
+      );
+      setSelectedGRN(posted);
+      setShowGRNDetails(false);
+      toast.success("GRN posted successfully");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to post GRN");
     }
   };
 
@@ -628,10 +700,12 @@ const SuppliersPage = () => {
               <GRNForm
                 supplier={grnSupplier}
                 items={items}
+                existingGRN={editingGRN}
                 onSuccess={handleGRNSuccess}
                 onClose={() => {
                   setShowGRNForm(false);
                   setGrnSupplier(null);
+                  setEditingGRN(null);
                 }}
                 onItemsRefresh={fetchItems}
                 suppliers={suppliers}
@@ -677,40 +751,55 @@ const SuppliersPage = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {grnsList.map((grn) => (
-                    <div
-                      key={grn._id}
-                      className="p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-sm cursor-pointer"
-                      onClick={() => {
-                        setSelectedGRN(grn);
-                        setShowGRNDetails(true);
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {grn.grnNo}
+                  {grnsList.map((grn) => {
+                    const statusClasses =
+                      grn.status === "posted"
+                        ? "bg-green-100 text-green-700 border border-green-200"
+                        : "bg-amber-100 text-amber-700 border border-amber-200";
+
+                    return (
+                      <div
+                        key={grn._id}
+                        className="p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-sm cursor-pointer"
+                        onClick={() => {
+                          setSelectedGRN(grn);
+                          setShowGRNDetails(true);
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-semibold text-gray-900">
+                                {grn.grnNo}
+                              </div>
+                              <span
+                                className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${statusClasses}`}
+                              >
+                                {(grn.status || "draft").toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              Date:{" "}
+                              {new Date(grn.grnDate).toLocaleDateString()}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            Date: {new Date(grn.grnDate).toLocaleDateString()}
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-primary">
+                              Rs. {Number(grn.grandTotal || 0).toFixed(2)}
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              {grn.lines?.length || 0} items
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-primary">
-                            Rs. {Number(grn.grandTotal || 0).toFixed(2)}
+                        {grn.remarks && (
+                          <div className="text-sm text-gray-600 mt-2 line-clamp-2">
+                            {grn.remarks}
                           </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {grn.lines?.length || 0} items
-                          </div>
-                        </div>
+                        )}
                       </div>
-                      {grn.remarks && (
-                        <div className="text-sm text-gray-600 mt-2 line-clamp-2">
-                          {grn.remarks}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -725,11 +814,18 @@ const SuppliersPage = () => {
           setShowGRNDetails(false);
           setSelectedGRN(null);
         }}
-        onEdit={() => toast.info("Edit functionality coming soon")}
-        onDelete={handleDeleteGRN}
+        onEdit={
+          selectedGRN?.status === "draft"
+            ? () => openEditGRN(selectedGRN)
+            : null
+        }
+        onDelete={selectedGRN?.status === "draft" ? handleDeleteGRN : null}
+        onPost={selectedGRN?.status === "draft" ? handlePostGRN : null}
       />
     </div>
   );
 };
 
 export default SuppliersPage;
+
+

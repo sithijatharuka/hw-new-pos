@@ -29,6 +29,11 @@ export const updateGRN = async (id, payload) => {
   return data;
 };
 
+export const postGRN = async (id) => {
+  const { data } = await api.post(`/grns/${id}/post`);
+  return data;
+};
+
 export const deleteGRN = async (id) => {
   const { data } = await api.delete(`/grns/${id}`);
   return data;

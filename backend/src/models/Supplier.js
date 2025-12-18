@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+/**
+ * Money helpers (Decimal128 in DB, numbers in API)
+ */
+const toDecimal = (v) => {
+  if (v === null || v === undefined || v === "") return undefined;
+  return mongoose.Types.Decimal128.fromString(String(v));
+};
+const decimalGetter = (v) => (v ? parseFloat(v.toString()) : 0);
+
 const supplierSchema = new mongoose.Schema(
   {
     supplierCode: { type: String, unique: true },
@@ -10,9 +19,23 @@ const supplierSchema = new mongoose.Schema(
     email: String,
     address: String,
 
-    openingBalance: { type: Number, default: 0 },
-    currentBalance: { type: Number, default: 0 },
-    creditLimit: Number,
+    openingBalance: {
+      type: mongoose.Schema.Types.Decimal128,
+      default: () => toDecimal(0),
+      set: toDecimal,
+      get: decimalGetter,
+    },
+    currentBalance: {
+      type: mongoose.Schema.Types.Decimal128,
+      default: () => toDecimal(0),
+      set: toDecimal,
+      get: decimalGetter,
+    },
+    creditLimit: {
+      type: mongoose.Schema.Types.Decimal128,
+      set: toDecimal,
+      get: decimalGetter,
+    },
     paymentTerms: {
       type: {
         type: String,
@@ -34,7 +57,11 @@ const supplierSchema = new mongoose.Schema(
       default: "active",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true },
+  }
 );
 
 supplierSchema.index({
@@ -42,7 +69,5 @@ supplierSchema.index({
   phones: "text",
   email: "text",
 });
-
-supplierSchema.index({ name: "text", phone: "text" });
 
 export const Supplier = mongoose.model("Supplier", supplierSchema);
