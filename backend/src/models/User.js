@@ -16,6 +16,15 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for user lookups
+userSchema.index({ username: 1 }, { name: "user_username" });
+userSchema.index({ role: 1 }, { name: "user_role" });
+userSchema.index({ isActive: 1 }, { name: "user_status" });
+userSchema.index(
+  { isActive: 1, createdAt: -1 },
+  { name: "user_status_recent" }
+);
+
 // ✅ Async pre-save hook (no next)
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;

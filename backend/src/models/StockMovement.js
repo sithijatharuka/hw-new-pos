@@ -23,7 +23,44 @@ const stockMovementSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-stockMovementSchema.index({ item: 1, createdAt: -1 });
+// Indexes for stock movement tracking
+stockMovementSchema.index({ item: 1 }, { name: "stock_movement_item" });
+stockMovementSchema.index({ type: 1 }, { name: "stock_movement_type" });
+stockMovementSchema.index(
+  { direction: 1 },
+  { name: "stock_movement_direction" }
+);
+stockMovementSchema.index(
+  { referenceId: 1 },
+  { name: "stock_movement_reference" }
+);
+stockMovementSchema.index({ createdAt: -1 }, { name: "stock_movement_recent" });
+
+// Compound indexes for efficient filtering
+stockMovementSchema.index(
+  { item: 1, createdAt: -1 },
+  { name: "stock_movement_item_recent" }
+);
+stockMovementSchema.index(
+  { item: 1, type: 1, createdAt: -1 },
+  { name: "stock_movement_item_type_recent" }
+);
+stockMovementSchema.index(
+  { type: 1, createdAt: -1 },
+  { name: "stock_movement_type_recent" }
+);
+
+// Index for direction-based queries
+stockMovementSchema.index(
+  { direction: 1, createdAt: -1 },
+  { name: "stock_movement_direction_recent" }
+);
+
+// Index for reference tracking (GRN, sales, purchases)
+stockMovementSchema.index(
+  { referenceId: 1, type: 1 },
+  { name: "stock_movement_reference_type" }
+);
 
 export const StockMovement = mongoose.model(
   "StockMovement",

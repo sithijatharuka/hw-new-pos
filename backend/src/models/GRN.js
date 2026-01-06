@@ -91,8 +91,28 @@ const grnSchema = new Schema(
   }
 );
 
-grnSchema.index({ supplier: 1, grnDate: -1 });
-grnSchema.index({ supplier: 1, status: 1, grnDate: -1 });
+// Indexes for GRN (Goods Receipt Note) queries
+grnSchema.index({ grnNo: 1 }, { name: "grn_number" });
+grnSchema.index({ supplier: 1 }, { name: "grn_supplier" });
+grnSchema.index({ status: 1 }, { name: "grn_status" });
+grnSchema.index({ grnDate: -1 }, { name: "grn_date" });
+grnSchema.index({ createdAt: -1 }, { name: "grn_recent" });
+
+// Compound indexes for common queries
+grnSchema.index({ supplier: 1, grnDate: -1 }, { name: "grn_supplier_date" });
+grnSchema.index(
+  { supplier: 1, status: 1, grnDate: -1 },
+  { name: "grn_supplier_status_date" }
+);
+
+// Index for status-based queries
+grnSchema.index({ status: 1, grnDate: -1 }, { name: "grn_status_date" });
+
+// Index for user-specific GRN tracking
+grnSchema.index({ createdBy: 1, grnDate: -1 }, { name: "grn_user_recent" });
+
+// Index for posted records
+grnSchema.index({ status: 1, postedAt: -1 }, { name: "grn_posted_records" });
 
 /**
  * v1: Always compute totals server-side

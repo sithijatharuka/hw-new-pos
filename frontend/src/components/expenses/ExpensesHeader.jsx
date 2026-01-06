@@ -1,0 +1,78 @@
+import React from "react";
+
+const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
+  const currentMonthTotal = expenses
+    .filter((e) => {
+      const expenseDate = new Date(e.date);
+      const now = new Date();
+      return (
+        expenseDate.getMonth() === now.getMonth() &&
+        expenseDate.getFullYear() === now.getFullYear()
+      );
+    })
+    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+  return (
+    <header className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            Expense Management
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base max-w-3xl">
+            Record and track daily expenses including rent, salaries, transport,
+            electricity, and other operational costs. Maintain financial clarity
+            with categorized expense tracking.
+          </p>
+        </div>
+        <div className="flex md:justify-end">
+          <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-200 min-w-[200px]">
+            <p className="text-xs text-gray-500 font-medium">Total Expenses</p>
+            <p className="text-xl font-bold text-gray-800 truncate">
+              Rs. {totalExpenses.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Categories</p>
+            <p className="text-lg font-bold text-gray-800">
+              {categories.length}
+            </p>
+          </div>
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-blue-600 text-lg">📊</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Total Records</p>
+            <p className="text-lg font-bold text-gray-800">{expenses.length}</p>
+          </div>
+          <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-green-600 text-lg">📈</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 font-medium">Current Month</p>
+            <p className="text-lg font-bold text-gray-800 truncate">
+              Rs. {currentMonthTotal.toFixed(2)}
+            </p>
+          </div>
+          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-purple-600 text-lg">💰</span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default ExpensesHeader;

@@ -64,10 +64,37 @@ const supplierSchema = new mongoose.Schema(
   }
 );
 
-supplierSchema.index({
-  name: "text",
-  phones: "text",
-  email: "text",
-});
+// Text indexes for full-text search
+supplierSchema.index(
+  {
+    name: "text",
+    phones: "text",
+    email: "text",
+    contactPerson: "text",
+  },
+  { name: "supplier_text_search" }
+);
+
+// Single field indexes for common queries
+supplierSchema.index({ name: 1 }, { name: "supplier_name" });
+supplierSchema.index({ email: 1 }, { name: "supplier_email", sparse: true });
+supplierSchema.index({ status: 1 }, { name: "supplier_status" });
+supplierSchema.index({ supplierCode: 1 }, { name: "supplier_code" });
+
+// Compound indexes for filtering and sorting
+supplierSchema.index(
+  { status: 1, createdAt: -1 },
+  { name: "supplier_status_recent" }
+);
+supplierSchema.index({ createdAt: -1 }, { name: "supplier_recent" });
+
+// Index for balance-related queries
+supplierSchema.index({ currentBalance: 1 }, { name: "supplier_balance" });
+
+// Index for payment terms queries
+supplierSchema.index(
+  { "paymentTerms.type": 1 },
+  { name: "supplier_payment_terms" }
+);
 
 export const Supplier = mongoose.model("Supplier", supplierSchema);

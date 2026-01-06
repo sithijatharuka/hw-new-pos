@@ -86,7 +86,36 @@ const purchaseSchema = new mongoose.Schema(
   }
 );
 
-purchaseSchema.index({ billNumber: 1 });
-purchaseSchema.index({ createdAt: 1 });
+// Indexes for purchase transaction queries
+purchaseSchema.index({ billNumber: 1 }, { name: "purchase_bill_number" });
+purchaseSchema.index({ supplier: 1 }, { name: "purchase_supplier" });
+purchaseSchema.index({ status: 1 }, { name: "purchase_status" });
+
+// Date-based indexes for reporting
+purchaseSchema.index({ billDate: -1 }, { name: "purchase_bill_date" });
+purchaseSchema.index({ createdAt: -1 }, { name: "purchase_recent" });
+
+// Compound indexes for common queries
+purchaseSchema.index(
+  { supplier: 1, createdAt: -1 },
+  { name: "purchase_supplier_recent" }
+);
+purchaseSchema.index(
+  { supplier: 1, status: 1, createdAt: -1 },
+  { name: "purchase_supplier_status" }
+);
+purchaseSchema.index(
+  { billDate: -1, status: 1 },
+  { name: "purchase_date_status" }
+);
+
+// Index for pending payments
+purchaseSchema.index(
+  { status: 1, balanceDue: 1 },
+  { name: "purchase_pending_payments" }
+);
+
+// Index for balance-related queries
+purchaseSchema.index({ amountPaid: 1 }, { name: "purchase_amount_paid" });
 
 export const Purchase = mongoose.model("Purchase", purchaseSchema);

@@ -112,6 +112,38 @@ const saleSchema = new mongoose.Schema(
   }
 );
 
-saleSchema.index({ createdAt: 1 });
+// Indexes for sale transaction queries
+saleSchema.index({ billNumber: 1 }, { name: "sale_bill_number" });
+saleSchema.index({ customer: 1 }, { name: "sale_customer" });
+saleSchema.index({ status: 1 }, { name: "sale_status" });
+
+// Date-based indexes for reporting
+saleSchema.index({ createdAt: -1 }, { name: "sale_recent" });
+saleSchema.index({ createdAt: 1, status: 1 }, { name: "sale_date_status" });
+
+// Compound indexes for common queries
+saleSchema.index(
+  { customer: 1, createdAt: -1 },
+  { name: "sale_customer_recent" }
+);
+saleSchema.index(
+  { customer: 1, status: 1, createdAt: -1 },
+  { name: "sale_customer_status_recent" }
+);
+
+// Index for pending payments
+saleSchema.index(
+  { status: 1, balanceDue: 1 },
+  { name: "sale_pending_payments" }
+);
+
+// Index for credit sales
+saleSchema.index(
+  { status: 1, customer: 1 },
+  { name: "sale_credit_transactions" }
+);
+
+// Index for tax invoice queries
+saleSchema.index({ isTaxInvoice: 1 }, { name: "sale_tax_invoices" });
 
 export const Sale = mongoose.model("Sale", saleSchema);

@@ -34,7 +34,29 @@ const creditPaymentSchema = new mongoose.Schema(
   }
 );
 
-creditPaymentSchema.index({ customer: 1, createdAt: -1 });
+// Indexes for credit payment queries
+creditPaymentSchema.index({ customer: 1 }, { name: "credit_payment_customer" });
+creditPaymentSchema.index({ method: 1 }, { name: "credit_payment_method" });
+creditPaymentSchema.index({ createdAt: -1 }, { name: "credit_payment_recent" });
+
+// Compound indexes for common queries
+creditPaymentSchema.index(
+  { customer: 1, createdAt: -1 },
+  { name: "credit_payment_customer_recent" }
+);
+creditPaymentSchema.index(
+  { customer: 1, method: 1 },
+  { name: "credit_payment_customer_method" }
+);
+
+// Index for applied invoices tracking
+creditPaymentSchema.index(
+  { appliedInvoices: 1 },
+  { name: "credit_payment_applied_invoices", sparse: true }
+);
+
+// Index for amount-based queries
+creditPaymentSchema.index({ amount: 1 }, { name: "credit_payment_amount" });
 
 export const CreditPayment = mongoose.model(
   "CreditPayment",

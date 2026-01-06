@@ -113,6 +113,47 @@ const itemSchema = new Schema(
   }
 );
 
+// Comprehensive indexes for efficient querying and filtering
+// Text indexes for full-text search
+itemSchema.index(
+  {
+    name: "text",
+    sku: "text",
+    barcode: "text",
+    category: "text",
+    brand: "text",
+  },
+  { name: "item_text_search" }
+);
+
+// Single field indexes for exact match queries
+itemSchema.index({ sku: 1 }, { name: "item_sku" });
+itemSchema.index({ barcode: 1 }, { name: "item_barcode", sparse: true });
+itemSchema.index({ category: 1 }, { name: "item_category" });
+itemSchema.index({ name: 1 }, { name: "item_name" });
+itemSchema.index({ isActive: 1 }, { name: "item_status" });
+itemSchema.index({ isBatchTracked: 1 }, { name: "item_batch_tracked" });
+
+// Compound indexes for common filtering patterns
+itemSchema.index(
+  { category: 1, isActive: 1 },
+  { name: "item_category_status" }
+);
+itemSchema.index(
+  { isActive: 1, createdAt: -1 },
+  { name: "item_status_recent" }
+);
+itemSchema.index({ brand: 1, isActive: 1 }, { name: "item_brand_status" });
+
+// Index for low stock alerts
+itemSchema.index({ lowStockLevel: 1, isActive: 1 }, { name: "item_low_stock" });
+
+// Index for batch tracking queries
+itemSchema.index(
+  { isBatchTracked: 1, isActive: 1 },
+  { name: "item_batch_status" }
+);
+
 itemSchema.virtual("availableStock").get(function () {
   const onHand = this.inventory?.onHand || 0;
   const reserved = this.inventory?.reserved || 0;

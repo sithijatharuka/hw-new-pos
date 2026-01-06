@@ -1,0 +1,540 @@
+import React, { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import api from "../../../../api";
+import FormHeader from "./FormHeader";
+import FormFooter from "./FormFooter";
+import ItemForm from "./ItemForm";
+
+/**
+ * AddNewItem (MASTER ONLY)
+ * 🔒 No stock mutation fields (onHand, reserved, openingStock, batches) are allowed here.
+ *
+ * Props:
+ * - open, onClose, onSuccess
+ * - item: existing item for edit
+ * - suppliers, categories, baseUnits
+ * - onCategoryAdd, onBaseUnitAdd, onCategoryDelete
+ * - mode (optional): "default" | "grn" (you can use to hide fields if you want)
+ */
+const AddNewItem = ({
+  open,
+  onClose,
+  onSuccess,
+  item: existingItem,
+
+  suppliers = [],
+  categories = [],
+  baseUnits = [],
+
+  onCategoryAdd,
+  onBaseUnitAdd,
+  onBaseUnitDelete,
+  onCategoryDelete,
+
+  mode = "default",
+  defaultSupplierId,
+}) => {
+  const emptyForm = useMemo(
+    () => ({
+      sku: "",
+      name: "",
+      barcode: "",
+      category: "",
+      brand: "",
+      description: "",
+
+      baseUnit: "",
+      units: [], // { fromUnit, toUnit, multiplier }
+
+      sellingPrice: "",
+      costPrice: "",
+
+      taxApplicable: false,
+      taxRate: "",
+      taxCode: "",
+
+      defaultSupplier: defaultSupplierId || "",
+
+      isBatchTracked: false,
+      isSerialTracked: false,
+
+      // ✅ safe “stock policy” fields (not stock qty)
+      lowStockLevel: "",
+      reorderQuantity: "",
+
+      isActive: true,
+    }),
+    [baseUnits, defaultSupplierId]
+  );
+
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [errs, setErrs] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [customBaseUnits, setCustomBaseUnits] = useState([]);
+  const CUSTOM_CATEGORIES_KEY = "pos_custom_item_categories";
+  const CUSTOM_UNITS_KEY = "pos_custom_item_units";
+
+  // ---------- init ----------
+  useEffect(() => {
+    if (!open) return;
+
+    if (existingItem) {
+      setEditingId(existingItem._id);
+
+      setForm({
+        ...emptyForm,
+        ...existingItem,
+
+        sku: existingItem.sku || "",
+        name: existingItem.name || "",
+        barcode: existingItem.barcode || "",
+        category: existingItem.category || "",
+        brand: existingItem.brand || "",
+        description: existingItem.description || "",
+
+        baseUnit: existingItem.baseUnit || emptyForm.baseUnit,
+        units: Array.isArray(existingItem.units) ? existingItem.units : [],
+
+        sellingPrice:
+          existingItem.sellingPrice === 0 || existingItem.sellingPrice
+            ? String(existingItem.sellingPrice)
+            : "",
+        costPrice:
+          existingItem.costPrice === 0 || existingItem.costPrice
+            ? String(existingItem.costPrice)
+            : "",
+
+        taxApplicable: Boolean(existingItem.taxApplicable),
+        taxRate:
+          existingItem.taxRate === 0 || existingItem.taxRate
+            ? String(existingItem.taxRate)
+            : "",
+        taxCode: existingItem.taxCode || "",
+
+        defaultSupplier:
+          existingItem.defaultSupplier?._id ||
+          existingItem.defaultSupplier ||
+          defaultSupplierId ||
+          "",
+
+        isBatchTracked: Boolean(existingItem.isBatchTracked),
+        isSerialTracked: Boolean(existingItem.isSerialTracked),
+
+        lowStockLevel:
+          existingItem.lowStockLevel === 0 || existingItem.lowStockLevel
+            ? String(existingItem.lowStockLevel)
+            : "10",
+
+        isActive: existingItem.isActive ?? true,
+      });
+    } else {
+      setEditingId(null);
+      setForm(emptyForm);
+    }
+
+    setErrs({});
+    setHasSubmitted(false);
+    setShowCategoryDropdown(false);
+    setShowBaseUnitDropdown(false);
+  }, [open, existingItem, emptyForm, defaultSupplierId]);
+
+  useEffect(() => {
+    try {
+      const storedCats = JSON.parse(
+        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]"
+      );
+      const storedUnits = JSON.parse(
+        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]"
+      );
+      if (Array.isArray(storedCats)) setCustomCategories(storedCats);
+      if (Array.isArray(storedUnits)) setCustomBaseUnits(storedUnits);
+    } catch (err) {
+      console.error("Failed to load custom lists", err);
+    }
+  }, []);
+
+  const setError = (k, v) => setErrs((p) => ({ ...p, [k]: v }));
+
+  const validateNumber = (
+    value,
+    { required = false, min = 0, max = null } = {}
+  ) => {
+    const v = (value ?? "").toString().trim();
+    if (!v) return required ? "Required" : "";
+    const n = Number(v);
+    if (Number.isNaN(n)) return "Must be a valid number";
+    if (n < min) return `Must be ≥ ${min}`;
+    if (max !== null && n > max) return `Must be ≤ ${max}`;
+    return "";
+  };
+
+  const validate = (next = form, { silent = false } = {}) => {
+    const e = {};
+
+    // required
+    const sku = String(next.sku || "").trim();
+    if (!sku) e.sku = "SKU is required";
+    else if (sku.length > 50) e.sku = "SKU must be 50 characters or less";
+    else if (!/[a-zA-Z]/.test(sku))
+      e.sku = "SKU must contain at least one letter";
+
+    const name = String(next.name || "").trim();
+    if (!name) e.name = "Item name is required";
+    else if (name.length < 2)
+      e.name = "Item name must be at least 2 characters";
+    else if (name.length > 120)
+      e.name = "Item name must be 120 characters or less";
+    else if (!/[a-zA-Z]/.test(name))
+      e.name = "Item name must contain at least one letter";
+    const baseUnitValue = String(next.baseUnit || "").trim();
+    if (!baseUnitValue) e.baseUnit = "Base unit is required";
+    if (!String(next.category || "").trim())
+      e.category = "Category is required";
+
+    const barcode = String(next.barcode || "").trim();
+    if (barcode.length > 0 && barcode.length > 64)
+      e.barcode = "Barcode must be 64 characters or less";
+
+    // pricing
+    {
+      const msg = validateNumber(next.costPrice, { required: true, min: 0 });
+      if (msg) e.costPrice = `Cost price ${msg.toLowerCase()}`;
+    }
+    {
+      const msg = validateNumber(next.sellingPrice, { required: true, min: 0 });
+      if (msg) e.sellingPrice = `Selling price ${msg.toLowerCase()}`;
+    }
+
+    // tax
+    if (next.taxApplicable) {
+      const msg = validateNumber(next.taxRate, {
+        required: true,
+        min: 0,
+        max: 100,
+      });
+      if (msg) e.taxRate = `Tax rate ${msg.toLowerCase()}`;
+    }
+
+    // tracking mode safety
+    if (next.isBatchTracked && next.isSerialTracked) {
+      e.tracking = "Item cannot be both batch-tracked and serial-tracked.";
+    }
+    if (!next.isBatchTracked && !next.isSerialTracked) {
+      e.tracking = "Select a tracking mode: batch or serial.";
+    }
+
+    // unit conversions
+    const baseUnit = String(next.baseUnit || "").trim();
+    const units = Array.isArray(next.units) ? next.units : [];
+    const seen = new Set();
+
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i] || {};
+      const fromUnit = String(u.fromUnit || "").trim();
+      const multRaw = u.multiplier;
+
+      if (!fromUnit) {
+        e.units = "All unit conversions must include a From Unit.";
+        break;
+      }
+      const key = fromUnit.toLowerCase();
+      if (seen.has(key)) {
+        e.units = `Duplicate unit conversion: ${fromUnit}`;
+        break;
+      }
+      seen.add(key);
+
+      const mult = Number(multRaw);
+      if (Number.isNaN(mult) || mult <= 0) {
+        e.units = "Multiplier must be a valid number > 0.";
+        break;
+      }
+
+      // force toUnit == baseUnit
+      if (u.toUnit && String(u.toUnit).trim() !== baseUnit) {
+        e.units = "Unit conversion toUnit must equal base unit.";
+        break;
+      }
+    }
+
+    // thresholds (optional but must be valid if provided)
+    {
+      const msg = validateNumber(next.lowStockLevel, {
+        required: true,
+        min: 0,
+      });
+      if (msg) e.lowStockLevel = `Low stock level ${msg.toLowerCase()}`;
+    }
+    {
+      const msg = validateNumber(next.reorderQuantity, {
+        required: false,
+        min: 0,
+      });
+      if (msg) e.reorderQuantity = `Reorder quantity ${msg.toLowerCase()}`;
+    }
+
+    if (!silent) setErrs(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const updateField = (field, value) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+
+      // normalize sku
+      if (field === "sku")
+        next.sku = String(value || "")
+          .trim()
+          .toUpperCase();
+
+      // baseUnit change -> force units[].toUnit = baseUnit
+      if (field === "baseUnit") {
+        next.units = (prev.units || []).map((u) => ({
+          ...u,
+          toUnit: value,
+        }));
+      }
+
+      // tax off -> clear rate
+      if (field === "taxApplicable" && !value) {
+        next.taxRate = "";
+      }
+
+      // tracking toggle safety: if enabling one, auto-disable the other
+      if (field === "isBatchTracked" && value === true) {
+        next.isSerialTracked = false;
+      }
+      if (field === "isSerialTracked" && value === true) {
+        next.isBatchTracked = false;
+      }
+
+      // validate only after the first submit
+      validate(next, { silent: !hasSubmitted });
+      return next;
+    });
+  };
+
+  const handleAddCategoryClick = async () => {
+    if (onCategoryAdd) return onCategoryAdd();
+
+    const name = window.prompt("Enter new category name");
+    const trimmed = (name || "").trim();
+    if (!trimmed) return;
+
+    const categoryOptions = Array.from(
+      new Set([...(categories || []), ...customCategories])
+    );
+    const exists = categoryOptions.some(
+      (c) => (c || "").toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      setError("category", "Category already exists.");
+      return;
+    }
+
+    setCustomCategories((prev) => {
+      const next = [...prev, trimmed];
+      localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+      return next;
+    });
+    updateField("category", trimmed);
+    setError("category", "");
+    toast.success("Category added");
+  };
+
+  const handleAddBaseUnitClick = async () => {
+    if (onBaseUnitAdd) return onBaseUnitAdd();
+
+    const name = window.prompt("Enter new base unit (e.g., box)");
+    const trimmed = (name || "").trim();
+    if (!trimmed) return;
+
+    const baseUnitOptions = Array.from(
+      new Set([...(baseUnits || []), ...customBaseUnits])
+    );
+    const exists = baseUnitOptions.some(
+      (u) => (u || "").toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      setError("baseUnit", "Base unit already exists.");
+      return;
+    }
+
+    setCustomBaseUnits((prev) => {
+      const next = [...prev, trimmed];
+      localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+      return next;
+    });
+    updateField("baseUnit", trimmed);
+    setError("baseUnit", "");
+    toast.success("Base unit added");
+  };
+
+  const handleDeleteBaseUnit = (unit) => {
+    const isCustom = customBaseUnits.includes(unit);
+    if (isCustom) {
+      setCustomBaseUnits((prev) => {
+        const next = prev.filter((u) => u !== unit);
+        localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+        return next;
+      });
+      if (form.baseUnit === unit) updateField("baseUnit", "");
+      return;
+    }
+
+    onBaseUnitDelete?.(unit);
+  };
+
+  const addUnitRow = () => {
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        units: [
+          ...(prev.units || []),
+          { fromUnit: "", toUnit: prev.baseUnit, multiplier: "" },
+        ],
+      };
+      validate(next, { silent: !hasSubmitted });
+      return next;
+    });
+  };
+
+  const updateUnitRow = (idx, patch) => {
+    setForm((prev) => {
+      const units = [...(prev.units || [])];
+      units[idx] = { ...(units[idx] || {}), ...patch, toUnit: prev.baseUnit };
+      const next = { ...prev, units };
+      validate(next, { silent: !hasSubmitted });
+      return next;
+    });
+  };
+
+  const removeUnitRow = (idx) => {
+    setForm((prev) => {
+      const units = [...(prev.units || [])];
+      units.splice(idx, 1);
+      const next = { ...prev, units };
+      validate(next, { silent: !hasSubmitted });
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    setHasSubmitted(true);
+    if (!validate(form)) return;
+
+    setSaving(true);
+    try {
+      // MASTER ONLY payload (no openingStock, no inventory.onHand/reserved, no batches)
+      const payload = {
+        sku: String(form.sku || "")
+          .trim()
+          .toUpperCase(),
+        name: String(form.name || "").trim(),
+        barcode: String(form.barcode || "").trim() || undefined,
+        category: String(form.category || "").trim(),
+        brand: String(form.brand || "").trim() || undefined,
+        description: String(form.description || "").trim() || undefined,
+
+        baseUnit: String(form.baseUnit || "").trim(),
+        units: (form.units || []).map((u) => ({
+          fromUnit: String(u.fromUnit || "").trim(),
+          toUnit: String(form.baseUnit || "").trim(),
+          multiplier: Number(u.multiplier),
+        })),
+
+        sellingPrice: Number(form.sellingPrice),
+        costPrice: Number(form.costPrice),
+
+        taxApplicable: Boolean(form.taxApplicable),
+        taxRate: form.taxApplicable ? Number(form.taxRate || 0) : 0,
+        taxCode: String(form.taxCode || "").trim() || undefined,
+
+        // lowStockLevel is a top-level field in the Item model
+        lowStockLevel:
+          form.lowStockLevel === "" || form.lowStockLevel === null
+            ? 10
+            : Number(form.lowStockLevel),
+
+        defaultSupplier: form.defaultSupplier || undefined,
+
+        isBatchTracked: Boolean(form.isBatchTracked),
+        isSerialTracked: Boolean(form.isSerialTracked),
+        isActive: Boolean(form.isActive),
+      };
+
+      if (editingId) {
+        await api.put(`/items/${editingId}`, payload);
+        toast.success("Item updated successfully");
+      } else {
+        await api.post("/items", payload);
+        toast.success("Item created successfully");
+      }
+
+      if (onSuccess) await onSuccess();
+      onClose?.();
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Failed to save item"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 sm:px-4 py-4 sm:py-6 overflow-auto">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <FormHeader
+          editingId={editingId}
+          onClose={() => {
+            setShowCategoryDropdown(false);
+            onClose?.();
+          }}
+        />
+
+        {/* Body */}
+        <ItemForm
+          form={form}
+          errs={errs}
+          hasSubmitted={hasSubmitted}
+          categories={categories}
+          customCategories={customCategories}
+          baseUnits={baseUnits}
+          customBaseUnits={customBaseUnits}
+          suppliers={suppliers}
+          onCategoryAdd={onCategoryAdd}
+          onCategoryDelete={onCategoryDelete}
+          onBaseUnitAdd={onBaseUnitAdd}
+          onBaseUnitDelete={onBaseUnitDelete}
+          updateField={updateField}
+          setError={setError}
+          addUnitRow={addUnitRow}
+          updateUnitRow={updateUnitRow}
+          removeUnitRow={removeUnitRow}
+        />
+
+        {/* Footer */}
+        <FormFooter
+          saving={saving}
+          editingId={editingId}
+          onCancel={() => {
+            setShowCategoryDropdown(false);
+            onClose?.();
+          }}
+          onSave={handleSave}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AddNewItem;

@@ -29,5 +29,9 @@ const settingsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Single document collection - minimal indexing needed
+// but included for consistency and potential future queries
+settingsSchema.index({ createdAt: -1 }, { name: "settings_recent" });
+
 // There will normally be only one settings document
 export const Settings = mongoose.model("Settings", settingsSchema);

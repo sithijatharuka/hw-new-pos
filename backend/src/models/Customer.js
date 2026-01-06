@@ -37,6 +37,25 @@ const customerSchema = new mongoose.Schema(
   }
 );
 
-customerSchema.index({ name: "text", phone: "text" });
+// Text indexes for full-text search
+customerSchema.index(
+  { name: "text", phone: "text" },
+  { name: "customer_text_search" }
+);
+
+// Single field indexes for common queries
+customerSchema.index({ name: 1 }, { name: "customer_name" });
+customerSchema.index({ phone: 1 }, { name: "customer_phone" });
+customerSchema.index({ type: 1 }, { name: "customer_type" });
+
+// Compound indexes for balanced queries
+customerSchema.index(
+  { type: 1, createdAt: -1 },
+  { name: "customer_type_recent" }
+);
+customerSchema.index({ createdAt: -1 }, { name: "customer_recent" });
+
+// Index for filtering by status in queries
+customerSchema.index({ currentBalance: 1 }, { name: "customer_balance" });
 
 export const Customer = mongoose.model("Customer", customerSchema);

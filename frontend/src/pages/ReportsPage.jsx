@@ -4,7 +4,7 @@ import {
   getProfitMetrics,
   getExpensesSummary,
   getMonthlySalesTrend,
-} from "../components/dashboard/dashboardApi";
+} from "../components/dashboard/api/dashboardApi";
 
 const ReportsPage = () => {
   const [dateRange, setDateRange] = useState("today");
