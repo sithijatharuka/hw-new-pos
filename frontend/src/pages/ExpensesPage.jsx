@@ -20,7 +20,7 @@ import {
   deleteExpense,
   loadExpenseCategories,
   addExpenseCategory,
-} from "../components/expenses/api";
+} from "../api/expenses";
 
 const ExpensesPage = () => {
   const [expenses, setExpenses] = useState([]);

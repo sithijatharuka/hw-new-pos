@@ -9,7 +9,7 @@ import {
   getSupplierGRNs,
   deleteGRN,
   postGRN,
-} from "../components/supplier/api/grnApi";
+} from "../api/supplier/grn";
 
 import SupplierFormModal from "../components/supplier/supplierForm/supplierFormModal/SupplierFormModal";
 import SupplierPayModal from "../components/supplier/supplierForm/SupplierPayModal";
@@ -27,9 +27,9 @@ import {
   updateSupplier,
   deleteSupplier,
   recordSupplierPayment,
-  getItemsForGrn,
   getCategoriesAndUnits,
-} from "../components/supplier/api/supplierApi";
+} from "../api/supplier/suppliers";
+import { fetchItemsForGrn } from "../api/inventory/items";
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -179,7 +179,7 @@ const SuppliersPage = () => {
   // ---------- GRN ----------
   const fetchItems = async () => {
     try {
-      const fetched = await getItemsForGrn();
+      const fetched = await fetchItemsForGrn();
       setItems(fetched);
     } catch {
       toast.error("Failed to load items");

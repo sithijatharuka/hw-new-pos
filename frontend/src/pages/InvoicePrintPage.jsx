@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api";
+import { getSale } from "../api/sales/sales";
 
 const InvoicePrintPage = () => {
   const { id } = useParams();
@@ -11,7 +11,7 @@ const InvoicePrintPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const { data } = await api.get(`/sales/${id}`);
+        const data = await getSale(id);
         setSale(data);
         setTimeout(() => {
           window.print();

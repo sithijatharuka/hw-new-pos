@@ -1,90 +1,134 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
+import mongoose from "mongoose";
 import { Purchase } from "../models/Purchase.js";
 import { Supplier } from "../models/Supplier.js";
 import { Item } from "../models/Item.js";
-import { StockMovement } from "../models/StockMovement.js";
+import { addStock } from "../services/stockService.js";
 
 const router = express.Router();
 
-// Apply inventory + supplier balance
-const applyPurchaseEffects = async (purchase) => {
-  for (const line of purchase.items) {
-    const item = await Item.findById(line.item);
-    if (!item) continue;
+router.post("/", protect, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Convert selected unit to base unit quantity
-    const baseUnit = item.baseUnit;
-    let factorToBase = 1;
-    if (line.unit !== baseUnit) {
-      const conversion = (item.units || []).find(
-        (u) => u.fromUnit === line.unit && u.toUnit === baseUnit
-      );
-      factorToBase = conversion?.multiplier || 1;
+  try {
+    const {
+      supplier,
+      billNumber,
+      billDate,
+      items = [],
+      amountPaid = 0,
+    } = req.body;
+
+    if (!supplier) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: "Supplier is required" });
+    }
+    if (!items.length) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: "At least one item is required" });
     }
 
-    const baseQty = line.qty * factorToBase;
-    item.currentStock = (item.currentStock || 0) + baseQty;
+    const supplierDoc = await Supplier.findById(supplier).session(session);
+    if (!supplierDoc) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: "Supplier not found" });
+    }
 
-    // Update latest cost per base unit
-    const costPerBase = factorToBase
-      ? line.costPrice / factorToBase
-      : line.costPrice;
-    item.costPrice = costPerBase;
+    // Validate items and ensure base units only
+    const itemIds = items.map((l) => l.item);
+    const itemDocs = await Item.find({ _id: { $in: itemIds } }).session(
+      session
+    );
+    const itemMap = new Map(itemDocs.map((it) => [String(it._id), it]));
 
-    await item.save();
-    await StockMovement.create({
-      item: item._id,
-      type: "purchase",
-      qty: baseQty,
-      direction: "in",
-      referenceId: purchase._id,
-      note: `Purchase ${purchase.billNumber}`,
-    });
+    for (let i = 0; i < items.length; i++) {
+      const line = items[i];
+      const doc = itemMap.get(String(line.item));
+      if (!doc) {
+        throw new Error(`Item not found in line ${i + 1}`);
+      }
+      const qty = Number(line.qty);
+      if (!qty || qty <= 0 || !Number.isFinite(qty)) {
+        throw new Error(`Invalid qty (line ${i + 1})`);
+      }
+      const cost = Number(line.costPrice);
+      if (!Number.isFinite(cost) || cost < 0) {
+        throw new Error(`Invalid costPrice (line ${i + 1})`);
+      }
+      if (doc.isBatchTracked && !String(line.batchNumber || "").trim()) {
+        throw new Error(`Batch number required for "${doc.name}"`);
+      }
+      // force unit to base unit
+      line.unit = doc.baseUnit;
+    }
+
+    const subTotal = items.reduce(
+      (sum, l) => sum + Number(l.lineTotal || 0),
+      0
+    );
+    const grandTotal = subTotal; // extend with tax later
+    const paid = Number(amountPaid) || 0;
+    const balanceDue = grandTotal - paid;
+    const status =
+      paid >= grandTotal ? "paid" : paid > 0 ? "partial" : "unpaid";
+
+    const purchase = await Purchase.create(
+      [
+        {
+          ...req.body,
+          supplier,
+          billNumber,
+          billDate,
+          subTotal,
+          grandTotal,
+          amountPaid: paid,
+          balanceDue,
+          status,
+          items,
+        },
+      ],
+      { session }
+    );
+
+    for (const line of items) {
+      const itemDoc = itemMap.get(String(line.item));
+      itemDoc.costPrice = Number(line.costPrice);
+      itemDoc.lastPurchasePrice = Number(line.costPrice);
+      await addStock(
+        {
+          itemId: itemDoc._id,
+          qty: line.qty,
+          batchNumber: line.batchNumber,
+          referenceId: purchase[0]._id,
+          note: `Purchase ${billNumber}`,
+          type: "purchase",
+        },
+        session
+      );
+      await itemDoc.save({ session });
+    }
+
+    supplierDoc.currentBalance =
+      Number(supplierDoc.currentBalance || 0) + balanceDue;
+    await supplierDoc.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    const created = await Purchase.findById(purchase[0]._id)
+      .populate("supplier", "name")
+      .session(null);
+    res.status(201).json(created);
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(400).json({ message: err.message || "Failed to create purchase" });
   }
-
-  const supplier = await Supplier.findById(purchase.supplier);
-  if (supplier) {
-    supplier.currentBalance += purchase.balanceDue;
-    await supplier.save();
-  }
-};
-
-router.post("/", protect, async (req, res) => {
-  const {
-    supplier,
-    billNumber,
-    billDate,
-    items = [],
-    amountPaid = 0,
-  } = req.body;
-
-  if (!supplier) {
-    return res.status(400).json({ message: "Supplier is required" });
-  }
-  if (!items.length) {
-    return res.status(400).json({ message: "At least one item is required" });
-  }
-
-  const subTotal = items.reduce((sum, l) => sum + Number(l.lineTotal || 0), 0);
-  const grandTotal = subTotal; // extend with tax later
-  const paid = Number(amountPaid) || 0;
-  const balanceDue = grandTotal - paid;
-  const status = paid >= grandTotal ? "paid" : paid > 0 ? "partial" : "unpaid";
-
-  const purchase = await Purchase.create({
-    ...req.body,
-    supplier,
-    billNumber,
-    billDate,
-    subTotal,
-    grandTotal,
-    amountPaid: paid,
-    balanceDue,
-    status,
-  });
-  await applyPurchaseEffects(purchase);
-  res.status(201).json(purchase);
 });
 
 router.get("/", protect, async (req, res) => {

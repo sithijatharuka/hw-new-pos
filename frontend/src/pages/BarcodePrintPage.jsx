@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Barcode from 'react-barcode';
-import api from '../api';
+import { getItem } from '../api/inventory/items';
 
 const BarcodePrintPage = () => {
   const { id } = useParams();
@@ -9,7 +9,7 @@ const BarcodePrintPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await api.get(`/items/${id}`);
+      const data = await getItem(id);
       setItem(data);
       setTimeout(() => window.print(), 300);
     };

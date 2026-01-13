@@ -16,7 +16,9 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "devsecret");
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error("JWT_SECRET is missing");
+    const decoded = jwt.verify(token, secret);
     req.user = await User.findById(decoded.id).select("-password");
     if (!req.user) {
       res.status(401);

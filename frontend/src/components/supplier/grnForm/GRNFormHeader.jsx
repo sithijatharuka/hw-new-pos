@@ -1,6 +1,12 @@
 import React from "react";
 
-const GRNFormHeader = ({ existingGRN, supplier }) => {
+const GRNFormHeader = ({
+  existingGRN,
+  supplier,
+  grnDate,
+  handleHeaderChange,
+  fieldsDisabled,
+}) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">
@@ -64,9 +70,9 @@ const GRNFormHeader = ({ existingGRN, supplier }) => {
           <input
             type="date"
             name="grnDate"
-            value={arguments[3]} // grnDate from parent
-            onChange={arguments[4]} // handleHeaderChange from parent
-            disabled={arguments[5]} // fieldsDisabled from parent
+            value={grnDate}
+            onChange={handleHeaderChange}
+            disabled={fieldsDisabled}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
           />
         </div>

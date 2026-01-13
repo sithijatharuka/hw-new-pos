@@ -16,7 +16,7 @@ import {
   getTopCategories,
   getProfitMetrics,
   getExpensesSummary,
-} from "../components/dashboard/api/dashboardApi";
+} from "../api/dashboard/dashboard";
 
 const DashboardPage = () => {
   // Date range state

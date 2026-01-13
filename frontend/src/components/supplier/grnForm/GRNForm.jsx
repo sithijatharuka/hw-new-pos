@@ -1,7 +1,7 @@
 // GRNForm.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { createGRN, updateGRN } from "../api/grnApi";
+import { createGRN, updateGRN } from "../../../api/supplier/grn";
 import AddNewItem from "../../inventory/product/addProduct/AddNewItem";
 import GRNFormHeader from "./GRNFormHeader";
 import GRNFormMetadata from "./GRNFormMetadata";

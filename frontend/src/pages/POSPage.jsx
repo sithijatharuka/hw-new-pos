@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import api from "../api";
 import { useOffline } from "../hooks/useOffline";
 import CustomerFormModal from "../components/customer/CustomerFormModal";
-import * as customerApi from "../components/customer/api/customerApi";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import {
   POSHeader,
@@ -20,16 +18,14 @@ import {
   validatePayment,
   recalcLine,
 } from "../components/posPage";
+import { loadVatRate } from "../api/settings/settings";
 import {
-  loadVatRate,
-  loadItems,
-  loadCategories,
+  loadActiveItems as loadItems,
+  loadItemCategories as loadCategories,
   searchItemByBarcode,
-  loadCustomers,
-  createCustomer,
-  saveSale,
-  saveSaleOffline,
-} from "../components/posPage/api";
+} from "../api/inventory/items";
+import { loadCustomers, createCustomer } from "../api/customer/customers";
+import { saveSale, saveSaleOffline } from "../api/sales/sales";
 
 const POSPage = () => {
   const navigate = useNavigate();

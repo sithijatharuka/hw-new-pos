@@ -21,6 +21,12 @@ import grnRoutes from "./routes/grnRoutes.js";
 
 dotenv.config();
 
+// Hard fail early if required secrets are missing
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET is required. Set it in your environment.");
+  process.exit(1);
+}
+
 const app = express();
 
 // If you deploy behind a reverse proxy later (nginx / render / etc.)

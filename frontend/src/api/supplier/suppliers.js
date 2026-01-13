@@ -1,4 +1,4 @@
-import api from "../../../api";
+import api from "../client";
 
 export const getSuppliers = async (query) => {
   const { data } = await api.get("/suppliers", { params: { q: query } });
@@ -25,11 +25,6 @@ export const deleteSupplier = async (id) => {
 export const recordSupplierPayment = async (id, amount) => {
   const { data } = await api.post(`/suppliers/${id}/pay`, { amount });
   return data?.supplier || data;
-};
-
-export const getItemsForGrn = async (limit = 999) => {
-  const { data } = await api.get(`/items`, { params: { limit } });
-  return data?.items || data || [];
 };
 
 export const getCategoriesAndUnits = async (defaultUnits = []) => {

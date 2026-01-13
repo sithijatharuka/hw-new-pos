@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import api from "../../../../api";
+import {
+  createItem,
+  updateItem,
+} from "../../../../api/inventory/items";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import ItemForm from "./ItemForm";
@@ -44,7 +47,6 @@ const AddNewItem = ({
       description: "",
 
       baseUnit: "",
-      units: [], // { fromUnit, toUnit, multiplier }
 
       sellingPrice: "",
       costPrice: "",
@@ -72,8 +74,6 @@ const AddNewItem = ({
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
   const [customCategories, setCustomCategories] = useState([]);
   const [customBaseUnits, setCustomBaseUnits] = useState([]);
   const CUSTOM_CATEGORIES_KEY = "pos_custom_item_categories";
@@ -98,7 +98,6 @@ const AddNewItem = ({
         description: existingItem.description || "",
 
         baseUnit: existingItem.baseUnit || emptyForm.baseUnit,
-        units: Array.isArray(existingItem.units) ? existingItem.units : [],
 
         sellingPrice:
           existingItem.sellingPrice === 0 || existingItem.sellingPrice
@@ -139,8 +138,6 @@ const AddNewItem = ({
 
     setErrs({});
     setHasSubmitted(false);
-    setShowCategoryDropdown(false);
-    setShowBaseUnitDropdown(false);
   }, [open, existingItem, emptyForm, defaultSupplierId]);
 
   useEffect(() => {
@@ -230,37 +227,6 @@ const AddNewItem = ({
 
     // unit conversions
     const baseUnit = String(next.baseUnit || "").trim();
-    const units = Array.isArray(next.units) ? next.units : [];
-    const seen = new Set();
-
-    for (let i = 0; i < units.length; i++) {
-      const u = units[i] || {};
-      const fromUnit = String(u.fromUnit || "").trim();
-      const multRaw = u.multiplier;
-
-      if (!fromUnit) {
-        e.units = "All unit conversions must include a From Unit.";
-        break;
-      }
-      const key = fromUnit.toLowerCase();
-      if (seen.has(key)) {
-        e.units = `Duplicate unit conversion: ${fromUnit}`;
-        break;
-      }
-      seen.add(key);
-
-      const mult = Number(multRaw);
-      if (Number.isNaN(mult) || mult <= 0) {
-        e.units = "Multiplier must be a valid number > 0.";
-        break;
-      }
-
-      // force toUnit == baseUnit
-      if (u.toUnit && String(u.toUnit).trim() !== baseUnit) {
-        e.units = "Unit conversion toUnit must equal base unit.";
-        break;
-      }
-    }
 
     // thresholds (optional but must be valid if provided)
     {
@@ -294,10 +260,7 @@ const AddNewItem = ({
 
       // baseUnit change -> force units[].toUnit = baseUnit
       if (field === "baseUnit") {
-        next.units = (prev.units || []).map((u) => ({
-          ...u,
-          toUnit: value,
-        }));
+        next.baseUnit = value;
       }
 
       // tax off -> clear rate
@@ -390,40 +353,6 @@ const AddNewItem = ({
     onBaseUnitDelete?.(unit);
   };
 
-  const addUnitRow = () => {
-    setForm((prev) => {
-      const next = {
-        ...prev,
-        units: [
-          ...(prev.units || []),
-          { fromUnit: "", toUnit: prev.baseUnit, multiplier: "" },
-        ],
-      };
-      validate(next, { silent: !hasSubmitted });
-      return next;
-    });
-  };
-
-  const updateUnitRow = (idx, patch) => {
-    setForm((prev) => {
-      const units = [...(prev.units || [])];
-      units[idx] = { ...(units[idx] || {}), ...patch, toUnit: prev.baseUnit };
-      const next = { ...prev, units };
-      validate(next, { silent: !hasSubmitted });
-      return next;
-    });
-  };
-
-  const removeUnitRow = (idx) => {
-    setForm((prev) => {
-      const units = [...(prev.units || [])];
-      units.splice(idx, 1);
-      const next = { ...prev, units };
-      validate(next, { silent: !hasSubmitted });
-      return next;
-    });
-  };
-
   const handleSave = async () => {
     setHasSubmitted(true);
     if (!validate(form)) return;
@@ -442,11 +371,6 @@ const AddNewItem = ({
         description: String(form.description || "").trim() || undefined,
 
         baseUnit: String(form.baseUnit || "").trim(),
-        units: (form.units || []).map((u) => ({
-          fromUnit: String(u.fromUnit || "").trim(),
-          toUnit: String(form.baseUnit || "").trim(),
-          multiplier: Number(u.multiplier),
-        })),
 
         sellingPrice: Number(form.sellingPrice),
         costPrice: Number(form.costPrice),
@@ -469,10 +393,10 @@ const AddNewItem = ({
       };
 
       if (editingId) {
-        await api.put(`/items/${editingId}`, payload);
+        await updateItem(editingId, payload);
         toast.success("Item updated successfully");
       } else {
-        await api.post("/items", payload);
+        await createItem(payload);
         toast.success("Item created successfully");
       }
 
@@ -497,8 +421,8 @@ const AddNewItem = ({
           editingId={editingId}
           onClose={() => {
             setShowCategoryDropdown(false);
-            onClose?.();
-          }}
+          onClose?.();
+        }}
         />
 
         {/* Body */}
@@ -511,16 +435,13 @@ const AddNewItem = ({
           baseUnits={baseUnits}
           customBaseUnits={customBaseUnits}
           suppliers={suppliers}
-          onCategoryAdd={onCategoryAdd}
-          onCategoryDelete={onCategoryDelete}
-          onBaseUnitAdd={onBaseUnitAdd}
-          onBaseUnitDelete={onBaseUnitDelete}
-          updateField={updateField}
-          setError={setError}
-          addUnitRow={addUnitRow}
-          updateUnitRow={updateUnitRow}
-          removeUnitRow={removeUnitRow}
-        />
+        onCategoryAdd={onCategoryAdd}
+        onCategoryDelete={onCategoryDelete}
+        onBaseUnitAdd={onBaseUnitAdd}
+        onBaseUnitDelete={onBaseUnitDelete}
+        updateField={updateField}
+        setError={setError}
+      />
 
         {/* Footer */}
         <FormFooter

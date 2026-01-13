@@ -14,23 +14,23 @@ const InventoryTable = ({
   lowStockOnly,
 }) => {
   return (
-    <div className="hidden lg:block overflow-x-auto">
+    <div className="hidden overflow-x-auto lg:block">
       <table className="min-w-full text-sm">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+            <th className="px-6 py-4 text-xs font-semibold text-left text-gray-700 uppercase">
               Item
             </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+            <th className="px-6 py-4 text-xs font-semibold text-left text-gray-700 uppercase">
               Category
             </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+            <th className="px-6 py-4 text-xs font-semibold text-left text-gray-700 uppercase">
               On-hand
             </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+            <th className="px-6 py-4 text-xs font-semibold text-left text-gray-700 uppercase">
               Selling
             </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+            <th className="px-6 py-4 text-xs font-semibold text-left text-gray-700 uppercase">
               Actions
             </th>
           </tr>

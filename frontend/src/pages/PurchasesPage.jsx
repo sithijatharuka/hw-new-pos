@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import api from "../api";
+import { loadItems } from "../api/inventory/items";
+import { getSuppliers } from "../api/supplier/suppliers";
+import { createPurchase } from "../api/purchases/purchases";
 
 const emptyLine = () => ({
   item: null,
@@ -37,7 +39,7 @@ const PurchasesPage = () => {
         setSearchResults([]);
         return;
       }
-      const { data } = await api.get("/items", { params: { q: query } });
+      const data = await loadItems(query);
       setSearchResults(data);
     };
     const id = setTimeout(fetchItems, 300);
@@ -46,9 +48,7 @@ const PurchasesPage = () => {
 
   useEffect(() => {
     const fetchSuppliers = async () => {
-      const { data } = await api.get("/suppliers", {
-        params: { q: supplierQuery },
-      });
+      const data = await getSuppliers(supplierQuery);
       setSuppliers(data);
       // keep selected supplier if still in list
       if (supplierId && !data.find((s) => s._id === supplierId)) {
@@ -60,25 +60,17 @@ const PurchasesPage = () => {
     return () => clearTimeout(id);
   }, [supplierQuery, supplierId]);
 
-  const getUnitOptions = (item) => {
-    if (!item) return [];
-    const baseUnit = item.baseUnit || "base";
-    const base = {
+const getUnitOptions = (item) => {
+  if (!item) return [];
+  const baseUnit = item.baseUnit || "base";
+  return [
+    {
       label: baseUnit,
       value: baseUnit,
       factorToBase: 1,
-    };
-    // backend item schema: units [{ fromUnit, toUnit, multiplier }]
-    const extras =
-      (item.units || [])
-        .filter((u) => u.toUnit === baseUnit)
-        .map((u) => ({
-          label: u.fromUnit,
-          value: u.fromUnit,
-          factorToBase: u.multiplier,
-        })) || [];
-    return [base, ...extras];
-  };
+    },
+  ];
+};
 
   const computeLine = (line) => {
     const qty = Number(line.qty) || 0;
@@ -112,25 +104,19 @@ const PurchasesPage = () => {
 
   const handleSelectItem = (idx, item) => {
     const indexToUse = idx ?? findFirstEmptyLineIndex();
-    const unitOptions = getUnitOptions(item);
-    const defaultUnit = unitOptions[0];
-    const factor = defaultUnit.factorToBase || 1;
-
     setLines((prev) => {
       const next = [...prev];
       if (!next[indexToUse]) next.push(emptyLine());
       const existing = next[indexToUse];
       const qty = existing.qty || 1;
-      // Assume cost price on item is per base unit; convert to selected
-      const costPerSelected = (item.costPrice || 0) * factor;
       let line = {
         ...existing,
         item,
         itemId: item._id,
         name: item.name,
-        unit: defaultUnit.value,
+        unit: item.baseUnit,
         qty,
-        unitPrice: costPerSelected,
+        unitPrice: item.costPrice || 0,
       };
       line = computeLine(line);
       next[indexToUse] = line;
@@ -139,26 +125,6 @@ const PurchasesPage = () => {
     addEmptyLineIfNeeded();
     setQuery("");
     setSearchResults([]);
-  };
-
-  const handleChangeUnit = (idx, unitValue) => {
-    setLines((prev) => {
-      const next = [...prev];
-      const line = { ...next[idx] };
-      if (!line.item) return prev;
-      const options = getUnitOptions(line.item);
-      const selected = options.find((o) => o.value === unitValue) || options[0];
-      const factor = selected.factorToBase || 1;
-      const costPerSelected = (line.item.costPrice || 0) * factor;
-      let updated = {
-        ...line,
-        unit: selected.value,
-        unitPrice: costPerSelected,
-      };
-      updated = computeLine(updated);
-      next[idx] = updated;
-      return next;
-    });
   };
 
   const subTotal = lines.reduce(
@@ -209,7 +175,7 @@ const PurchasesPage = () => {
         status: paymentStatus,
         note,
       };
-      const { data } = await api.post("/purchases", payload);
+      const data = await createPurchase(payload);
       setMessage("Purchase saved and stock updated.");
       setLines([emptyLine()]);
       setBillNumber("");
@@ -230,8 +196,7 @@ const PurchasesPage = () => {
         <div>
           <h2 className="text-xl font-semibold">Purchases / GRN</h2>
           <p className="text-xs text-gray-500">
-            Record supplier bills with multi-unit quantities. Stock is tracked
-            in base units.
+            Record supplier bills; quantities are captured in the item base unit.
           </p>
         </div>
         <div className="text-xs text-right">
@@ -335,17 +300,6 @@ const PurchasesPage = () => {
                       Cost (base): Rs. {item.costPrice?.toFixed(2)} /{" "}
                       {item.baseUnit}
                     </div>
-                    {item.units?.length > 0 && (
-                      <div className="text-[10px] text-gray-400">
-                        Units:{" "}
-                        {item.units
-                          .map(
-                            (u) =>
-                              `1 ${u.fromUnit}=${u.multiplier} ${item.baseUnit}`
-                          )
-                          .join(", ")}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
@@ -390,48 +344,9 @@ const PurchasesPage = () => {
                       />
                     </td>
                     <td className="px-2 py-1 text-center">
-                      {line.item ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <select
-                            className="w-20 bg-transparent border rounded-lg text-[11px]"
-                            value={line.unit || unitOptions[0]?.value || ""}
-                            onChange={(e) =>
-                              handleChangeUnit(idx, e.target.value)
-                            }
-                          >
-                            {unitOptions.map((u) => (
-                              <option key={u.value} value={u.value}>
-                                {u.label}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex flex-wrap justify-center gap-1">
-                            {unitOptions.map((u) => (
-                              <button
-                                key={u.value}
-                                type="button"
-                                className={`px-2 py-0.5 rounded-full text-[10px] border cursor-pointer ${
-                                  (line.unit || unitOptions[0]?.value) ===
-                                  u.value
-                                    ? "bg-primary text-white border-primary"
-                                    : "bg-white hover:bg-soft"
-                                }`}
-                                onClick={() => handleChangeUnit(idx, u.value)}
-                              >
-                                {u.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <input
-                          className="w-16 text-center bg-transparent outline-none"
-                          value={line.unit}
-                          onChange={(e) =>
-                            updateLine(idx, { unit: e.target.value })
-                          }
-                        />
-                      )}
+                      <span className="inline-flex px-3 py-1 rounded-full bg-gray-100 text-[11px]">
+                        {line.unit || unitOptions[0]?.value || ""}
+                      </span>
                     </td>
                     <td className="px-2 py-1 text-right">
                       <input

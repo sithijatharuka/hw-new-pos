@@ -1,6 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import {
+  getDailySalesReport,
+  getInventoryValue,
+  getProfitReport,
+  getCustomerCreditReport,
+  getLowStockItems,
+} from '../api/reports/reports';
 
 const OwnerDashboardPage = () => {
   const [daily, setDaily] = useState(null);
@@ -13,24 +19,25 @@ const OwnerDashboardPage = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [dailyRes, invRes, profitRes, custRes, lowStockRes] = await Promise.all([
-        api.get('/reports/sales-daily'),
-        api.get('/reports/inventory-value'),
-        api.get('/reports/profit'),
-        api.get('/reports/customer-credit'),
-        api.get('/items', { params: { lowStock: 'true' } }),
-      ]);
+      const [dailyRes, invRes, profitRes, custRes, lowStockRes] =
+        await Promise.all([
+          getDailySalesReport(),
+          getInventoryValue(),
+          getProfitReport(),
+          getCustomerCreditReport(),
+          getLowStockItems(),
+        ]);
 
-      setDaily(dailyRes.data);
-      setInventory(invRes.data);
-      setProfit(profitRes.data);
+      setDaily(dailyRes);
+      setInventory(invRes);
+      setProfit(profitRes);
       setCustomerCredit(
-        (custRes.data || []).reduce(
+        (custRes || []).reduce(
           (sum, c) => sum + (c.currentBalance || 0),
           0
         )
       );
-      setLowStockItems(lowStockRes.data || []);
+      setLowStockItems(lowStockRes || []);
     } catch (e) {
       // basic fail-safe
     } finally {

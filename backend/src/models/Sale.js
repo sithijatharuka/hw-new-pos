@@ -15,6 +15,7 @@ const saleItemSchema = new mongoose.Schema(
     description: String,
     qty: { type: Number, required: true },
     unit: { type: String, required: true },
+    batchNumber: { type: String },
     unitPrice: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,

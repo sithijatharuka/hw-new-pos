@@ -11,6 +11,7 @@ const GRNLineItem = ({
   onLineChange,
   onAddProduct,
   onRemoveLine,
+  linesLength,
 }) => {
   const it = line.item ? itemById.get(String(line.item)) : null;
   const isBatchTracked = Boolean(it?.isBatchTracked);
@@ -142,7 +143,7 @@ const GRNLineItem = ({
         <button
           type="button"
           onClick={() => onRemoveLine(lineIndex)}
-          disabled={form.lines.length === 1 || !isEditable}
+          disabled={linesLength === 1 || fieldsDisabled}
           className="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Remove

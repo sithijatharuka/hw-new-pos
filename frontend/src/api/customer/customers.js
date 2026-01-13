@@ -1,7 +1,12 @@
-import api from "../../../api";
+import api from "../client";
 
 export const fetchCustomers = async (query = "") => {
   const { data } = await api.get("/customers", { params: { q: query } });
+  return data || [];
+};
+
+export const loadCustomers = async () => {
+  const { data } = await api.get("/customers");
   return data || [];
 };
 

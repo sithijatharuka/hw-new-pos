@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api";
+import api from "../api/client";
 
 const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState("admin");
@@ -196,7 +196,7 @@ const LoginPage = ({ onLogin }) => {
                     className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-2xl border text-sm font-semibold tracking-wide text-primary shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition duration-200 ease-out cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed bg-soft"
                     disabled={loading}
                   >
-                    {loading ? "Logging in…" : "Login"}
+                    {loading ? "Logging in..." : "Login"}
                   </button>
 
                   <p className="text-[11px] leading-relaxed text-gray-500 text-center">

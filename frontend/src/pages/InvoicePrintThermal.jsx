@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api";
+import { getSale } from "../api/sales/sales";
+import { getSettings } from "../api/settings/settings";
 
 const InvoicePrintThermal = () => {
   const { id } = useParams();
@@ -12,9 +13,9 @@ const InvoicePrintThermal = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const [{ data: saleData }, { data: settingsData }] = await Promise.all([
-          api.get(`/sales/${id}`),
-          api.get("/settings"),
+        const [saleData, settingsData] = await Promise.all([
+          getSale(id),
+          getSettings(),
         ]);
         setSale(saleData);
         setShop(settingsData);

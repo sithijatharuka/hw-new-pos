@@ -1,8 +1,4 @@
-// grnApi.js
-import api from "../../../api";
-
-// ✅ GRN endpoint is one of the ONLY places that should mutate stock/batches.
-// Item endpoints are master-only.
+import api from "../client";
 
 export const createGRN = async (payload) => {
   const { data } = await api.post("/grns", payload);

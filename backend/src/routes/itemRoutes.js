@@ -28,7 +28,6 @@ const sanitizeItemPayload = (body = {}) => {
     "description",
 
     "baseUnit",
-    "units",
 
     "sellingPrice",
     "costPrice",

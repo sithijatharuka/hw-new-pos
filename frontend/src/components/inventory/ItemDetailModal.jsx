@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import api from "../../api";
+import { getItemBatches } from "../../api/inventory/items";
 
 const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
   const [batches, setBatches] = useState([]);
@@ -14,7 +14,7 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
 
       try {
         setBatchesLoading(true);
-        const { data } = await api.get(`/items/${item._id}/batches`);
+        const data = await getItemBatches(item._id);
         setBatches(data?.batches || []);
       } catch (err) {
         toast.error(err?.response?.data?.message || "Failed to load batches");

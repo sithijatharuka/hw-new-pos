@@ -753,7 +753,7 @@ export const getDashboardSummary = async (req, res) => {
 
     res.json({
       dailySalesOverview: {
-        date: startOfDay,
+        date: start,
         invoiceCount,
         totalSalesAmount: Math.round(totalSalesAmount * 100) / 100,
         grossProfit: Math.round(grossProfit * 100) / 100,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import { getSettings, updateSettings } from '../api/settings/settings';
 
 const SettingsPage = ({ user }) => {
   const [settings, setSettings] = useState(null);
@@ -14,7 +14,7 @@ const SettingsPage = ({ user }) => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.get('/settings');
+      const data = await getSettings();
       setSettings({
         shopName: data.shopName || '',
         shopAddress: data.shopAddress || '',
@@ -52,7 +52,7 @@ const SettingsPage = ({ user }) => {
     setError('');
     setMessage('');
     try {
-      const { data } = await api.put('/settings', settings);
+      const data = await updateSettings(settings);
       setSettings({
         shopName: data.shopName || '',
         shopAddress: data.shopAddress || '',

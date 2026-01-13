@@ -14,8 +14,8 @@ import {
   deleteItem,
   activateItem,
   deactivateItem,
-  loadInventoryLookups,
-} from "../components/inventory/api";
+} from "../api/inventory/items";
+import { loadInventoryLookups } from "../api/inventory/lookups";
 
 const InventoryPage = () => {
   const navigate = useNavigate();

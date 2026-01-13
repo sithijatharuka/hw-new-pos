@@ -14,7 +14,7 @@ import {
   updateCustomer,
   deleteCustomer,
   receivePayment,
-} from "../components/customer/api/customerApi";
+} from "../api/customer/customers";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import { SearchBar } from "../components/common";
 

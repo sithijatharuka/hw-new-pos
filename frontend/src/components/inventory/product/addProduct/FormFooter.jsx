@@ -2,11 +2,11 @@ import React from "react";
 
 const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
   return (
-    <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-end gap-3">
+    <div className="sticky bottom-0 p-4 bg-white border-t border-gray-200 sm:p-6">
+      <div className="flex flex-col justify-end gap-3 sm:flex-row">
         <button
           type="button"
-          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 active:scale-95 transition-all font-medium"
+          className="px-6 py-3 font-medium text-gray-700 transition-all border-2 border-gray-300 rounded-xl hover:bg-gray-50 active:scale-95"
           onClick={onCancel}
         >
           Cancel
@@ -14,7 +14,7 @@ const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
 
         <button
           type="button"
-          className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl hover:shadow-lg active:scale-95 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+          className="px-6 py-3 font-medium text-white transition-all bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={onSave}
           disabled={saving}
         >

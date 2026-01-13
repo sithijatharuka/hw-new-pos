@@ -5,13 +5,20 @@ import { User } from "../models/User.js";
 const router = express.Router();
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "devsecret", {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is missing");
+  return jwt.sign({ id }, secret, {
     expiresIn: "7d",
   });
 };
 
 // Seed an admin if none exists (dev helper)
 router.post("/seed-admin", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res
+      .status(403)
+      .json({ message: "Admin seeding is disabled in production" });
+  }
   const { name, username, password } = req.body;
   const existing = await User.findOne({ username });
   if (existing) {
