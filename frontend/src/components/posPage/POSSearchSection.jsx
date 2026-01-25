@@ -1,5 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { SearchBar } from "../common";
+import { getItemBatches } from "../../api/inventory/items";
+
+const emptyBatchModal = {
+  open: false,
+  item: null,
+  batches: [],
+  loading: false,
+  error: null,
+  selectedBatch: null,
+};
 
 const POSSearchSection = ({
   query,
@@ -18,14 +28,75 @@ const POSSearchSection = ({
   setIsTaxInvoice,
   recalcLinesForVat,
 }) => {
+  const [batchModal, setBatchModal] = useState(emptyBatchModal);
+
+  const closeBatchModal = () => setBatchModal(emptyBatchModal);
+
+  // Open batch modal and fetch batches
+  const handleBatchItemClick = async (item) => {
+    setBatchModal({
+      open: true,
+      item,
+      batches: [],
+      loading: true,
+      error: null,
+      selectedBatch: null,
+    });
+
+    try {
+      const data = await getItemBatches(item._id);
+      // data.batches is the array we want
+      setBatchModal((prev) => ({
+        ...prev,
+        batches: Array.isArray(data?.batches) ? data.batches : [],
+        loading: false,
+      }));
+    } catch (err) {
+      setBatchModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Failed to load batches",
+      }));
+    }
+  };
+
+  const handleBatchSelect = (batch) => {
+    setBatchModal((prev) => ({ ...prev, selectedBatch: batch }));
+  };
+
+  const handleBatchConfirm = () => {
+    const selected = batchModal.selectedBatch;
+    if (!selected || !batchModal.item) return;
+
+    // Use batch.sellingPrice if available, else fallback to item.sellingPrice
+    const batchPrice =
+      typeof selected.sellingPrice === "number"
+        ? selected.sellingPrice
+        : Number(selected.sellingPrice) ||
+          Number(batchModal.item.sellingPrice) ||
+          0;
+
+    // Attach batchNumber and batchId directly for validation
+    const itemWithBatch = {
+      ...batchModal.item,
+      selectedBatch: selected,
+      batchNumber: selected.batchNumber,
+      batchId: selected._id,
+      sellingPrice: batchPrice,
+    };
+
+    handleSelectItem(null, itemWithBatch);
+    closeBatchModal();
+  };
+
   return (
-    <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="p-4 border-b border-gray-200 sm:p-6 bg-gradient-to-r from-gray-50 to-white">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Search */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="space-y-4 lg:col-span-2">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1 min-w-0">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
+              <label className="block mb-2 text-sm font-semibold text-gray-800">
                 Search Items
               </label>
               <SearchBar
@@ -37,12 +108,12 @@ const POSSearchSection = ({
             </div>
 
             <div className="w-full md:w-56">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
+              <label className="block mb-2 text-sm font-semibold text-gray-800">
                 Category
               </label>
               <div className="relative">
                 <select
-                  className="w-full h-11 sm:h-12 pl-4 pr-10 bg-white border-2 border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all duration-200 text-sm"
+                  className="w-full pl-4 pr-10 text-sm text-gray-800 transition-all duration-200 bg-white border-2 border-gray-300 appearance-none cursor-pointer h-11 sm:h-12 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
@@ -53,7 +124,7 @@ const POSSearchSection = ({
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs">
+                <div className="absolute text-xs text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-1/2">
                   ▼
                 </div>
               </div>
@@ -62,11 +133,8 @@ const POSSearchSection = ({
             <div className="flex items-end">
               <button
                 type="button"
-                onClick={() => {
-                  setQuery("");
-                  // Manually clear search results if needed
-                }}
-                className="w-full md:w-auto h-11 sm:h-12 px-4 sm:px-6 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all duration-200 font-medium cursor-pointer whitespace-nowrap text-sm"
+                onClick={() => setQuery("")}
+                className="w-full px-4 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border-2 border-gray-300 cursor-pointer md:w-auto h-11 sm:h-12 sm:px-6 rounded-xl hover:bg-gray-50 hover:border-gray-400 active:scale-95 whitespace-nowrap"
               >
                 Clear
               </button>
@@ -75,32 +143,45 @@ const POSSearchSection = ({
 
           {/* Search Results */}
           {query && searchResults.length > 0 && (
-            <div className="bg-white border-2 border-gray-200 rounded-xl shadow-lg overflow-hidden">
-              <div className="max-h-64 overflow-y-auto">
+            <div className="overflow-hidden bg-white border-2 border-gray-200 shadow-lg rounded-xl">
+              <div className="overflow-y-auto max-h-64">
                 {searchResults.map((item) => {
                   const onHand = Number(item?.inventory?.onHand || 0);
+                  const isBatchTracked = !!item.isBatchTracked;
+
                   return (
                     <button
                       key={item._id}
                       type="button"
-                      className="w-full px-3 sm:px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors duration-150"
-                      onClick={() => handleSelectItem(null, item)}
+                      className="flex items-center justify-between w-full px-3 py-3 transition-colors duration-150 border-b border-gray-100 cursor-pointer sm:px-4 hover:bg-gray-50 last:border-b-0"
+                      onClick={() =>
+                        isBatchTracked
+                          ? handleBatchItemClick(item)
+                          : handleSelectItem(null, item)
+                      }
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
                           <span className="text-sm">📦</span>
                         </div>
-                        <div className="text-left min-w-0">
-                          <div className="font-medium text-gray-900 text-sm sm:text-base break-words">
+
+                        <div className="min-w-0 text-left">
+                          <div className="text-sm font-medium text-gray-900 break-words sm:text-base">
                             {item.name}
+                            {isBatchTracked && (
+                              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                                Batch
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-500">
                             {item.category || "Uncategorized"}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right ml-2 flex-shrink-0">
-                        <div className="font-semibold text-gray-900 text-sm">
+
+                      <div className="flex-shrink-0 ml-2 text-right">
+                        <div className="text-sm font-semibold text-gray-900">
                           Rs. {Number(item.sellingPrice || 0).toFixed(2)}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -113,24 +194,152 @@ const POSSearchSection = ({
               </div>
             </div>
           )}
+
+          {/* Batch Modal */}
+          {batchModal.open && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+              {/* backdrop click */}
+              <button
+                type="button"
+                aria-label="Close"
+                className="absolute inset-0 cursor-default"
+                onClick={closeBatchModal}
+              />
+
+              <div className="relative z-10 w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+                <div className="flex items-start justify-between p-5 border-b border-gray-100">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Select Batch
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {batchModal.item?.name}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeBatchModal}
+                    className="flex items-center justify-center w-10 h-10 text-gray-500 transition rounded-xl hover:bg-gray-100"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-5">
+                  {batchModal.loading && (
+                    <div className="text-sm text-gray-600">
+                      Loading batches…
+                    </div>
+                  )}
+
+                  {batchModal.error && (
+                    <div className="text-sm text-red-600">
+                      {batchModal.error}
+                    </div>
+                  )}
+
+                  {!batchModal.loading &&
+                    !batchModal.error &&
+                    batchModal.batches.length === 0 && (
+                      <div className="text-sm text-gray-500">
+                        No batches found for this item.
+                      </div>
+                    )}
+
+                  {!batchModal.loading &&
+                    !batchModal.error &&
+                    batchModal.batches.length > 0 && (
+                      <div className="pr-1 space-y-2 overflow-y-auto max-h-56">
+                        {batchModal.batches.map((batch) => {
+                          const selected =
+                            batchModal.selectedBatch?._id === batch._id;
+                          // Use qtyOnHand for stock, sellingPrice for price
+                          const batchOnHand = Number(batch?.qtyOnHand ?? 0);
+                          const disabled = batchOnHand <= 0;
+                          return (
+                            <label
+                              key={batch._id}
+                              className={[
+                                "flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition",
+                                selected
+                                  ? "border-primary bg-primary/10"
+                                  : "border-gray-200 hover:bg-gray-50",
+                                disabled ? "opacity-50 cursor-not-allowed" : "",
+                              ].join(" ")}
+                            >
+                              <input
+                                type="radio"
+                                name="batch"
+                                value={batch._id}
+                                checked={selected}
+                                disabled={disabled}
+                                onChange={() => handleBatchSelect(batch)}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900">
+                                  Batch: {batch.batchNumber || "N/A"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Stock: {batchOnHand}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-semibold text-gray-900">
+                                  Rs.{" "}
+                                  {(typeof batch.sellingPrice === "number"
+                                    ? batch.sellingPrice
+                                    : Number(batch.sellingPrice) ||
+                                      Number(batchModal.item?.sellingPrice) ||
+                                      0
+                                  ).toFixed(2)}
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 active:scale-95"
+                    onClick={closeBatchModal}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-white rounded-xl bg-primary hover:bg-primary/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleBatchConfirm}
+                    disabled={!batchModal.selectedBatch}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Barcode + Invoice type */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="block mb-2 text-sm font-semibold text-gray-800">
               Barcode Scanner
             </label>
+
             <form onSubmit={handleBarcodeSearch}>
               <div className="relative">
                 <input
                   ref={barcodeInputRef}
-                  className="w-full h-11 sm:h-12 pl-10 pr-24 bg-white border-2 border-gray-300 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
+                  className="w-full pl-10 pr-24 text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 bg-white border-2 border-gray-300 h-11 sm:h-12 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-base"
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value)}
                   placeholder="Scan barcode here"
                 />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                <div className="absolute text-sm text-gray-400 -translate-y-1/2 left-3 top-1/2">
                   📟
                 </div>
                 <button
@@ -141,23 +350,26 @@ const POSSearchSection = ({
                 </button>
               </div>
             </form>
+
             <p className="mt-2 text-xs text-gray-500">
               Focus here and scan barcode for instant item lookup.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="block mb-2 text-sm font-semibold text-gray-800">
               Invoice Type
             </label>
-            <div className="flex gap-2 flex-col xs:flex-row">
+
+            <div className="flex flex-col gap-2 xs:flex-row">
               <button
                 type="button"
-                className={`flex-1 h-10 sm:h-11 rounded-xl border-2 text-sm sm:text-base font-medium transition-all duration-200 ${
+                className={[
+                  "flex-1 h-10 sm:h-11 rounded-xl border-2 text-sm sm:text-base font-medium transition-all duration-200 active:scale-95",
                   !isTaxInvoice
                     ? "bg-primary text-white border-primary shadow-md"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                } cursor-pointer active:scale-95`}
+                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400",
+                ].join(" ")}
                 onClick={() => {
                   setIsTaxInvoice(false);
                   recalcLinesForVat(false);
@@ -165,13 +377,15 @@ const POSSearchSection = ({
               >
                 Normal Bill
               </button>
+
               <button
                 type="button"
-                className={`flex-1 h-10 sm:h-11 rounded-xl border-2 text-sm sm:text-base font-medium transition-all duration-200 ${
+                className={[
+                  "flex-1 h-10 sm:h-11 rounded-xl border-2 text-sm sm:text-base font-medium transition-all duration-200 active:scale-95",
                   isTaxInvoice
                     ? "bg-primary text-white border-primary shadow-md"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                } cursor-pointer active:scale-95`}
+                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400",
+                ].join(" ")}
                 onClick={() => {
                   setIsTaxInvoice(true);
                   recalcLinesForVat(true);

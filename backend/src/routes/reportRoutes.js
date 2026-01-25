@@ -11,12 +11,19 @@ const router = express.Router();
 
 // Daily sales report
 router.get('/sales-daily', protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { date } = req.query;
   const d = date ? new Date(date) : new Date();
   const start = new Date(d.setHours(0, 0, 0, 0));
   const end = new Date(d.setHours(23, 59, 59, 999));
 
-  const sales = await Sale.find({ createdAt: { $gte: start, $lte: end } });
+  const sales = await Sale.find({
+    tenantId,
+    createdAt: { $gte: start, $lte: end },
+  });
 
   const total = sales.reduce((sum, s) => sum + s.grandTotal, 0);
   res.json({ date: start, total, count: sales.length, sales });
@@ -24,7 +31,11 @@ router.get('/sales-daily', protect, async (req, res) => {
 
 // Inventory value report (simple average)
 router.get('/inventory-value', protect, async (req, res) => {
-  const items = await Item.find({ isActive: true });
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const items = await Item.find({ tenantId, isActive: true });
   const rows = items.map((i) => ({
     itemId: i._id,
     name: i.name,
@@ -38,6 +49,10 @@ router.get('/inventory-value', protect, async (req, res) => {
 
 // Fast-moving / slow-moving items (by sales count)
 router.get('/item-movement', protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { from, to } = req.query;
   const dateFilter = {};
   if (from || to) {
@@ -47,7 +62,7 @@ router.get('/item-movement', protect, async (req, res) => {
   }
 
   const pipeline = [
-    { $match: dateFilter },
+    { $match: { tenantId, ...dateFilter } },
     { $unwind: '$items' },
     {
       $group: {
@@ -76,6 +91,10 @@ router.get('/item-movement', protect, async (req, res) => {
 
 // Profit report (very simplified: sales - purchases - expenses)
 router.get('/profit', protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { from, to } = req.query;
   const dateFilter = {};
   if (from || to) {
@@ -84,15 +103,15 @@ router.get('/profit', protect, async (req, res) => {
     if (to) dateFilter.createdAt.$lte = new Date(to);
   }
 
-  const sales = await Sale.find(dateFilter);
-  const purchases = await Purchase.find(dateFilter);
+  const sales = await Sale.find({ tenantId, ...dateFilter });
+  const purchases = await Purchase.find({ tenantId, ...dateFilter });
   const expenseFilter = {};
   if (from || to) {
     expenseFilter.date = {};
     if (from) expenseFilter.date.$gte = new Date(from);
     if (to) expenseFilter.date.$lte = new Date(to);
   }
-  const expenses = await Expense.find(expenseFilter);
+  const expenses = await Expense.find({ tenantId, ...expenseFilter });
 
   const salesTotal = sales.reduce((s, x) => s + x.grandTotal, 0);
   const purchaseTotal = purchases.reduce((s, x) => s + x.grandTotal, 0);
@@ -110,17 +129,27 @@ router.get('/profit', protect, async (req, res) => {
 
 // Customer credit report
 router.get('/customer-credit', protect, async (req, res) => {
-  const customers = await Customer.find({ currentBalance: { $ne: 0 } }).sort({
-    currentBalance: -1,
-  });
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const customers = await Customer.find({
+    tenantId,
+    currentBalance: { $ne: 0 },
+  }).sort({ currentBalance: -1 });
   res.json(customers);
 });
 
 // Supplier credit report
 router.get('/supplier-credit', protect, async (req, res) => {
-  const suppliers = await Supplier.find({ currentBalance: { $ne: 0 } }).sort({
-    currentBalance: -1,
-  });
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const suppliers = await Supplier.find({
+    tenantId,
+    currentBalance: { $ne: 0 },
+  }).sort({ currentBalance: -1 });
   res.json(suppliers);
 });
 

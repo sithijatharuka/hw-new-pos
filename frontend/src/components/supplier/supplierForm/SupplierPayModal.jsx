@@ -18,11 +18,11 @@ export default function SupplierPayModal({
 }) {
   const outstanding = useMemo(
     () => Number(supplier?.currentBalance || 0),
-    [supplier]
+    [supplier],
   );
 
   const [amount, setAmount] = useState(() =>
-    outstanding > 0 ? outstanding.toFixed(2) : ""
+    outstanding > 0 ? outstanding.toFixed(2) : "",
   );
   const [error, setError] = useState("");
 
@@ -37,48 +37,88 @@ export default function SupplierPayModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Record Payment</h3>
-            <p className="text-sm text-gray-500 mt-1">{supplier.name}</p>
+    <div
+      className={[
+        "fixed inset-0 z-50",
+        "flex items-center justify-center p-4 sm:p-6",
+        "bg-primary/60 backdrop-blur-sm",
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "w-full max-w-md",
+          "rounded-3xl border border-border-light bg-background-secondary",
+          "shadow-2xl",
+          "transition-all duration-200 ease-out",
+        ].join(" ")}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-border-light sm:p-6">
+          <div className="min-w-0">
+            <h3 className="text-lg font-extrabold text-text-primary">
+              Record Payment
+            </h3>
+            <p className="mt-1 text-sm truncate text-text-secondary">
+              {supplier.name}
+            </p>
           </div>
+
           <button
             onClick={() => {
               setError("");
               onClose();
             }}
-            className="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-500 flex items-center justify-center"
+            className={[
+              "inline-flex h-11 w-11 items-center justify-center",
+              "rounded-2xl border border-border-light",
+              "bg-background-secondary text-text-secondary",
+              "transition-all duration-200 ease-out",
+              "hover:bg-background-subtle hover:shadow-sm",
+              "active:scale-[0.98]",
+              "focus:outline-none focus:ring-2 focus:ring-focus/20",
+              "cursor-pointer",
+            ].join(" ")}
+            aria-label="Close"
+            title="Close"
           >
             ✕
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
-          <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-            <span className="text-sm text-gray-600">Outstanding</span>
-            <span className="text-lg font-bold text-red-600">
-              Rs. {outstanding.toFixed(2)}
-            </span>
+        {/* Body */}
+        <div className="p-5 space-y-5 sm:p-6">
+          <div className="p-4 border rounded-2xl border-border-light bg-background-subtle">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-text-secondary">
+                Outstanding
+              </span>
+              <span className="text-lg font-extrabold text-red-600 tabular-nums">
+                Rs. {outstanding.toFixed(2)}
+              </span>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-text-primary">
               Payment Amount
             </label>
+
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+              <span className="absolute text-sm font-semibold -translate-y-1/2 left-4 top-1/2 text-text-tertiary">
                 Rs.
               </span>
               <input
                 type="number"
                 step="0.01"
-                className={`w-full pl-12 pr-4 py-3 border ${
-                  error ? "border-red-300 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 ${
-                  error ? "focus:ring-red-200" : "focus:ring-primary/20"
-                } focus:border-primary text-sm`}
+                className={[
+                  "w-full rounded-2xl py-3 pl-12 pr-4 text-sm",
+                  "bg-background-secondary text-text-primary placeholder:text-text-tertiary",
+                  "border focus:outline-none focus:ring-2 focus:border-primary",
+                  error
+                    ? "border-error bg-error-bg focus:ring-error/20"
+                    : "border-border-light focus:ring-focus/20",
+                  "shadow-sm transition-all duration-200 ease-out hover:shadow-md",
+                ].join(" ")}
                 value={amount}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -88,24 +128,46 @@ export default function SupplierPayModal({
                 placeholder="0.00"
               />
             </div>
-            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+
+            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+        {/* Footer */}
+        <div className="flex flex-col-reverse gap-3 p-5 border-t border-border-light sm:flex-row sm:justify-end sm:p-6">
           <button
             onClick={() => {
               setError("");
               onClose();
             }}
-            className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-medium"
+            className={[
+              "inline-flex items-center justify-center",
+              "rounded-2xl px-5 py-2.5 text-sm font-semibold",
+              "border border-border-light bg-background-secondary text-text-secondary",
+              "transition-all duration-200 ease-out",
+              "hover:bg-background-subtle hover:shadow-sm",
+              "active:scale-[0.98]",
+              "focus:outline-none focus:ring-2 focus:ring-focus/20",
+              "cursor-pointer",
+            ].join(" ")}
           >
             Cancel
           </button>
+
           <button
             onClick={submit}
             disabled={saving}
-            className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+            className={[
+              "inline-flex items-center justify-center",
+              "rounded-2xl px-5 py-2.5 text-sm font-semibold",
+              "bg-primary text-text-inverse",
+              "shadow-md transition-all duration-200 ease-out",
+              "hover:shadow-lg hover:-translate-y-0.5",
+              "active:translate-y-0 active:scale-[0.99]",
+              "focus:outline-none focus:ring-2 focus:ring-focus/20",
+              "disabled:opacity-70 disabled:cursor-not-allowed",
+              "cursor-pointer",
+            ].join(" ")}
           >
             {saving ? "Processing..." : "Confirm Payment"}
           </button>

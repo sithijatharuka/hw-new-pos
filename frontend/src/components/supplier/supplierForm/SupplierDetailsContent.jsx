@@ -1,85 +1,123 @@
+// src/components/supplier/details/SupplierDetailsContent.jsx
 import React from "react";
 import { formatPaymentTerms } from "../../../utils/paymentTerms";
 
 const SupplierDetailsContent = ({ supplier }) => {
+  const outstanding = Number(supplier.currentBalance || 0);
+
   return (
     <div className="space-y-4 text-sm">
-      <div>
-        <span className="font-semibold text-gray-700">Supplier Code:</span>
-        <p className="text-gray-600">{supplier.supplierCode || "—"}</p>
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          SUPPLIER CODE
+        </span>
+        <p className="text-text-primary">{supplier.supplierCode || "—"}</p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Name:</span>
-        <p className="text-gray-600">{supplier.name}</p>
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          NAME
+        </span>
+        <p className="text-text-primary">{supplier.name}</p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Contact Person:</span>
-        <p className="text-gray-600">{supplier.contactPerson || "—"}</p>
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          CONTACT PERSON
+        </span>
+        <p className="text-text-primary">{supplier.contactPerson || "—"}</p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Phone(s):</span>
-        <p className="text-gray-600">
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          PHONE(S)
+        </span>
+        <p className="text-text-primary">
           {supplier.phones && supplier.phones.length > 0
             ? supplier.phones.join(", ")
             : "—"}
         </p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Email:</span>
-        <p className="text-gray-600">{supplier.email || "—"}</p>
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          EMAIL
+        </span>
+        <p className="text-text-primary">{supplier.email || "—"}</p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Address:</span>
-        <p className="text-gray-600">{supplier.address || "—"}</p>
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          ADDRESS
+        </span>
+        <p className="text-text-primary">{supplier.address || "—"}</p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Payment Terms:</span>
-        <p className="text-gray-600">
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          PAYMENT TERMS
+        </span>
+        <p className="text-text-primary">
           {formatPaymentTerms(supplier.paymentTerms)}
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-3 pt-2">
-        <div>
-          <span className="font-semibold text-gray-700">Opening Balance:</span>
-          <p className="text-gray-600">
+
+      <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
+        <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-subtle">
+          <span className="text-xs font-semibold tracking-wider text-text-secondary">
+            OPENING BALANCE
+          </span>
+          <p className="mt-1 text-sm font-semibold text-text-primary">
             Rs. {Number(supplier.openingBalance || 0).toFixed(2)}
           </p>
         </div>
-        <div>
-          <span className="font-semibold text-gray-700">Current Balance:</span>
+
+        <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-subtle">
+          <span className="text-xs font-semibold tracking-wider text-text-secondary">
+            CURRENT BALANCE
+          </span>
           <p
-            className={
-              Number(supplier.currentBalance || 0) > 0
-                ? "text-red-600 font-semibold"
-                : "text-green-600 font-semibold"
-            }
+            className={[
+              "mt-1 text-sm font-semibold",
+              outstanding > 0 ? "text-red-600" : "text-success",
+            ].join(" ")}
           >
-            Rs. {Number(supplier.currentBalance || 0).toFixed(2)}
+            Rs. {outstanding.toFixed(2)}
           </p>
         </div>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Credit Limit:</span>
-        <p className="text-gray-600">
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          CREDIT LIMIT
+        </span>
+        <p className="text-text-primary">
           Rs. {Number(supplier.creditLimit || 0).toFixed(2)}
         </p>
       </div>
-      <div>
-        <span className="font-semibold text-gray-700">Status:</span>
+
+      <div className="grid gap-1">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary">
+          STATUS
+        </span>
         <p
-          className={
+          className={[
+            "font-semibold",
             supplier.status === "active"
-              ? "text-green-600 font-semibold"
-              : "text-gray-600"
-          }
+              ? "text-success"
+              : "text-text-tertiary",
+          ].join(" ")}
         >
           {supplier.status === "active" ? "Active" : "Inactive"}
         </p>
       </div>
+
       {supplier.notes && (
-        <div>
-          <span className="font-semibold text-gray-700">Notes:</span>
-          <p className="text-gray-600">{supplier.notes}</p>
+        <div className="grid gap-1">
+          <span className="text-xs font-semibold tracking-wider text-text-secondary">
+            NOTES
+          </span>
+          <p className="text-text-primary">{supplier.notes}</p>
         </div>
       )}
     </div>

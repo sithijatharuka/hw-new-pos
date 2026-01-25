@@ -10,6 +10,8 @@ import SuppliersPage from "./pages/SuppliersPage";
 import ReportsPage from "./pages/ReportsPage";
 import ExpensesPage from "./pages/ExpensesPage";
 import SettingsPage from "./pages/SettingsPage";
+import UsersPage from "./pages/UsersPage";
+import OwnerSignupPage from "./pages/OwnerSignupPage";
 import InvoicePrintA4 from "./pages/InvoicePrintA4";
 import InvoicePrintThermal from "./pages/InvoicePrintThermal";
 import BarcodePrintPage from "./pages/BarcodePrintPage";
@@ -29,7 +31,8 @@ const App = () => {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setUser(null);
   };
@@ -37,6 +40,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage onLogin={setUser} />} />
+      <Route path="/signup" element={<OwnerSignupPage />} />
       <Route
         path="/*"
         element={
@@ -54,6 +58,7 @@ const App = () => {
                 <Route path="/suppliers" element={<SuppliersPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/expenses" element={<ExpensesPage />} />
+                <Route path="/users" element={<UsersPage user={user} />} />
                 <Route
                   path="/settings"
                   element={<SettingsPage user={user} />}

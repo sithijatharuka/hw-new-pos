@@ -6,7 +6,7 @@ const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
       <div className="flex flex-col justify-end gap-3 sm:flex-row">
         <button
           type="button"
-          className="px-6 py-3 font-medium text-gray-700 transition-all border-2 border-gray-300 rounded-xl hover:bg-gray-50 active:scale-95"
+          className="px-6 py-3 font-medium text-gray-700 transition-all border-2 border-gray-300 rounded-xl hover:bg-gray-50 active:scale-95 cursor-pointer"
           onClick={onCancel}
         >
           Cancel
@@ -14,7 +14,7 @@ const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
 
         <button
           type="button"
-          className="px-6 py-3 font-medium text-white transition-all bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="px-6 py-3 font-medium text-white transition-all bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           onClick={onSave}
           disabled={saving}
         >

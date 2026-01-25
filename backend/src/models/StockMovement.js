@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const stockMovementSchema = new mongoose.Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     item: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
 
     type: {
@@ -19,6 +20,7 @@ const stockMovementSchema = new mongoose.Schema(
     referenceId: { type: mongoose.Schema.Types.ObjectId, index: true },
 
     note: { type: String, trim: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
@@ -30,6 +32,7 @@ stockMovementSchema.index(
   { direction: 1 },
   { name: "stock_movement_direction" }
 );
+stockMovementSchema.index({ tenantId: 1 }, { name: "stock_movement_tenant" });
 stockMovementSchema.index(
   { referenceId: 1 },
   { name: "stock_movement_reference" }

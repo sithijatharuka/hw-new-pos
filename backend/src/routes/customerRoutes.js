@@ -8,14 +8,23 @@ const router = express.Router();
 
 // Create customer
 router.post("/", protect, async (req, res) => {
-  const customer = await Customer.create(req.body);
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const { tenantId: ignoredTenant, ...safe } = req.body;
+  const customer = await Customer.create({ ...safe, tenantId });
   res.status(201).json(customer);
 });
 
 // List/search customers
 router.get("/", protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { q } = req.query;
-  const filter = {};
+  const filter = { tenantId };
   if (q) {
     filter.$text = { $search: q };
   }
@@ -25,21 +34,36 @@ router.get("/", protect, async (req, res) => {
 
 // Get customer + credit summary
 router.get("/:id", protect, async (req, res) => {
-  const customer = await Customer.findById(req.params.id);
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const customer = await Customer.findOne({
+    _id: req.params.id,
+    tenantId,
+  });
   if (!customer) {
     res.status(404);
     throw new Error("Customer not found");
   }
-  const creditSales = await Sale.find({ customer: customer._id }).sort({
-    createdAt: -1,
-  });
+  const creditSales = await Sale.find({
+    tenantId,
+    customer: customer._id,
+  }).sort({ createdAt: -1 });
   res.json({ customer, creditSales });
 });
 
 // Monthly statement (simple)
 router.get("/:id/statement", protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { from, to } = req.query;
-  const customer = await Customer.findById(req.params.id);
+  const customer = await Customer.findOne({
+    _id: req.params.id,
+    tenantId,
+  });
   if (!customer) {
     res.status(404);
     throw new Error("Customer not found");
@@ -51,6 +75,7 @@ router.get("/:id/statement", protect, async (req, res) => {
     if (to) dateFilter.createdAt.$lte = new Date(to);
   }
   const sales = await Sale.find({
+    tenantId,
     customer: customer._id,
     ...dateFilter,
   }).sort({ createdAt: 1 });
@@ -67,7 +92,14 @@ router.get("/:id/statement", protect, async (req, res) => {
 // Receive payment from customer (reduce credit balance)
 router.post("/:id/receive-payment", protect, async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const customer = await Customer.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -84,6 +116,7 @@ router.post("/:id/receive-payment", protect, async (req, res) => {
 
     // Create credit payment record
     const payment = await CreditPayment.create({
+      tenantId,
       customer: customer._id,
       amount: Number(amount),
       method,
@@ -108,7 +141,14 @@ router.post("/:id/receive-payment", protect, async (req, res) => {
 // Get payment history for a customer
 router.get("/:id/payments", protect, async (req, res) => {
   try {
-    const payments = await CreditPayment.find({ customer: req.params.id })
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const payments = await CreditPayment.find({
+      tenantId,
+      customer: req.params.id,
+    })
       .sort({ createdAt: -1 })
       .limit(100);
     res.json(payments);
@@ -120,9 +160,16 @@ router.get("/:id/payments", protect, async (req, res) => {
 // Update customer
 router.put("/:id", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { name, phone, address, nic, type, creditLimit, notes } = req.body;
 
-    const customer = await Customer.findById(req.params.id);
+    const customer = await Customer.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -146,7 +193,14 @@ router.put("/:id", protect, async (req, res) => {
 // Delete customer
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const customer = await Customer.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -159,7 +213,10 @@ router.delete("/:id", protect, async (req, res) => {
     }
 
     // Check if customer has any sales
-    const salesCount = await Sale.countDocuments({ customer: customer._id });
+    const salesCount = await Sale.countDocuments({
+      tenantId,
+      customer: customer._id,
+    });
     if (salesCount > 0) {
       return res.status(400).json({
         message: "Cannot delete customer with existing sales records",

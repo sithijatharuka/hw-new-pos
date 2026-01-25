@@ -20,10 +20,10 @@ const EssentialInformation = ({
   const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
 
   const categoryOptions = Array.from(
-    new Set([...(categories || []), ...customCategories])
+    new Set([...(categories || []), ...customCategories]),
   );
   const baseUnitOptions = Array.from(
-    new Set([...(baseUnits || []), ...customBaseUnits])
+    new Set([...(baseUnits || []), ...customBaseUnits]),
   );
 
   const CUSTOM_CATEGORIES_KEY = "pos_custom_item_categories";
@@ -37,7 +37,7 @@ const EssentialInformation = ({
     if (!trimmed) return;
 
     const exists = categoryOptions.some(
-      (c) => (c || "").toLowerCase() === trimmed.toLowerCase()
+      (c) => (c || "").toLowerCase() === trimmed.toLowerCase(),
     );
     if (exists) {
       setError("category", "Category already exists.");
@@ -46,7 +46,7 @@ const EssentialInformation = ({
 
     try {
       const storedCats = JSON.parse(
-        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]"
+        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]",
       );
       const next = [...storedCats, trimmed];
       localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
@@ -66,7 +66,7 @@ const EssentialInformation = ({
     if (!trimmed) return;
 
     const exists = baseUnitOptions.some(
-      (u) => (u || "").toLowerCase() === trimmed.toLowerCase()
+      (u) => (u || "").toLowerCase() === trimmed.toLowerCase(),
     );
     if (exists) {
       setError("baseUnit", "Base unit already exists.");
@@ -75,7 +75,7 @@ const EssentialInformation = ({
 
     try {
       const storedUnits = JSON.parse(
-        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]"
+        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]",
       );
       const next = [...storedUnits, trimmed];
       localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
@@ -92,7 +92,7 @@ const EssentialInformation = ({
     if (isCustom) {
       try {
         const storedUnits = JSON.parse(
-          localStorage.getItem(CUSTOM_UNITS_KEY) || "[]"
+          localStorage.getItem(CUSTOM_UNITS_KEY) || "[]",
         );
         const next = storedUnits.filter((u) => u !== unit);
         localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
@@ -106,13 +106,33 @@ const EssentialInformation = ({
     onBaseUnitDelete?.(unit);
   };
 
+  // Handle category deletion
+  const handleDeleteCategory = (cat) => {
+    const isCustom = customCategories.includes(cat);
+    if (isCustom) {
+      try {
+        const storedCats = JSON.parse(
+          localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]",
+        );
+        const next = storedCats.filter((c) => c !== cat);
+        localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+        if (form.category === cat) updateField("category", "");
+        toast.success("Category deleted");
+      } catch (err) {
+        console.error("Failed to delete category", err);
+      }
+      return;
+    }
+    onCategoryDelete?.(cat);
+  };
+
   return (
     <div>
-      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+      <h3 className="mb-4 text-base font-semibold text-gray-900 sm:text-lg">
         Essential Information
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* SKU */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -164,14 +184,14 @@ const EssentialInformation = ({
         </div>
 
         {/* Category */}
-        <div className="space-y-2 relative">
+        <div className="relative space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700">
               Category <span className="text-red-500">*</span>
             </label>
             <button
               type="button"
-              className="text-sm text-primary hover:underline"
+              className="text-sm cursor-pointer text-primary hover:underline"
               onClick={handleAddCategoryClick}
             >
               + Add New
@@ -180,7 +200,7 @@ const EssentialInformation = ({
 
           <button
             type="button"
-            className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl text-left text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl text-left text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer ${
               errs.category ? "border-red-300 bg-red-50" : "border-gray-300"
             } ${showCategoryDropdown ? "border-primary" : ""}`}
             onClick={() => setShowCategoryDropdown((p) => !p)}
@@ -188,7 +208,7 @@ const EssentialInformation = ({
             <span className={form.category ? "text-gray-900" : "text-gray-400"}>
               {form.category || "Select category"}
             </span>
-            <span className="text-gray-500 text-sm">▾</span>
+            <span className="text-sm text-gray-500">▾</span>
           </button>
 
           {errs.category && (
@@ -196,7 +216,7 @@ const EssentialInformation = ({
           )}
 
           {showCategoryDropdown && (
-            <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg text-sm">
+            <div className="absolute z-10 w-full mt-1 overflow-y-auto text-sm bg-white border border-gray-300 shadow-lg max-h-48 rounded-xl">
               {categoryOptions.length === 0 ? (
                 <div className="px-4 py-3 text-gray-500">
                   No categories. Click + Add New to create one.
@@ -205,7 +225,7 @@ const EssentialInformation = ({
                 categoryOptions.map((cat) => (
                   <div
                     key={cat}
-                    className="group flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    className="flex items-center justify-between px-4 py-3 border-b border-gray-100 cursor-pointer group hover:bg-gray-50 last:border-b-0"
                     onClick={() => {
                       updateField("category", cat);
                       setShowCategoryDropdown(false);
@@ -214,10 +234,10 @@ const EssentialInformation = ({
                     <span className="text-gray-900">{cat}</span>
                     <button
                       type="button"
-                      className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-red-500 transition-opacity opacity-0 cursor-pointer hover:text-red-700 group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onCategoryDelete?.(cat);
+                        handleDeleteCategory(cat);
                       }}
                       title="Delete category"
                     >
@@ -231,14 +251,14 @@ const EssentialInformation = ({
         </div>
 
         {/* Base Unit */}
-        <div className="space-y-2 relative">
+        <div className="relative space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700">
               Base Unit <span className="text-red-500">*</span>
             </label>
             <button
               type="button"
-              className="text-sm text-primary hover:underline"
+              className="text-sm cursor-pointer text-primary hover:underline"
               onClick={handleAddBaseUnitClick}
             >
               + Add New
@@ -247,7 +267,7 @@ const EssentialInformation = ({
 
           <button
             type="button"
-            className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl text-left text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl text-left text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer ${
               errs.baseUnit ? "border-red-300 bg-red-50" : "border-gray-300"
             } ${showBaseUnitDropdown ? "border-primary" : ""}`}
             onClick={() => setShowBaseUnitDropdown((p) => !p)}
@@ -255,7 +275,7 @@ const EssentialInformation = ({
             <span className={form.baseUnit ? "text-gray-900" : "text-gray-400"}>
               {form.baseUnit || "Select unit"}
             </span>
-            <span className="text-gray-500 text-sm">▾</span>
+            <span className="text-sm text-gray-500">▾</span>
           </button>
 
           {errs.baseUnit && (
@@ -263,7 +283,7 @@ const EssentialInformation = ({
           )}
 
           {showBaseUnitDropdown && (
-            <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg text-sm">
+            <div className="absolute z-10 w-full mt-1 overflow-y-auto text-sm bg-white border border-gray-300 shadow-lg max-h-48 rounded-xl">
               {baseUnitOptions.length === 0 ? (
                 <div className="px-4 py-3 text-gray-500">
                   No base units. Click + Add New to create one.
@@ -272,7 +292,7 @@ const EssentialInformation = ({
                 baseUnitOptions.map((u) => (
                   <div
                     key={u}
-                    className="group flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    className="flex items-center justify-between px-4 py-3 border-b border-gray-100 cursor-pointer group hover:bg-gray-50 last:border-b-0"
                     onClick={() => {
                       updateField("baseUnit", u);
                       setShowBaseUnitDropdown(false);
@@ -281,7 +301,7 @@ const EssentialInformation = ({
                     <span className="text-gray-900">{u}</span>
                     <button
                       type="button"
-                      className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-red-500 transition-opacity opacity-0 cursor-pointer hover:text-red-700 group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteBaseUnit(u);
@@ -300,12 +320,12 @@ const EssentialInformation = ({
 
       {/* Description */}
       <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block mb-2 text-sm font-medium text-gray-700">
           Description
         </label>
         <textarea
           rows={3}
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm resize-none"
+          className="w-full px-4 py-3 text-sm border-2 border-gray-300 resize-none rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
           value={form.description}
           onChange={(e) => updateField("description", e.target.value)}
           placeholder="Optional description..."

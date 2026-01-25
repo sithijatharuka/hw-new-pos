@@ -11,6 +11,7 @@ const decimalGetter = (v) => (v ? parseFloat(v.toString()) : 0);
 
 const customerSchema = new mongoose.Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     name: { type: String, required: true, index: true },
     phone: { type: String, index: true },
     address: String,
@@ -47,6 +48,7 @@ customerSchema.index(
 customerSchema.index({ name: 1 }, { name: "customer_name" });
 customerSchema.index({ phone: 1 }, { name: "customer_phone" });
 customerSchema.index({ type: 1 }, { name: "customer_type" });
+customerSchema.index({ tenantId: 1 }, { name: "customer_tenant" });
 
 // Compound indexes for balanced queries
 customerSchema.index(

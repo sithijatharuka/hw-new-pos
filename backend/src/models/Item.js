@@ -36,7 +36,7 @@ const batchSchema = new Schema(
       get: decimalGetter,
     },
   },
-  { _id: true, toJSON: { getters: true }, toObject: { getters: true } }
+  { _id: true, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 /**
@@ -47,15 +47,15 @@ const inventorySchema = new Schema(
     onHand: { type: Number, default: 0, min: 0 },
     reserved: { type: Number, default: 0, min: 0 }, // keep for future, unused in v1
   },
-  { _id: false }
+  { _id: false },
 );
 
 const itemSchema = new Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     sku: {
       type: String,
       required: true,
-      unique: true,
       index: true,
       trim: true,
       uppercase: true,
@@ -110,7 +110,7 @@ const itemSchema = new Schema(
     timestamps: true,
     toJSON: { getters: true, virtuals: true },
     toObject: { getters: true, virtuals: true },
-  }
+  },
 );
 
 // Comprehensive indexes for efficient querying and filtering
@@ -123,7 +123,7 @@ itemSchema.index(
     category: "text",
     brand: "text",
   },
-  { name: "item_text_search" }
+  { name: "item_text_search" },
 );
 
 // Single field indexes for exact match queries
@@ -133,15 +133,17 @@ itemSchema.index({ category: 1 }, { name: "item_category" });
 itemSchema.index({ name: 1 }, { name: "item_name" });
 itemSchema.index({ isActive: 1 }, { name: "item_status" });
 itemSchema.index({ isBatchTracked: 1 }, { name: "item_batch_tracked" });
+itemSchema.index({ tenantId: 1 }, { name: "item_tenant" });
+itemSchema.index({ tenantId: 1, sku: 1 }, { unique: true, name: "item_tenant_sku" });
 
 // Compound indexes for common filtering patterns
 itemSchema.index(
   { category: 1, isActive: 1 },
-  { name: "item_category_status" }
+  { name: "item_category_status" },
 );
 itemSchema.index(
   { isActive: 1, createdAt: -1 },
-  { name: "item_status_recent" }
+  { name: "item_status_recent" },
 );
 itemSchema.index({ brand: 1, isActive: 1 }, { name: "item_brand_status" });
 
@@ -151,7 +153,7 @@ itemSchema.index({ lowStockLevel: 1, isActive: 1 }, { name: "item_low_stock" });
 // Index for batch tracking queries
 itemSchema.index(
   { isBatchTracked: 1, isActive: 1 },
-  { name: "item_batch_status" }
+  { name: "item_batch_status" },
 );
 
 itemSchema.virtual("availableStock").get(function () {

@@ -1,3 +1,4 @@
+// SupplierDetailsSection.jsx
 import React, { useMemo } from "react";
 import {
   PAYMENT_TERM_TYPES,
@@ -8,39 +9,60 @@ import {
 const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
   const pt = useMemo(
     () => normalizePaymentTerms(form.paymentTerms),
-    [form.paymentTerms]
+    [form.paymentTerms],
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Address <span className="text-red-500">*</span>
+    <div className="space-y-6">
+      {/* Address */}
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-text-primary">
+          Address <span className="text-red-600">*</span>
         </label>
-        <textarea
-          rows={3}
-          className={`w-full px-4 py-3 border ${
-            errors.address ? "border-red-300 bg-red-50" : "border-gray-200"
-          } rounded-xl focus:outline-none focus:ring-2 ${
-            errors.address ? "focus:ring-red-200" : "focus:ring-primary/20"
-          } focus:border-primary text-sm resize-none`}
-          value={form.address}
-          onChange={(e) => onFormChange({ address: e.target.value })}
-        />
+
+        <div className="relative">
+          <textarea
+            rows={3}
+            className={[
+              "w-full resize-none rounded-2xl px-4 py-3 text-sm",
+              "bg-background-secondary text-text-primary placeholder:text-text-tertiary",
+              "border focus:outline-none focus:ring-2 focus:border-primary",
+              errors.address
+                ? "border-error bg-error-bg focus:ring-error/20"
+                : "border-border-light focus:ring-focus/20",
+              "shadow-sm transition-all duration-200 ease-out",
+              "hover:shadow-md",
+            ].join(" ")}
+            value={form.address}
+            onChange={(e) => onFormChange({ address: e.target.value })}
+          />
+        </div>
+
         {errors.address && (
-          <p className="mt-2 text-xs text-red-600">{errors.address}</p>
+          <p className="text-xs font-medium text-red-600">{errors.address}</p>
         )}
       </div>
 
       {/* Payment Terms */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Payment Terms
-        </label>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <label className="block text-sm font-semibold text-text-primary">
+            Payment Terms
+          </label>
+          <span className="text-xs text-text-tertiary">
+            Set supplier payment conditions
+          </span>
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <select
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className={[
+              "w-full rounded-2xl px-4 py-3 text-sm",
+              "bg-background-secondary text-text-primary",
+              "border border-border-light shadow-sm",
+              "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
+              "transition-all duration-200 ease-out hover:shadow-md cursor-pointer",
+            ].join(" ")}
             value={pt.type}
             onChange={(e) => {
               const type = e.target.value;
@@ -60,9 +82,16 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
           </select>
 
           <select
-            className={`w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
-              pt.type !== "NET" ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={[
+              "w-full rounded-2xl px-4 py-3 text-sm",
+              "bg-background-secondary text-text-primary",
+              "border border-border-light shadow-sm",
+              "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
+              "transition-all duration-200 ease-out",
+              pt.type !== "NET"
+                ? "opacity-60 cursor-not-allowed"
+                : "hover:shadow-md cursor-pointer",
+            ].join(" ")}
             value={pt.days}
             disabled={pt.type !== "NET"}
             onChange={(e) =>
@@ -84,14 +113,25 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
         </div>
 
         {pt.type === "NET" && (
-          <div className="mt-3">
-            <label className="block text-xs text-gray-500 mb-1">
-              Custom Net Days (optional)
-            </label>
+          <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-secondary">
+            <div className="flex items-center justify-between gap-3">
+              <label className="block text-xs font-semibold text-text-secondary">
+                Custom Net Days (optional)
+              </label>
+              <span className="text-xs text-text-tertiary">
+                Override preset if needed
+              </span>
+            </div>
             <input
               type="number"
               min={0}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className={[
+                "mt-3 w-full rounded-2xl px-4 py-2.5 text-sm",
+                "bg-background-secondary text-text-primary",
+                "border border-border-light shadow-sm",
+                "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
+                "transition-all duration-200 ease-out hover:shadow-md",
+              ].join(" ")}
               value={pt.days}
               onChange={(e) =>
                 onFormChange({
@@ -106,72 +146,89 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
         )}
 
         {errors.paymentTerms && (
-          <p className="mt-2 text-xs text-red-600">{errors.paymentTerms}</p>
+          <p className="text-xs font-medium text-red-600">
+            {errors.paymentTerms}
+          </p>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Opening Balance <span className="text-red-500">*</span>{" "}
+      {/* Balances */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Opening Balance */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-text-primary">
+            Opening Balance <span className="text-red-600">*</span>{" "}
             {isEdit && (
-              <span className="text-gray-400 text-xs">(read-only)</span>
+              <span className="text-xs font-medium text-text-tertiary">
+                (read-only)
+              </span>
             )}
           </label>
           <input
             type="number"
             step="0.01"
             disabled={isEdit}
-            className={`w-full px-4 py-3 border ${
+            className={[
+              "w-full rounded-2xl px-4 py-3 text-sm",
+              "bg-background-secondary text-text-primary placeholder hookup",
+              "border focus:outline-none focus:ring-2 focus:border-primary",
               errors.openingBalance
-                ? "border-red-300 bg-red-50"
-                : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 ${
-              errors.openingBalance
-                ? "focus:ring-red-200"
-                : "focus:ring-primary/20"
-            } focus:border-primary text-sm ${
-              isEdit ? "bg-gray-50 cursor-not-allowed" : ""
-            }`}
+                ? "border-error bg-error-bg focus:ring-error/20"
+                : "border-border-light focus:ring-focus/20",
+              "shadow-sm transition-all duration-200 ease-out",
+              isEdit ? "opacity-70 cursor-not-allowed" : "hover:shadow-md",
+            ].join(" ")}
             value={form.openingBalance}
             onChange={(e) => onFormChange({ openingBalance: e.target.value })}
           />
           {errors.openingBalance && (
-            <p className="mt-2 text-xs text-red-600">{errors.openingBalance}</p>
+            <p className="text-xs font-medium text-red-600">
+              {errors.openingBalance}
+            </p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Credit Limit <span className="text-red-500">*</span>
+        {/* Credit Limit */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-text-primary">
+            Credit Limit <span className="text-red-600">*</span>
           </label>
           <input
             type="number"
             step="0.01"
-            className={`w-full px-4 py-3 border ${
+            className={[
+              "w-full rounded-2xl px-4 py-3 text-sm",
+              "bg-background-secondary text-text-primary",
+              "border focus:outline-none focus:ring-2 focus:border-primary",
               errors.creditLimit
-                ? "border-red-300 bg-red-50"
-                : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 ${
-              errors.creditLimit
-                ? "focus:ring-red-200"
-                : "focus:ring-primary/20"
-            } focus:border-primary text-sm`}
+                ? "border-error bg-error-bg focus:ring-error/20"
+                : "border-border-light focus:ring-focus/20",
+              "shadow-sm transition-all duration-200 ease-out hover:shadow-md",
+            ].join(" ")}
             value={form.creditLimit}
             onChange={(e) => onFormChange({ creditLimit: e.target.value })}
           />
           {errors.creditLimit && (
-            <p className="mt-2 text-xs text-red-600">{errors.creditLimit}</p>
+            <p className="text-xs font-medium text-red-600">
+              {errors.creditLimit}
+            </p>
           )}
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      {/* Status */}
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-text-primary">
           Status
         </label>
         <select
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className={[
+            "w-full rounded-2xl px-4 py-3 text-sm",
+            "bg-background-secondary text-text-primary",
+            "border border-border-light shadow-sm",
+            "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
+            "transition-all duration-200 ease-out hover:shadow-md cursor-pointer",
+          ].join(" ")}
           value={form.status}
           onChange={(e) => onFormChange({ status: e.target.value })}
         >
@@ -180,13 +237,20 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      {/* Notes */}
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-text-primary">
           Notes
         </label>
         <textarea
           rows={2}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm resize-none"
+          className={[
+            "w-full resize-none rounded-2xl px-4 py-3 text-sm",
+            "bg-background-secondary text-text-primary placeholder:text-text-tertiary",
+            "border border-border-light shadow-sm",
+            "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
+            "transition-all duration-200 ease-out hover:shadow-md",
+          ].join(" ")}
           value={form.notes}
           onChange={(e) => onFormChange({ notes: e.target.value })}
         />

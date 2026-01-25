@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const settingsSchema = new mongoose.Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     shopName: { type: String, default: "Your Hardware Shop Name" },
     shopAddress: {
       type: String,
@@ -32,6 +33,10 @@ const settingsSchema = new mongoose.Schema(
 // Single document collection - minimal indexing needed
 // but included for consistency and potential future queries
 settingsSchema.index({ createdAt: -1 }, { name: "settings_recent" });
+settingsSchema.index(
+  { tenantId: 1 },
+  { unique: true, name: "settings_tenant_unique" }
+);
 
 // There will normally be only one settings document
 export const Settings = mongoose.model("Settings", settingsSchema);

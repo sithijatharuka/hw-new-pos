@@ -14,16 +14,16 @@ const GRNFormHeader = ({
       </h2>
 
       {supplier && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="p-4 border border-blue-200 bg-blue-50 rounded-xl">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <div>
-              <p className="text-xs text-blue-600 font-medium">Supplier Name</p>
+              <p className="text-xs font-medium text-blue-600">Supplier Name</p>
               <p className="text-sm font-semibold text-gray-900">
                 {supplier.name}
               </p>
             </div>
             <div>
-              <p className="text-xs text-blue-600 font-medium">
+              <p className="text-xs font-medium text-blue-600">
                 Contact Person
               </p>
               <p className="text-sm text-gray-900">
@@ -31,7 +31,7 @@ const GRNFormHeader = ({
               </p>
             </div>
             <div>
-              <p className="text-xs text-blue-600 font-medium">Phone</p>
+              <p className="text-xs font-medium text-blue-600">Phone</p>
               <p className="text-sm text-gray-900">
                 {supplier.phones?.[0] || "-"}
               </p>
@@ -41,17 +41,17 @@ const GRNFormHeader = ({
       )}
 
       {!existingGRN && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
           <p className="text-sm text-blue-800">
             GRN Number will be automatically generated when you save this GRN
           </p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {existingGRN && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
               GRN No
             </label>
             <input
@@ -64,17 +64,21 @@ const GRNFormHeader = ({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            GRN Date
-          </label>
-          <input
-            type="date"
-            name="grnDate"
-            value={grnDate}
-            onChange={handleHeaderChange}
-            disabled={fieldsDisabled}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-          />
+          {existingGRN && (
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                GRN Date
+              </label>
+              <input
+                type="date"
+                name="grnDate"
+                value={grnDate}
+                onChange={handleHeaderChange}
+                disabled={fieldsDisabled}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

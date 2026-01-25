@@ -22,7 +22,7 @@ const UnitConversions = ({
 
         <button
           type="button"
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 active:scale-95 transition-all text-sm"
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 active:scale-95 transition-all text-sm cursor-pointer"
           onClick={addUnitRow}
         >
           + Add Unit
@@ -79,7 +79,7 @@ const UnitConversions = ({
                   </div>
                   <button
                     type="button"
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm cursor-pointer"
                     onClick={() => removeUnitRow(idx)}
                     title="Remove"
                   >

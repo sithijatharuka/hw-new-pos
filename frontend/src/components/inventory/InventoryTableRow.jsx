@@ -70,7 +70,7 @@ const InventoryTableRow = ({
       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-wrap gap-2">
           <button
-            className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg"
+            className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
             onClick={() => onEdit(item)}
           >
             Edit
@@ -78,14 +78,14 @@ const InventoryTableRow = ({
 
           {item.isActive ? (
             <button
-              className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg"
+              className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
               onClick={() => onDeactivate(item._id)}
             >
               Deactivate
             </button>
           ) : (
             <button
-              className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg"
+              className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
               onClick={() => onActivate(item._id)}
             >
               Activate
@@ -93,14 +93,14 @@ const InventoryTableRow = ({
           )}
 
           <button
-            className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg"
+            className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
             onClick={() => onDelete(item._id)}
           >
             Delete
           </button>
 
           <button
-            className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg"
+            className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
             onClick={() => onPrintBarcode(item._id)}
           >
             Print Barcode

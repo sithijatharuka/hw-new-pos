@@ -11,7 +11,8 @@ const decimalGetter = (v) => (v ? parseFloat(v.toString()) : 0);
 
 const supplierSchema = new mongoose.Schema(
   {
-    supplierCode: { type: String, unique: true },
+    tenantId: { type: String, required: true, index: true },
+    supplierCode: { type: String },
     name: { type: String, required: true, index: true },
 
     contactPerson: String,
@@ -80,6 +81,15 @@ supplierSchema.index({ name: 1 }, { name: "supplier_name" });
 supplierSchema.index({ email: 1 }, { name: "supplier_email", sparse: true });
 supplierSchema.index({ status: 1 }, { name: "supplier_status" });
 supplierSchema.index({ supplierCode: 1 }, { name: "supplier_code" });
+supplierSchema.index({ tenantId: 1 }, { name: "supplier_tenant" });
+supplierSchema.index(
+  { tenantId: 1, supplierCode: 1 },
+  {
+    unique: true,
+    name: "supplier_tenant_code",
+    partialFilterExpression: { supplierCode: { $type: "string" } },
+  }
+);
 
 // Compound indexes for filtering and sorting
 supplierSchema.index(

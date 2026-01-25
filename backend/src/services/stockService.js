@@ -7,18 +7,29 @@ const ensureNumber = (v) => {
   return n;
 };
 
-const loadItemOrThrow = async (itemId, session) => {
-  const item = await Item.findById(itemId).session(session || null);
+const loadItemOrThrow = async (itemId, tenantId, session) => {
+  const item = await Item.findOne({ _id: itemId, tenantId }).session(
+    session || null
+  );
   if (!item) throw new Error("Item not found");
   if (item.isActive === false) throw new Error("Item is inactive");
   return item;
 };
 
 export const addStock = async (
-  { itemId, qty, batchNumber, note, referenceId, type = "adjustment" },
+  {
+    itemId,
+    tenantId,
+    qty,
+    batchNumber,
+    note,
+    referenceId,
+    type = "adjustment",
+    createdBy,
+  },
   session
 ) => {
-  const item = await loadItemOrThrow(itemId, session);
+  const item = await loadItemOrThrow(itemId, tenantId, session);
   const amount = ensureNumber(qty);
   if (amount <= 0) throw new Error("Quantity must be greater than zero");
 
@@ -43,12 +54,14 @@ export const addStock = async (
   await StockMovement.create(
     [
       {
+        tenantId,
         item: item._id,
         type,
         direction: "in",
         qty: amount,
         referenceId,
         note,
+        createdBy,
       },
     ],
     { session }
@@ -58,10 +71,19 @@ export const addStock = async (
 };
 
 export const deductStock = async (
-  { itemId, qty, batchNumber, note, referenceId, type = "adjustment" },
+  {
+    itemId,
+    tenantId,
+    qty,
+    batchNumber,
+    note,
+    referenceId,
+    type = "adjustment",
+    createdBy,
+  },
   session
 ) => {
-  const item = await loadItemOrThrow(itemId, session);
+  const item = await loadItemOrThrow(itemId, tenantId, session);
   const amount = ensureNumber(qty);
   if (amount <= 0) throw new Error("Quantity must be greater than zero");
 
@@ -95,12 +117,14 @@ export const deductStock = async (
   await StockMovement.create(
     [
       {
+        tenantId,
         item: item._id,
         type,
         direction: "out",
         qty: amount,
         referenceId,
         note,
+        createdBy,
       },
     ],
     { session }

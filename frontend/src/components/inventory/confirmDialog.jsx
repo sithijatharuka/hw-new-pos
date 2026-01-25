@@ -9,7 +9,7 @@ export const confirmWithToast = (message) =>
           <p className="text-xs text-gray-600">{message}</p>
           <div className="flex justify-end gap-2 pt-1">
             <button
-              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 cursor-pointer active:scale-95 transition-all"
               onClick={() => {
                 toast.dismiss(t.id);
                 resolve(false);
@@ -18,7 +18,7 @@ export const confirmWithToast = (message) =>
               Cancel
             </button>
             <button
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white font-medium"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white font-medium cursor-pointer hover:shadow-lg active:scale-95 transition-all"
               onClick={() => {
                 toast.dismiss(t.id);
                 resolve(true);

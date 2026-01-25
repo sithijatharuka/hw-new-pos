@@ -24,25 +24,33 @@ export const protect = async (req, res, next) => {
       res.status(401);
       throw new Error("User not found");
     }
+    if (decoded.tenantId && req.user.tenantId !== decoded.tenantId) {
+      res.status(401);
+      throw new Error("Tenant mismatch");
+    }
+    if (!req.user.tenantId) {
+      res.status(403);
+      throw new Error("Tenant context missing");
+    }
     next();
   } catch (err) {
     console.error(err);
     res.status(401);
     if (err.name === "TokenExpiredError") {
-      throw new Error("Token expired");
+      return res.status(401).json({ message: "Access token expired" });
     } else if (err.name === "JsonWebTokenError") {
-      throw new Error("Invalid token");
+      return res.status(401).json({ message: "Invalid access token" });
     } else {
-      throw new Error("Not authorized, token failed");
+      return res.status(401).json({ message: "Not authorized, token failed" });
     }
   }
 };
 
 export const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  if (req.user && (req.user.role === "admin" || req.user.role === "owner")) {
     next();
   } else {
     res.status(403);
-    throw new Error("Admin access only");
+    throw new Error("Admin or owner access only");
   }
 };

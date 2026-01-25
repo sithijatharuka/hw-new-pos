@@ -48,7 +48,7 @@ const POSPage = () => {
   } = usePrefixSearch(
     allItems,
     (item) => [item.name, item.barcode, item.brand, item.category, item.sku],
-    300
+    300,
   );
 
   // ✅ local list for UI dropdown (your old code referenced setSearchResults but never defined it)
@@ -114,7 +114,7 @@ const POSPage = () => {
     setCategories((prev) => {
       if (prev && prev.length) return prev;
       return Array.from(
-        new Set(allItems.map((i) => i.category).filter(Boolean))
+        new Set(allItems.map((i) => i.category).filter(Boolean)),
       );
     });
   }, [allItems]);
@@ -136,7 +136,7 @@ const POSPage = () => {
   const filteredByCategory = useMemo(() => {
     const base = selectedCategory
       ? searchFiltered.filter(
-          (item) => (item.category || "") === selectedCategory
+          (item) => (item.category || "") === selectedCategory,
         )
       : searchFiltered;
     return base;
@@ -157,7 +157,7 @@ const POSPage = () => {
 
   const recalcLinesForVat = (nextIsTaxInvoice) => {
     setLines((prev) =>
-      prev.map((line) => recalcLineWithVat(line, nextIsTaxInvoice))
+      prev.map((line) => recalcLineWithVat(line, nextIsTaxInvoice)),
     );
   };
 
@@ -212,21 +212,12 @@ const POSPage = () => {
     return index === -1 ? lines.length : index;
   };
 
+  // Only add a new row when user clicks '+ Add Row'
   const addEmptyLineIfNeeded = () => {
     setLines((prev) => {
-      if (prev.length === 0) {
-        const init = [emptyLine()];
-        ensureLineErrorsLength(init);
-        return init;
-      }
-      const last = prev[prev.length - 1];
-      if (last.item || last.name) {
-        const newLines = [...prev, emptyLine()];
-        ensureLineErrorsLength(newLines);
-        return newLines;
-      }
-      ensureLineErrorsLength(prev);
-      return prev;
+      const newLines = [...prev, emptyLine()];
+      ensureLineErrorsLength(newLines);
+      return newLines;
     });
   };
 
@@ -243,27 +234,39 @@ const POSPage = () => {
 
     setLines((prev) => {
       const next = [...prev];
-      if (!next[indexToUse]) next.push(emptyLine());
+      // Only add/replace at index if it exists, else push
+      let targetIdx = indexToUse;
+      if (targetIdx >= next.length) {
+        next.push({});
+      }
+
+      // If batch-tracked and batch info present, copy batchNumber/_id to line
+      let batchNumber = undefined;
+      let batchId = undefined;
+      if (item.isBatchTracked && item.selectedBatch) {
+        batchNumber = item.selectedBatch.batchNumber;
+        batchId = item.selectedBatch._id;
+      }
 
       const baseLine = {
-        ...next[indexToUse],
+        ...next[targetIdx],
         item,
         itemId: item._id,
         name: item.name,
         unit: item.baseUnit,
         unitPrice: Number(item.sellingPrice || 0),
-        qty: Number(next[indexToUse].qty || 1),
-        discount: Number(next[indexToUse].discount || 0),
+        qty: Number(next[targetIdx]?.qty || 1),
+        discount: Number(next[targetIdx]?.discount || 0),
+        ...(batchNumber ? { batchNumber } : {}),
+        ...(batchId ? { batchId } : {}),
+        ...(item.selectedBatch ? { selectedBatch: item.selectedBatch } : {}),
       };
 
       const recalculated = recalcLineWithVat(baseLine);
-      next[indexToUse] = recalculated;
-
-      // always ensure one extra row at end
-      if (indexToUse === next.length - 1) next.push(emptyLine());
+      next[targetIdx] = recalculated;
 
       ensureLineErrorsLength(next);
-      syncLineError(indexToUse, recalculated);
+      syncLineError(targetIdx, recalculated);
       return next;
     });
 
@@ -287,7 +290,7 @@ const POSPage = () => {
       barcodeInputRef.current?.focus();
     } catch (err) {
       toast.error(
-        err?.response?.data?.message || "No item found for this barcode."
+        err?.response?.data?.message || "No item found for this barcode.",
       );
     }
   };
@@ -295,11 +298,11 @@ const POSPage = () => {
   // Totals
   const lineTotalsSum = lines.reduce(
     (sum, l) => sum + (Number(l.lineTotal) || 0),
-    0
+    0,
   );
   const taxTotal = lines.reduce(
     (sum, l) => sum + (Number(l.taxAmount) || 0),
-    0
+    0,
   );
   const baseTotal = lineTotalsSum - taxTotal;
 
@@ -309,7 +312,7 @@ const POSPage = () => {
 
   const totalPayments = payments.reduce(
     (sum, p) => sum + (Number(p.amount) || 0),
-    0
+    0,
   );
 
   const updatePayment = (idx, updates) => {
@@ -348,7 +351,7 @@ const POSPage = () => {
 
   const filteredCustomers = useMemo(
     () => customers.filter((c) => c.type === "credit" || c.type === "both"),
-    [customers]
+    [customers],
   );
 
   const handleCreateOrUpdateCustomer = async (formData) => {
@@ -363,7 +366,7 @@ const POSPage = () => {
       toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to create customer."
+          "Failed to create customer.",
       );
     } finally {
       setCustomerFormSaving(false);
@@ -385,7 +388,7 @@ const POSPage = () => {
         const err = newLineErrors[i];
         if (err && Object.keys(err).length > 0) {
           toast.error(
-            `Please check in line ${i + 1} (check red-highlighted fields).`
+            `Please check in line ${i + 1} (check red-highlighted fields).`,
           );
           return false;
         }
@@ -418,7 +421,7 @@ const POSPage = () => {
       }
       if (sumPayments < grandTotal) {
         toast.error(
-          "Total payments cannot be less than the grand total for a paid invoice."
+          "Total payments cannot be less than the grand total for a paid invoice.",
         );
         return false;
       }
@@ -431,14 +434,14 @@ const POSPage = () => {
       }
       if (customer.type === "cash") {
         toast.error(
-          "This customer is marked as cash-only. Select a credit-enabled customer."
+          "This customer is marked as cash-only. Select a credit-enabled customer.",
         );
         return false;
       }
       const creditPortion = grandTotal - sumPayments;
       if (creditPortion <= 0) {
         toast.error(
-          "Credit amount must be greater than 0 for a credit sale. Use Paid instead."
+          "Credit amount must be greater than 0 for a credit sale. Use Paid instead.",
         );
         return false;
       }
@@ -450,7 +453,7 @@ const POSPage = () => {
         const newBalance = customer.currentBalance + creditPortion;
         if (newBalance > customer.creditLimit) {
           toast.error(
-            "This sale would exceed the customer's credit limit. Reduce credit or update limit."
+            "This sale would exceed the customer's credit limit. Reduce credit or update limit.",
           );
           return false;
         }
@@ -474,7 +477,7 @@ const POSPage = () => {
 
     const sumPayments = cleanedPayments.reduce(
       (sum, p) => sum + (p.amount || 0),
-      0
+      0,
     );
 
     let balanceDue = grandTotal - sumPayments;
@@ -497,6 +500,10 @@ const POSPage = () => {
         discount: Number(l.discount),
         taxAmount: Number(l.taxAmount),
         lineTotal: Number(l.lineTotal),
+        // Ensure batchNumber is sent for batch-tracked items
+        ...(l.item && l.item.isBatchTracked && l.batchNumber
+          ? { batchNumber: l.batchNumber }
+          : {}),
       })),
       subTotal: baseTotal,
       discountTotal: discountAmount,
@@ -539,19 +546,20 @@ const POSPage = () => {
       barcodeInputRef.current?.focus();
     } catch (err) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Failed to save sale."
+        err?.response?.data?.message || err?.message || "Failed to save sale.",
       );
     }
   };
 
   const hasValidLine = lines.some((l) => l.item);
   const hasLineError = lines.some(
-    (l, idx) => l.item && lineErrors[idx] && Object.keys(lineErrors[idx]).length
+    (l, idx) =>
+      l.item && lineErrors[idx] && Object.keys(lineErrors[idx]).length,
   );
   const discountInvalid =
     discountAmount < 0 || discountAmount > baseTotal + taxTotal;
   const paymentHasError = paymentErrors.some(
-    (e) => e && Object.keys(e).length > 0
+    (e) => e && Object.keys(e).length > 0,
   );
 
   const canSavePaid =
@@ -576,8 +584,8 @@ const POSPage = () => {
       <POSHeader isOffline={isOffline} vatRate={vatRate} />
 
       {/* Main */}
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl">
           {/* Search & Barcode */}
           <POSSearchSection
             query={query}
@@ -608,7 +616,7 @@ const POSPage = () => {
 
           {/* Customer + Summary */}
           <div className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
               {/* Customer */}
               <POSCustomerSection
                 customer={customer}

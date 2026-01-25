@@ -34,6 +34,7 @@ const purchaseItemSchema = new mongoose.Schema(
 
 const purchaseSchema = new mongoose.Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     supplier: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Supplier",
@@ -78,6 +79,8 @@ const purchaseSchema = new mongoose.Schema(
       enum: ["paid", "partial", "unpaid"],
       default: "unpaid",
     },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,
@@ -90,6 +93,7 @@ const purchaseSchema = new mongoose.Schema(
 purchaseSchema.index({ billNumber: 1 }, { name: "purchase_bill_number" });
 purchaseSchema.index({ supplier: 1 }, { name: "purchase_supplier" });
 purchaseSchema.index({ status: 1 }, { name: "purchase_status" });
+purchaseSchema.index({ tenantId: 1 }, { name: "purchase_tenant" });
 
 // Date-based indexes for reporting
 purchaseSchema.index({ billDate: -1 }, { name: "purchase_bill_date" });

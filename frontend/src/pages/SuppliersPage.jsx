@@ -5,11 +5,7 @@ import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import EntityCardList from "../components/common/EntityCardList";
 
 import GrnDetailsModal from "../components/supplier/grnDetail/GrnDetailsModal";
-import {
-  getSupplierGRNs,
-  deleteGRN,
-  postGRN,
-} from "../api/supplier/grn";
+import { getSupplierGRNs, deleteGRN, postGRN } from "../api/supplier/grn";
 
 import SupplierFormModal from "../components/supplier/supplierForm/supplierFormModal/SupplierFormModal";
 import SupplierPayModal from "../components/supplier/supplierForm/SupplierPayModal";
@@ -79,7 +75,7 @@ const SuppliersPage = () => {
       ...(s.phones || []),
       s.address,
     ],
-    300
+    300,
   );
 
   const fetchSuppliers = async () => {
@@ -130,7 +126,7 @@ const SuppliersPage = () => {
       if (editingSupplier) {
         const updated = await updateSupplier(editingSupplier._id, payload);
         setSuppliers((prev) =>
-          prev.map((s) => (s._id === updated._id ? updated : s))
+          prev.map((s) => (s._id === updated._id ? updated : s)),
         );
         toast.success("Supplier updated");
       } else {
@@ -164,7 +160,7 @@ const SuppliersPage = () => {
       const updated = await recordSupplierPayment(paySupplier._id, amount);
 
       setSuppliers((prev) =>
-        prev.map((s) => (s._id === updated._id ? updated : s))
+        prev.map((s) => (s._id === updated._id ? updated : s)),
       );
       setShowPayModal(false);
       setPaySupplier(null);
@@ -235,7 +231,7 @@ const SuppliersPage = () => {
     toast.success(
       savedGrn && savedGrn._id && wasEditing
         ? "GRN updated successfully"
-        : "GRN created successfully"
+        : "GRN created successfully",
     );
   };
 
@@ -298,7 +294,7 @@ const SuppliersPage = () => {
     try {
       const posted = await postGRN(selectedGRN._id);
       setGrnsList((prev) =>
-        prev.map((g) => (g._id === posted._id ? posted : g))
+        prev.map((g) => (g._id === posted._id ? posted : g)),
       );
       setSelectedGRN(posted);
       setShowGRNDetails(false);
@@ -312,7 +308,7 @@ const SuppliersPage = () => {
   const showSupplierDetails = (supplier) => {
     toast.custom(
       (t) => (
-        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <div className="w-full max-w-md p-6 bg-white border border-gray-200 rounded-lg shadow-lg">
           <div className="flex items-start justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900">{supplier.name}</h3>
             <button
@@ -322,12 +318,12 @@ const SuppliersPage = () => {
               ✕
             </button>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="overflow-y-auto max-h-96">
             <SupplierDetailsContent supplier={supplier} />
           </div>
         </div>
       ),
-      { duration: Infinity }
+      { duration: Infinity },
     );
   };
 
@@ -339,7 +335,7 @@ const SuppliersPage = () => {
       <SupplierPageHeader onAddSupplier={openCreate} />
 
       {/* Search */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+      <div className="overflow-hidden bg-white border border-gray-100 shadow-md rounded-2xl">
         <SupplierSearchBar
           query={q}
           onQueryChange={setQ}
@@ -369,20 +365,20 @@ const SuppliersPage = () => {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden lg:block overflow-x-auto">
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="border-b border-gray-100 bg-gray-50">
               <tr>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-6 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
                   Supplier
                 </th>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-6 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
                   Terms
                 </th>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-6 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
                   Outstanding
                 </th>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-6 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
                   Actions
                 </th>
               </tr>

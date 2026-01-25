@@ -153,10 +153,10 @@ const CustomersPage = () => {
       <CustomerPageHeader onAddNew={() => openFormModal()} />
 
       {/* Main Content Card */}
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl">
           {/* Search Bar */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-white">
+          <div className="px-6 py-4 bg-white border-b border-gray-200">
             <SearchBar
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

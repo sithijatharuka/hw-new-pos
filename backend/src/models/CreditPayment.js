@@ -11,6 +11,7 @@ const decimalGetter = (v) => (v ? parseFloat(v.toString()) : 0);
 
 const creditPaymentSchema = new mongoose.Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
@@ -38,6 +39,7 @@ const creditPaymentSchema = new mongoose.Schema(
 creditPaymentSchema.index({ customer: 1 }, { name: "credit_payment_customer" });
 creditPaymentSchema.index({ method: 1 }, { name: "credit_payment_method" });
 creditPaymentSchema.index({ createdAt: -1 }, { name: "credit_payment_recent" });
+creditPaymentSchema.index({ tenantId: 1 }, { name: "credit_payment_tenant" });
 
 // Compound indexes for common queries
 creditPaymentSchema.index(

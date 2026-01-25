@@ -19,7 +19,7 @@ const InventoryHeader = ({ onAddNew, lowStockOnly, setLowStockOnly }) => {
 
       <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">
         <button
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white text-sm font-semibold rounded-xl shadow-lg"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white text-sm font-semibold rounded-xl shadow-lg cursor-pointer hover:shadow-xl active:scale-95 transition-all"
           onClick={onAddNew}
         >
           <span>+</span>

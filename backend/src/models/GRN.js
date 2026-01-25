@@ -39,10 +39,10 @@ const grnLineSchema = new Schema(
 
 const grnSchema = new Schema(
   {
+    tenantId: { type: String, required: true, index: true },
     grnNo: {
       type: String,
       required: true,
-      unique: true,
       index: true,
       trim: true,
     },
@@ -63,6 +63,7 @@ const grnSchema = new Schema(
       index: true,
     },
     postedAt: { type: Date },
+    cancelledAt: { type: Date },
 
     lines: {
       type: [grnLineSchema],
@@ -83,6 +84,7 @@ const grnSchema = new Schema(
 
     remarks: { type: String, trim: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,
@@ -97,6 +99,11 @@ grnSchema.index({ supplier: 1 }, { name: "grn_supplier" });
 grnSchema.index({ status: 1 }, { name: "grn_status" });
 grnSchema.index({ grnDate: -1 }, { name: "grn_date" });
 grnSchema.index({ createdAt: -1 }, { name: "grn_recent" });
+grnSchema.index({ tenantId: 1 }, { name: "grn_tenant" });
+grnSchema.index(
+  { tenantId: 1, grnNo: 1 },
+  { unique: true, name: "grn_tenant_number" }
+);
 
 // Compound indexes for common queries
 grnSchema.index({ supplier: 1, grnDate: -1 }, { name: "grn_supplier_date" });

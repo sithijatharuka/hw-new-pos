@@ -4,23 +4,31 @@ import { Settings } from "../models/Settings.js";
 
 const router = express.Router();
 
-const getOrCreateSettings = async () => {
-  let s = await Settings.findOne();
+const getOrCreateSettings = async (tenantId) => {
+  let s = await Settings.findOne({ tenantId });
   if (!s) {
-    s = await Settings.create({});
+    s = await Settings.create({ tenantId });
   }
   return s;
 };
 
 // Get current settings
 router.get("/", protect, async (req, res) => {
-  const s = await getOrCreateSettings();
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const s = await getOrCreateSettings(tenantId);
   res.json(s);
 });
 
 // Update settings (admin only)
 router.put("/", protect, adminOnly, async (req, res) => {
-  const s = await getOrCreateSettings();
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const s = await getOrCreateSettings(tenantId);
   s.shopName = req.body.shopName ?? s.shopName;
   s.shopAddress = req.body.shopAddress ?? s.shopAddress;
   s.shopPhone = req.body.shopPhone ?? s.shopPhone;
@@ -39,7 +47,11 @@ router.post("/expense-categories", protect, async (req, res) => {
   if (!category || !category.trim()) {
     return res.status(400).json({ message: "Category name is required" });
   }
-  const s = await getOrCreateSettings();
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const s = await getOrCreateSettings(tenantId);
   if (!s.expenseCategories.includes(category.trim())) {
     s.expenseCategories.push(category.trim());
     await s.save();
@@ -50,7 +62,11 @@ router.post("/expense-categories", protect, async (req, res) => {
 // Remove expense category
 router.delete("/expense-categories/:category", protect, async (req, res) => {
   const { category } = req.params;
-  const s = await getOrCreateSettings();
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const s = await getOrCreateSettings(tenantId);
   s.expenseCategories = s.expenseCategories.filter((c) => c !== category);
   await s.save();
   res.json(s);

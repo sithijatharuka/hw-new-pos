@@ -9,19 +9,20 @@ import { deductStock } from "../services/stockService.js";
 
 const router = express.Router();
 
-const vatRateFromSettings = async () => {
-  const s = await Settings.findOne();
+const vatRateFromSettings = async (tenantId) => {
+  const s = await Settings.findOne({ tenantId });
   if (s && typeof s.vatRate === "number") return s.vatRate;
   return Number(process.env.VAT_RATE || 0.15);
 };
 
 // Calculate VAT-aware totals on server-side to keep source of truth
-const hydrateAndCalculateSale = async (payload) => {
-  const VAT_RATE = await vatRateFromSettings();
+const hydrateAndCalculateSale = async (payload, tenantId) => {
+  const VAT_RATE = await vatRateFromSettings(tenantId);
   const itemIds = payload.items.map((l) => l.item);
-  const items = await Item.find({ _id: { $in: itemIds } }).select(
-    "taxApplicable"
-  );
+  const items = await Item.find({
+    _id: { $in: itemIds },
+    tenantId,
+  }).select("taxApplicable");
   const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
   let subTotal = 0;
@@ -71,23 +72,28 @@ const hydrateAndCalculateSale = async (payload) => {
 };
 
 // Helper to update stock + customer
-const applySaleEffects = async (sale, session) => {
+const applySaleEffects = async (sale, tenantId, userId, session) => {
   for (const line of sale.items) {
     await deductStock(
       {
         itemId: line.item,
+        tenantId,
         qty: line.qty,
         batchNumber: line.batchNumber,
         referenceId: sale._id,
         note: `Sale ${sale.billNumber}`,
         type: "sale",
+        createdBy: userId,
       },
       session
     );
   }
 
   if (sale.customer && sale.balanceDue > 0) {
-    const customer = await Customer.findById(sale.customer).session(session);
+    const customer = await Customer.findOne({
+      _id: sale.customer,
+      tenantId,
+    }).session(session);
     if (customer) {
       customer.currentBalance =
         Number(customer.currentBalance || 0) + Number(sale.balanceDue);
@@ -102,7 +108,13 @@ router.post("/", protect, async (req, res) => {
   session.startTransaction();
 
   try {
-    const calculated = await hydrateAndCalculateSale(req.body);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const calculated = await hydrateAndCalculateSale(req.body, tenantId);
 
     // basic validation
     if (!Array.isArray(calculated.items) || !calculated.items.length) {
@@ -117,12 +129,30 @@ router.post("/", protect, async (req, res) => {
       }
       if (!line.item) throw new Error(`Item id required (line ${i + 1})`);
     }
+    if (calculated.customer) {
+      const customer = await Customer.findOne({
+        _id: calculated.customer,
+        tenantId,
+      }).session(session);
+      if (!customer) {
+        throw new Error("Customer not found");
+      }
+    }
 
-    const saleDocs = await Sale.create([calculated], { session });
+    const saleDocs = await Sale.create(
+      [
+        {
+          ...calculated,
+          tenantId,
+          createdBy: req.user?._id,
+        },
+      ],
+      { session }
+    );
     const sale = saleDocs[0];
 
     if (!sale.savedAsPending) {
-      await applySaleEffects(sale, session);
+      await applySaleEffects(sale, tenantId, req.user?._id, session);
     }
 
     await session.commitTransaction();
@@ -141,7 +171,16 @@ router.put("/:id/finalize", protect, async (req, res) => {
   session.startTransaction();
 
   try {
-    const sale = await Sale.findById(req.params.id).session(session);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const sale = await Sale.findOne({
+      _id: req.params.id,
+      tenantId,
+    }).session(session);
     if (!sale) {
       await session.abortTransaction();
       session.endSession();
@@ -152,14 +191,18 @@ router.put("/:id/finalize", protect, async (req, res) => {
       session.endSession();
       return res.status(400).json({ message: "Sale already finalized" });
     }
-    const calculated = await hydrateAndCalculateSale({
-      ...sale.toObject(),
-      ...req.body,
-      savedAsPending: false,
-    });
+    const calculated = await hydrateAndCalculateSale(
+      {
+        ...sale.toObject(),
+        ...req.body,
+        savedAsPending: false,
+      },
+      tenantId
+    );
     sale.set(calculated);
+    sale.updatedBy = req.user?._id;
     await sale.save({ session });
-    await applySaleEffects(sale, session);
+    await applySaleEffects(sale, tenantId, req.user?._id, session);
     await session.commitTransaction();
     session.endSession();
     res.json(sale);
@@ -174,8 +217,12 @@ router.put("/:id/finalize", protect, async (req, res) => {
 
 // List sales (daily)
 router.get("/", protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { date } = req.query;
-  const filter = {};
+  const filter = { tenantId };
   if (date) {
     const d = new Date(date);
     const start = new Date(d.setHours(0, 0, 0, 0));
@@ -191,7 +238,14 @@ router.get("/", protect, async (req, res) => {
 
 // Get sale
 router.get("/:id", protect, async (req, res) => {
-  const sale = await Sale.findById(req.params.id).populate(
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const sale = await Sale.findOne({
+    _id: req.params.id,
+    tenantId,
+  }).populate(
     "customer",
     "name phone address"
   );

@@ -47,7 +47,7 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
               </p>
             </div>
             <button
-              className="w-8 h-8 rounded-lg hover:bg-gray-100"
+              className="w-8 h-8 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
               onClick={onClose}
             >
               ✕
@@ -187,13 +187,13 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-5">
           <div className="flex justify-end gap-3">
             <button
-              className="px-6 py-3 border-2 border-gray-300 rounded-xl"
+              className="px-6 py-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
               onClick={onClose}
             >
               Close
             </button>
             <button
-              className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl"
+              className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl cursor-pointer hover:shadow-lg active:scale-95 transition-all"
               onClick={() => {
                 onEdit(item);
                 onClose();

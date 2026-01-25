@@ -13,6 +13,12 @@ router.post("/", protect, async (req, res) => {
   session.startTransaction();
 
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const {
       supplier,
       billNumber,
@@ -32,7 +38,10 @@ router.post("/", protect, async (req, res) => {
       return res.status(400).json({ message: "At least one item is required" });
     }
 
-    const supplierDoc = await Supplier.findById(supplier).session(session);
+    const supplierDoc = await Supplier.findOne({
+      _id: supplier,
+      tenantId,
+    }).session(session);
     if (!supplierDoc) {
       await session.abortTransaction();
       session.endSession();
@@ -41,9 +50,10 @@ router.post("/", protect, async (req, res) => {
 
     // Validate items and ensure base units only
     const itemIds = items.map((l) => l.item);
-    const itemDocs = await Item.find({ _id: { $in: itemIds } }).session(
-      session
-    );
+    const itemDocs = await Item.find({
+      _id: { $in: itemIds },
+      tenantId,
+    }).session(session);
     const itemMap = new Map(itemDocs.map((it) => [String(it._id), it]));
 
     for (let i = 0; i < items.length; i++) {
@@ -81,6 +91,7 @@ router.post("/", protect, async (req, res) => {
       [
         {
           ...req.body,
+          tenantId,
           supplier,
           billNumber,
           billDate,
@@ -90,6 +101,7 @@ router.post("/", protect, async (req, res) => {
           balanceDue,
           status,
           items,
+          createdBy: req.user?._id,
         },
       ],
       { session }
@@ -102,11 +114,13 @@ router.post("/", protect, async (req, res) => {
       await addStock(
         {
           itemId: itemDoc._id,
+          tenantId,
           qty: line.qty,
           batchNumber: line.batchNumber,
           referenceId: purchase[0]._id,
           note: `Purchase ${billNumber}`,
           type: "purchase",
+          createdBy: req.user?._id,
         },
         session
       );
@@ -120,7 +134,10 @@ router.post("/", protect, async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    const created = await Purchase.findById(purchase[0]._id)
+    const created = await Purchase.findOne({
+      _id: purchase[0]._id,
+      tenantId,
+    })
       .populate("supplier", "name")
       .session(null);
     res.status(201).json(created);
@@ -132,8 +149,12 @@ router.post("/", protect, async (req, res) => {
 });
 
 router.get("/", protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { from, to } = req.query;
-  const filter = {};
+  const filter = { tenantId };
   if (from || to) {
     filter.billDate = {};
     if (from) filter.billDate.$gte = new Date(from);

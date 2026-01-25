@@ -6,14 +6,26 @@ import { Purchase } from "../models/Purchase.js";
 const router = express.Router();
 
 router.post("/", protect, async (req, res) => {
-  const supplier = await Supplier.create(req.body);
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const { tenantId: ignoredTenant, ...safe } = req.body;
+  const supplier = await Supplier.create({ ...safe, tenantId });
   res.status(201).json(supplier);
 });
 
 // Update supplier
 router.put("/:id", protect, async (req, res) => {
   try {
-    const supplier = await Supplier.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const supplier = await Supplier.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
@@ -46,8 +58,12 @@ router.put("/:id", protect, async (req, res) => {
 });
 
 router.get("/", protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { q } = req.query;
-  const filter = {};
+  const filter = { tenantId };
   if (q) {
     filter.$text = { $search: q };
   }
@@ -56,21 +72,36 @@ router.get("/", protect, async (req, res) => {
 });
 
 router.get("/:id", protect, async (req, res) => {
-  const supplier = await Supplier.findById(req.params.id);
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const supplier = await Supplier.findOne({
+    _id: req.params.id,
+    tenantId,
+  });
   if (!supplier) {
     res.status(404);
     throw new Error("Supplier not found");
   }
-  const purchases = await Purchase.find({ supplier: supplier._id }).sort({
-    createdAt: -1,
-  });
+  const purchases = await Purchase.find({
+    tenantId,
+    supplier: supplier._id,
+  }).sort({ createdAt: -1 });
   res.json({ supplier, purchases });
 });
 
 // Pay down supplier outstanding (reduces currentBalance)
 router.post("/:id/pay", protect, async (req, res) => {
   try {
-    const supplier = await Supplier.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const supplier = await Supplier.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
@@ -99,7 +130,14 @@ router.post("/:id/pay", protect, async (req, res) => {
 // Delete supplier (only if no outstanding balance and no purchases)
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const supplier = await Supplier.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const supplier = await Supplier.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
@@ -111,6 +149,7 @@ router.delete("/:id", protect, async (req, res) => {
     }
 
     const purchaseCount = await Purchase.countDocuments({
+      tenantId,
       supplier: supplier._id,
     });
     if (purchaseCount > 0) {
@@ -119,7 +158,7 @@ router.delete("/:id", protect, async (req, res) => {
       });
     }
 
-    await Supplier.findByIdAndDelete(req.params.id);
+    await Supplier.findOneAndDelete({ _id: req.params.id, tenantId });
     res.json({ message: "Supplier deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

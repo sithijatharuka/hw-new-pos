@@ -8,7 +8,7 @@ const SettingsPage = ({ user }) => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'owner';
 
   const loadSettings = async () => {
     setLoading(true);
@@ -45,7 +45,7 @@ const SettingsPage = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) {
-      setError('Only admin users can change settings.');
+      setError('Only admin or owner users can change settings.');
       return;
     }
     setSaving(true);
@@ -97,7 +97,7 @@ const SettingsPage = ({ user }) => {
           <p className="capitalize">Role: {user?.role}</p>
           {!isAdmin && (
             <p className="text-red-500 mt-1">
-              Only admin can update settings (view only).
+              Only admin or owner can update settings (view only).
             </p>
           )}
         </div>

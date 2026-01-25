@@ -18,6 +18,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import grnRoutes from "./routes/grnRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/grns", grnRoutes);
+app.use("/api/users", userRoutes);
 
 // 404 + error (keep these LAST)
 app.use(notFound);

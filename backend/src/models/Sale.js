@@ -64,7 +64,8 @@ const paymentSchema = new mongoose.Schema(
 
 const saleSchema = new mongoose.Schema(
   {
-    billNumber: { type: String, required: true, unique: true, index: true },
+    tenantId: { type: String, required: true, index: true },
+    billNumber: { type: String, required: true, index: true },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
     items: [saleItemSchema],
     subTotal: {
@@ -105,6 +106,8 @@ const saleSchema = new mongoose.Schema(
     },
     isTaxInvoice: { type: Boolean, default: false },
     savedAsPending: { type: Boolean, default: false },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,
@@ -117,6 +120,11 @@ const saleSchema = new mongoose.Schema(
 saleSchema.index({ billNumber: 1 }, { name: "sale_bill_number" });
 saleSchema.index({ customer: 1 }, { name: "sale_customer" });
 saleSchema.index({ status: 1 }, { name: "sale_status" });
+saleSchema.index({ tenantId: 1 }, { name: "sale_tenant" });
+saleSchema.index(
+  { tenantId: 1, billNumber: 1 },
+  { unique: true, name: "sale_tenant_bill_number" }
+);
 
 // Date-based indexes for reporting
 saleSchema.index({ createdAt: -1 }, { name: "sale_recent" });

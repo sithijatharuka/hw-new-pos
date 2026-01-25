@@ -7,13 +7,13 @@ import { StockMovement } from "../models/StockMovement.js";
 const asNumber = (v) =>
   v === null || v === undefined || v === "" ? NaN : Number(v);
 
-const validateGrnLines = async (lines) => {
+const validateGrnLines = async (lines, tenantId) => {
   if (!Array.isArray(lines) || lines.length === 0) {
     throw new Error("GRN must have at least one item line");
   }
 
   const itemIds = lines.map((l) => l.item);
-  const items = await Item.find({ _id: { $in: itemIds } });
+  const items = await Item.find({ _id: { $in: itemIds }, tenantId });
   const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
   for (let i = 0; i < lines.length; i++) {
@@ -55,8 +55,8 @@ const validateGrnLines = async (lines) => {
 /**
  * Generate GRN number for a supplier: SUPPLIERCODE-GRN####
  */
-const generateGRNNumber = async (supplierId) => {
-  const supplier = await Supplier.findById(supplierId);
+const generateGRNNumber = async (supplierId, tenantId) => {
+  const supplier = await Supplier.findOne({ _id: supplierId, tenantId });
   if (!supplier) throw new Error("Supplier not found");
 
   const supplierCode =
@@ -64,6 +64,7 @@ const generateGRNNumber = async (supplierId) => {
 
   // Find the last GRN for this supplier to get the next sequence number
   const lastGRN = await GRN.findOne({
+    tenantId,
     supplier: supplierId,
     grnNo: new RegExp(`^${supplierCode}-GRN\\d+$`),
   })
@@ -86,6 +87,10 @@ const generateGRNNumber = async (supplierId) => {
  */
 export const createGRN = async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { supplier, lines } = req.body;
     let { grnNo } = req.body;
 
@@ -98,36 +103,40 @@ export const createGRN = async (req, res) => {
       return res.status(400).json({ message: "At least one item is required" });
     }
 
-    const supplierExists = await Supplier.findById(supplier);
+    const supplierExists = await Supplier.findOne({
+      _id: supplier,
+      tenantId,
+    });
     if (!supplierExists) {
       return res.status(404).json({ message: "Supplier not found" });
     }
 
     // Auto-generate GRN number if not provided
     if (!grnNo || !grnNo.trim()) {
-      grnNo = await generateGRNNumber(supplier);
+      grnNo = await generateGRNNumber(supplier, tenantId);
     } else {
       grnNo = String(grnNo).trim();
-      const exists = await GRN.findOne({ grnNo });
+      const exists = await GRN.findOne({ tenantId, grnNo });
       if (exists)
         return res.status(400).json({ message: "GRN No already exists" });
     }
 
     // Validate items exist + batch requirements (but do not change stock)
     try {
-      await validateGrnLines(lines);
+      await validateGrnLines(lines, tenantId);
     } catch (err) {
       return res.status(400).json({ message: err.message });
     }
 
     const grn = await GRN.create({
       ...req.body,
+      tenantId,
       grnNo,
       status: "draft",
       createdBy: req.user?._id,
     });
 
-    const populated = await GRN.findById(grn._id)
+    const populated = await GRN.findOne({ _id: grn._id, tenantId })
       .populate("supplier")
       .populate("lines.item");
     res.status(201).json(populated);
@@ -147,7 +156,16 @@ export const postGRN = async (req, res) => {
   session.startTransaction();
 
   try {
-    const grn = await GRN.findById(req.params.id).session(session);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grn = await GRN.findOne({
+      _id: req.params.id,
+      tenantId,
+    }).session(session);
     if (!grn) {
       await session.abortTransaction();
       session.endSession();
@@ -170,7 +188,10 @@ export const postGRN = async (req, res) => {
 
     // Fetch all items involved in the GRN
     const itemIds = grn.lines.map((l) => l.item);
-    const items = await Item.find({ _id: { $in: itemIds } }).session(session);
+    const items = await Item.find({
+      _id: { $in: itemIds },
+      tenantId,
+    }).session(session);
     const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
     // Process each line
@@ -269,12 +290,14 @@ export const postGRN = async (req, res) => {
       await StockMovement.create(
         [
           {
+            tenantId,
             item: item._id,
             type: "grn",
             direction: "in",
             qty,
             referenceId: grn._id,
             note: `GRN Posted: ${grn.grnNo}`,
+            createdBy: req.user?._id,
           },
         ],
         { session }
@@ -284,12 +307,13 @@ export const postGRN = async (req, res) => {
     // Mark GRN as posted
     grn.status = "posted";
     grn.postedAt = new Date();
+    grn.updatedBy = req.user?._id;
     await grn.save({ session });
 
     await session.commitTransaction();
     session.endSession();
 
-    const populated = await GRN.findById(grn._id)
+    const populated = await GRN.findOne({ _id: grn._id, tenantId })
       .populate("supplier")
       .populate("lines.item");
     res.json(populated);
@@ -309,7 +333,16 @@ export const cancelGRN = async (req, res) => {
   session.startTransaction();
 
   try {
-    const grn = await GRN.findById(req.params.id).session(session);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grn = await GRN.findOne({
+      _id: req.params.id,
+      tenantId,
+    }).session(session);
     if (!grn) return res.status(404).json({ message: "GRN not found" });
 
     if (grn.status !== "posted") {
@@ -319,7 +352,10 @@ export const cancelGRN = async (req, res) => {
     }
 
     const itemIds = grn.lines.map((l) => l.item);
-    const items = await Item.find({ _id: { $in: itemIds } }).session(session);
+    const items = await Item.find({
+      _id: { $in: itemIds },
+      tenantId,
+    }).session(session);
     const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
     for (let i = 0; i < grn.lines.length; i++) {
@@ -381,12 +417,14 @@ export const cancelGRN = async (req, res) => {
       await StockMovement.create(
         [
           {
+            tenantId,
             item: it._id,
             type: "grn_cancel",
             direction: "out",
             qty,
             referenceId: grn._id,
             note: `GRN Cancelled: ${grn.grnNo}`,
+            createdBy: req.user?._id,
           },
         ],
         { session }
@@ -395,12 +433,13 @@ export const cancelGRN = async (req, res) => {
 
     grn.status = "cancelled";
     grn.cancelledAt = new Date();
+    grn.updatedBy = req.user?._id;
     await grn.save({ session });
 
     await session.commitTransaction();
     session.endSession();
 
-    const populated = await GRN.findById(grn._id)
+    const populated = await GRN.findOne({ _id: grn._id, tenantId })
       .populate("supplier")
       .populate("lines.item");
     res.json(populated);
@@ -417,7 +456,11 @@ export const cancelGRN = async (req, res) => {
  */
 export const getAllGRNs = async (req, res) => {
   try {
-    const grns = await GRN.find()
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grns = await GRN.find({ tenantId })
       .populate("supplier")
       .populate("lines.item")
       .sort({ grnDate: -1 });
@@ -433,7 +476,14 @@ export const getAllGRNs = async (req, res) => {
  */
 export const getGRN = async (req, res) => {
   try {
-    const grn = await GRN.findById(req.params.id)
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grn = await GRN.findOne({
+      _id: req.params.id,
+      tenantId,
+    })
       .populate("supplier")
       .populate("lines.item");
     if (!grn) return res.status(404).json({ message: "GRN not found" });
@@ -449,13 +499,20 @@ export const getGRN = async (req, res) => {
  */
 export const getSupplierGRNs = async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { supplierId } = req.params;
 
-    const supplier = await Supplier.findById(supplierId);
+    const supplier = await Supplier.findOne({
+      _id: supplierId,
+      tenantId,
+    });
     if (!supplier)
       return res.status(404).json({ message: "Supplier not found" });
 
-    const grns = await GRN.find({ supplier: supplierId })
+    const grns = await GRN.find({ tenantId, supplier: supplierId })
       .populate("supplier")
       .populate("lines.item")
       .sort({ grnDate: -1 });
@@ -472,7 +529,14 @@ export const getSupplierGRNs = async (req, res) => {
  */
 export const updateGRN = async (req, res) => {
   try {
-    const grn = await GRN.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grn = await GRN.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!grn) return res.status(404).json({ message: "GRN not found" });
 
     if (grn.status !== "draft") {
@@ -482,20 +546,39 @@ export const updateGRN = async (req, res) => {
     }
 
     // Prevent changing status via update
-    const { status, postedAt, cancelledAt, ...safe } = req.body;
+    const {
+      status,
+      postedAt,
+      cancelledAt,
+      tenantId: ignoredTenant,
+      createdBy,
+      updatedBy,
+      ...safe
+    } = req.body;
+
+    if (safe.supplier) {
+      const supplierExists = await Supplier.findOne({
+        _id: safe.supplier,
+        tenantId,
+      });
+      if (!supplierExists) {
+        return res.status(400).json({ message: "Supplier not found" });
+      }
+    }
 
     try {
-      await validateGrnLines(safe.lines || grn.lines || []);
+      await validateGrnLines(safe.lines || grn.lines || [], tenantId);
     } catch (err) {
       return res.status(400).json({ message: err.message });
     }
 
     Object.assign(grn, safe);
     grn.status = "draft";
+    grn.updatedBy = req.user?._id;
 
     await grn.save();
 
-    const populated = await GRN.findById(grn._id)
+    const populated = await GRN.findOne({ _id: grn._id, tenantId })
       .populate("supplier")
       .populate("lines.item");
     res.json(populated);
@@ -510,7 +593,14 @@ export const updateGRN = async (req, res) => {
  */
 export const deleteGRN = async (req, res) => {
   try {
-    const grn = await GRN.findById(req.params.id);
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const grn = await GRN.findOne({
+      _id: req.params.id,
+      tenantId,
+    });
     if (!grn) return res.status(404).json({ message: "GRN not found" });
 
     if (grn.status !== "draft") {
@@ -519,7 +609,7 @@ export const deleteGRN = async (req, res) => {
         .json({ message: "Only DRAFT GRNs can be deleted" });
     }
 
-    await GRN.findByIdAndDelete(req.params.id);
+    await GRN.findOneAndDelete({ _id: req.params.id, tenantId });
     res.json({ message: "Draft GRN deleted successfully" });
   } catch (err) {
     console.error("Error in deleteGRN:", err);

@@ -9,15 +9,15 @@ const POSItemsSection = ({
   addEmptyLineIfNeeded,
 }) => {
   return (
-    <div className="p-4 sm:p-6 border-b border-gray-200">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+    <div className="p-4 border-b border-gray-200 sm:p-6">
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-base font-bold text-gray-900 sm:text-lg">
           Items List
         </h3>
         <button
           type="button"
           onClick={addEmptyLineIfNeeded}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:scale-95 transition-all duration-200 font-medium cursor-pointer text-sm self-start sm:self-auto"
+          className="self-start px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 active:scale-95 sm:self-auto"
         >
           + Add Row
         </button>
@@ -25,7 +25,7 @@ const POSItemsSection = ({
 
       {/* Desktop table */}
       <div className="hidden lg:block">
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <div className="overflow-x-auto border border-gray-200 rounded-xl">
           <table className="min-w-full text-xs sm:text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -61,7 +61,7 @@ const POSItemsSection = ({
                 return (
                   <tr
                     key={idx}
-                    className="hover:bg-gray-50/50 transition-colors"
+                    className="transition-colors hover:bg-gray-50/50"
                   >
                     <td className="py-3 px-3 sm:px-4 align-top min-w-[180px]">
                       <div
@@ -84,7 +84,7 @@ const POSItemsSection = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 align-top">
+                    <td className="px-3 py-3 align-top sm:px-4">
                       <input
                         type="number"
                         min="0"
@@ -106,7 +106,7 @@ const POSItemsSection = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 align-top">
+                    <td className="px-3 py-3 align-top sm:px-4">
                       <input
                         className={`w-20 sm:w-full px-3 py-2 text-xs sm:text-sm text-center rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
                           err.unit
@@ -126,7 +126,7 @@ const POSItemsSection = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 align-top">
+                    <td className="px-3 py-3 align-top sm:px-4">
                       <input
                         type="number"
                         min="0"
@@ -148,7 +148,7 @@ const POSItemsSection = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 align-top">
+                    <td className="px-3 py-3 align-top sm:px-4">
                       <input
                         type="number"
                         min="0"
@@ -171,20 +171,20 @@ const POSItemsSection = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 text-right text-xs sm:text-sm text-gray-700 font-medium align-top whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-medium text-right text-gray-700 align-top sm:px-4 sm:text-sm whitespace-nowrap">
                       {Number(line.taxAmount || 0).toFixed(2)}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 text-right text-xs sm:text-sm text-gray-900 font-bold align-top whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-bold text-right text-gray-900 align-top sm:px-4 sm:text-sm whitespace-nowrap">
                       {Number(line.lineTotal || 0).toFixed(2)}
                     </td>
 
-                    <td className="py-3 px-3 sm:px-4 text-center align-top">
+                    <td className="px-3 py-3 text-center align-top sm:px-4">
                       {line.item && (
                         <button
                           type="button"
                           onClick={() => deleteLine(idx)}
-                          className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center justify-center text-red-600 transition-colors rounded-lg cursor-pointer w-7 h-7 sm:w-8 sm:h-8 hover:bg-red-50"
                           title="Delete line"
                         >
                           🗑️
@@ -206,7 +206,7 @@ const POSItemsSection = ({
           renderCard={(line, idx) => {
             const err = lineErrors[idx] || {};
             return (
-              <div className="border border-gray-200 rounded-xl bg-gray-50 p-3 sm:p-4 space-y-3">
+              <div className="p-3 space-y-3 border border-gray-200 rounded-xl bg-gray-50 sm:p-4">
                 <div>
                   <div
                     className={`w-full px-3 py-2 text-xs sm:text-sm rounded-lg border transition-all break-words ${
@@ -328,7 +328,7 @@ const POSItemsSection = ({
                 </div>
 
                 <div className="flex items-center justify-between mt-1">
-                  <div className="text-xs sm:text-sm text-gray-600">
+                  <div className="text-xs text-gray-600 sm:text-sm">
                     <div>
                       VAT:{" "}
                       <span className="font-medium text-gray-800">
@@ -346,7 +346,7 @@ const POSItemsSection = ({
                     <button
                       type="button"
                       onClick={() => deleteLine(idx)}
-                      className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="inline-flex items-center justify-center w-8 h-8 text-red-600 transition-colors rounded-lg cursor-pointer hover:bg-red-50"
                       title="Delete line"
                     >
                       🗑️
@@ -357,7 +357,7 @@ const POSItemsSection = ({
             );
           }}
           emptyState={
-            <div className="flex flex-col items-center justify-center space-y-3 text-center py-8 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-8 space-y-3 text-center text-gray-400">
               <p className="text-sm">
                 No items added yet. Start by adding items above.
               </p>

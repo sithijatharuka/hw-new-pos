@@ -23,13 +23,13 @@ const InventoryFilters = ({
           />
           <div className="flex gap-2 w-full sm:w-auto">
             <button
-              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl"
+              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
               onClick={onSearch}
             >
               Search
             </button>
             <button
-              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl"
+              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
               onClick={onClear}
             >
               Clear

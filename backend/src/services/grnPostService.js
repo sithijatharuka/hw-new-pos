@@ -15,7 +15,7 @@ import { Item } from "../models/Item.js";
  * - Enforces: if item.isBatchTracked => line.batchNumber is required
  * - Also prevents negative qty and handles empty lines via GRN schema validator
  */
-export async function postGRN({ grnId, postedBy }) {
+export async function postGRN({ grnId, postedBy, tenantId }) {
   if (!mongoose.isValidObjectId(grnId)) {
     throw new Error("Invalid grnId");
   }
@@ -25,7 +25,7 @@ export async function postGRN({ grnId, postedBy }) {
   try {
     const result = await session.withTransaction(async () => {
       // 1) Load GRN (lock it by using the session)
-      const grn = await GRN.findById(grnId).session(session);
+      const grn = await GRN.findOne({ _id: grnId, tenantId }).session(session);
       if (!grn) throw new Error("GRN not found");
 
       if (grn.status !== "draft") {
@@ -39,7 +39,11 @@ export async function postGRN({ grnId, postedBy }) {
       // 2) Gather item IDs and load items in one query
       const itemIds = [...new Set(grn.lines.map((l) => String(l.item)))];
 
-      const items = await Item.find({ _id: { $in: itemIds }, isActive: true })
+      const items = await Item.find({
+        _id: { $in: itemIds },
+        tenantId,
+        isActive: true,
+      })
         .session(session)
         .select("_id isBatchTracked inventory batches");
 

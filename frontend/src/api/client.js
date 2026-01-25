@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,7 +22,8 @@ api.interceptors.response.use(
       const errorMessage = error.response.data?.message || "Session expired";
       if (!window.location.pathname.includes("/login")) {
         toast.error(errorMessage + ". Please login again.");
-        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         setTimeout(() => {
           window.location.href = "/login";
@@ -30,7 +31,7 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

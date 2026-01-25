@@ -48,6 +48,20 @@ export const validateLine = (line) => {
   if (Number.isNaN(disc) || disc < 0 || disc > 100)
     errors.discount = "Discount must be between 0 and 100.";
 
+  // Batch-tracked item: require batch selection
+  if (line.item && line.item.isBatchTracked) {
+    if (
+      !line.batchNumber &&
+      !line.batchId &&
+      !(
+        line.selectedBatch &&
+        (line.selectedBatch.batchNumber || line.selectedBatch._id)
+      )
+    ) {
+      errors.batch = `Batch number required for "${line.name}"`;
+    }
+  }
+
   return errors;
 };
 

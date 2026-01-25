@@ -6,8 +6,14 @@ const router = express.Router();
 
 // Create expense
 router.post('/', protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const { createdBy, updatedBy, tenantId: ignoredTenant, ...safe } = req.body;
   const expense = await Expense.create({
-    ...req.body,
+    ...safe,
+    tenantId,
     createdBy: req.user?._id,
   });
   res.status(201).json(expense);
@@ -15,8 +21,12 @@ router.post('/', protect, async (req, res) => {
 
 // List expenses with optional date range
 router.get('/', protect, async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { from, to } = req.query;
-  const filter = {};
+  const filter = { tenantId };
   if (from || to) {
     filter.date = {};
     if (from) filter.date.$gte = new Date(from);
@@ -28,9 +38,16 @@ router.get('/', protect, async (req, res) => {
 
 // Update expense
 router.put('/:id', protect, async (req, res) => {
-  const expense = await Expense.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const { createdBy, updatedBy, tenantId: ignoredTenant, ...safe } = req.body;
+  const expense = await Expense.findOneAndUpdate(
+    { _id: req.params.id, tenantId },
+    { ...safe, updatedBy: req.user?._id },
+    { new: true }
+  );
   if (!expense) {
     res.status(404);
     throw new Error('Expense not found');
@@ -40,7 +57,11 @@ router.put('/:id', protect, async (req, res) => {
 
 // Delete expense
 router.delete('/:id', protect, async (req, res) => {
-  const expense = await Expense.findById(req.params.id);
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const expense = await Expense.findOne({ _id: req.params.id, tenantId });
   if (!expense) {
     res.status(404);
     throw new Error('Expense not found');

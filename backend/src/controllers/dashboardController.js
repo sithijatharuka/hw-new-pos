@@ -9,6 +9,10 @@ import { Expense } from "../models/Expense.js";
 // 1. REAL-TIME DAILY SALES OVERVIEW
 // ==========================================
 export const getDailySalesOverview = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { date, startDate, endDate } = req.query;
 
   let start, end;
@@ -43,6 +47,7 @@ export const getDailySalesOverview = async (req, res) => {
   }
 
   const sales = await Sale.find({
+    tenantId,
     createdAt: { $gte: start, $lte: end },
   });
 
@@ -90,7 +95,11 @@ export const getDailySalesOverview = async (req, res) => {
 // 2. LOW STOCK CRITICAL ITEMS
 // ==========================================
 export const getLowStockItems = async (req, res) => {
-  const items = await Item.find({ isActive: true });
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const items = await Item.find({ tenantId, isActive: true });
 
   const lowStockItems = items
     .map((item) => {
@@ -137,7 +146,11 @@ export const getLowStockItems = async (req, res) => {
 // 3. OUTSTANDING CUSTOMER CREDIT SUMMARY
 // ==========================================
 export const getOutstandingCredits = async (req, res) => {
-  const customers = await Customer.find();
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
+  const customers = await Customer.find({ tenantId });
 
   const creditData = customers
     .map((customer) => ({
@@ -174,8 +187,13 @@ export const getOutstandingCredits = async (req, res) => {
 // 4. SUPPLIER PAYABLES
 // ==========================================
 export const getSupplierPayables = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   // Get all active suppliers with outstanding balance
   const suppliers = await Supplier.find({
+    tenantId,
     currentBalance: { $gt: 0 },
     status: "active",
   }).sort({ currentBalance: -1 });
@@ -185,6 +203,7 @@ export const getSupplierPayables = async (req, res) => {
 
   for (const supplier of suppliers.slice(0, 10)) {
     const unpaidPurchases = await Purchase.find({
+      tenantId,
       supplier: supplier._id,
       status: { $ne: "paid" },
     })
@@ -222,6 +241,10 @@ export const getSupplierPayables = async (req, res) => {
 // range of days (e.g., last 7 or last 30 days)
 // ==========================================
 export const getMonthlySalesTrend = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { months = 12, range = "months", days = 30 } = req.query;
 
   // Daily trend (used for last 7 / last 30 days)
@@ -253,6 +276,7 @@ export const getMonthlySalesTrend = async (req, res) => {
       );
 
       const sales = await Sale.find({
+        tenantId,
         createdAt: { $gte: startOfDay, $lte: endOfDay },
       });
 
@@ -291,6 +315,7 @@ export const getMonthlySalesTrend = async (req, res) => {
     );
 
     const sales = await Sale.find({
+      tenantId,
       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
     });
 
@@ -314,6 +339,10 @@ export const getMonthlySalesTrend = async (req, res) => {
 // 6. TOP SELLING CATEGORIES
 // ==========================================
 export const getTopCategories = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { period = "today", startDate, endDate } = req.query;
   let dateFilter = {};
 
@@ -370,7 +399,9 @@ export const getTopCategories = async (req, res) => {
     dateFilter = { createdAt: { $gte: start, $lte: end } };
   }
 
-  const sales = await Sale.find(dateFilter).populate("items.item");
+  const sales = await Sale.find({ tenantId, ...dateFilter }).populate(
+    "items.item"
+  );
 
   const categoryStats = {};
 
@@ -409,6 +440,10 @@ export const getTopCategories = async (req, res) => {
 // 7. PROFIT CARDS
 // ==========================================
 export const getProfitMetrics = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { startDate, endDate } = req.query;
 
   let todayStart, todayEnd, monthStart, monthEnd;
@@ -483,21 +518,25 @@ export const getProfitMetrics = async (req, res) => {
 
   // Today's/Range sales
   const todaySales = await Sale.find({
+    tenantId,
     createdAt: { $gte: todayStart, $lte: todayEnd },
   });
 
   // This month's sales
   const monthSales = await Sale.find({
+    tenantId,
     createdAt: { $gte: monthStart, $lte: monthEnd },
   });
 
   // Today's/Range expenses
   const todayExpenses = await Expense.find({
+    tenantId,
     date: { $gte: todayStart, $lte: todayEnd },
   });
 
   // This month's expenses
   const monthExpenses = await Expense.find({
+    tenantId,
     date: { $gte: monthStart, $lte: monthEnd },
   });
 
@@ -544,6 +583,10 @@ export const getProfitMetrics = async (req, res) => {
 // EXPENSES SUMMARY
 // ==========================================
 export const getExpensesSummary = async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant context missing" });
+  }
   const { startDate, endDate } = req.query;
 
   let expenseStart, expenseEnd;
@@ -595,6 +638,7 @@ export const getExpensesSummary = async (req, res) => {
 
   // Fetch expenses
   const expenses = await Expense.find({
+    tenantId,
     date: { $gte: expenseStart, $lte: expenseEnd },
   });
 
@@ -630,6 +674,10 @@ export const getExpensesSummary = async (req, res) => {
 // ==========================================
 export const getDashboardSummary = async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { date, startDate, endDate } = req.query;
 
     let start, end;
@@ -673,6 +721,7 @@ export const getDashboardSummary = async (req, res) => {
 
     // 1. Daily Sales
     const todaySales = await Sale.find({
+      tenantId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -709,7 +758,7 @@ export const getDashboardSummary = async (req, res) => {
     });
 
     // 2. Low Stock Items
-    const items = await Item.find({ isActive: true });
+    const items = await Item.find({ tenantId, isActive: true });
     const lowStockItems = items
       .filter((item) => item.currentStock <= item.lowStockLevel)
       .map((item) => ({
@@ -728,7 +777,7 @@ export const getDashboardSummary = async (req, res) => {
       .slice(0, 5);
 
     // 3. Outstanding Credits
-    const customers = await Customer.find();
+    const customers = await Customer.find({ tenantId });
     const totalCredit = customers.reduce((sum, c) => sum + c.currentBalance, 0);
     const topCreditCustomers = customers
       .filter((c) => c.currentBalance > 0)
@@ -743,6 +792,7 @@ export const getDashboardSummary = async (req, res) => {
 
     // 4. Supplier Payables
     const unpaidPurchases = await Purchase.find({
+      tenantId,
       status: { $ne: "paid" },
     }).populate("supplier");
 

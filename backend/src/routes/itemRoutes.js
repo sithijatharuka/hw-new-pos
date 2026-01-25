@@ -84,7 +84,11 @@ const isValidId = (id) => mongoose.isValidObjectId(id);
 // Categories list
 router.get("/categories/list", protect, async (req, res) => {
   try {
-    const categories = await Item.distinct("category");
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const categories = await Item.distinct("category", { tenantId });
     res.json(categories.filter(Boolean).sort());
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -94,7 +98,11 @@ router.get("/categories/list", protect, async (req, res) => {
 // Base Units list
 router.get("/units/list", protect, async (req, res) => {
   try {
-    const units = await Item.distinct("baseUnit");
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
+    const units = await Item.distinct("baseUnit", { tenantId });
     res.json(units.filter(Boolean).sort());
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -104,9 +112,13 @@ router.get("/units/list", protect, async (req, res) => {
 // List items (search + lowStock + category + isActive)
 router.get("/", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { q, lowStock, category, isActive } = req.query;
 
-    const filter = {};
+    const filter = { tenantId };
     if (category) filter.category = category;
 
     if (isActive === "true") filter.isActive = true;
@@ -151,8 +163,12 @@ router.get("/", protect, async (req, res) => {
 // Barcode lookup (exact match) -> fast for POS scanning
 router.get("/barcode/:code", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const code = String(req.params.code || "").trim();
-    const item = await Item.findOne({ barcode: code }).select(
+    const item = await Item.findOne({ tenantId, barcode: code }).select(
       "sku name barcode category brand baseUnit sellingPrice costPrice lastPurchasePrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate batches"
     );
 
@@ -177,12 +193,16 @@ router.get("/barcode/:code", protect, async (req, res) => {
  */
 router.get("/:id/batches", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
     // Only fetch what's needed for "show item + batches"
-    const item = await Item.findById(id).select(
+    const item = await Item.findOne({ _id: id, tenantId }).select(
       "sku name barcode baseUnit isActive isBatchTracked inventory.onHand inventory.reserved batches"
     );
 
@@ -240,6 +260,10 @@ router.get("/:id/batches", protect, async (req, res) => {
 // Create item (MASTER ONLY, always zero stock)
 router.post("/", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const payload = sanitizeItemPayload(req.body);
 
     if (!payload.sku || !payload.name || !payload.baseUnit) {
@@ -250,6 +274,7 @@ router.post("/", protect, async (req, res) => {
 
     // Optional business rule: unique name + category
     const existing = await Item.findOne({
+      tenantId,
       name: new RegExp(`^${payload.name}$`, "i"),
       category: payload.category || "",
     });
@@ -264,6 +289,7 @@ router.post("/", protect, async (req, res) => {
 
     const item = await Item.create({
       ...payload,
+      tenantId,
       // enforce clean stock state
       inventory: {
         onHand: 0,
@@ -289,13 +315,17 @@ router.post("/", protect, async (req, res) => {
 // Update item (MASTER ONLY)
 router.put("/:id", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
     const payload = sanitizeItemPayload(req.body);
 
-    const item = await Item.findById(id);
+    const item = await Item.findOne({ _id: id, tenantId });
     if (!item) return res.status(404).json({ message: "Item not found" });
 
     Object.assign(item, payload);
@@ -319,11 +349,15 @@ router.put("/:id", protect, async (req, res) => {
 
 router.patch("/:id/activate", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
-    const item = await Item.findById(id);
+    const item = await Item.findOne({ _id: id, tenantId });
     if (!item) return res.status(404).json({ message: "Item not found" });
 
     item.isActive = true;
@@ -337,11 +371,15 @@ router.patch("/:id/activate", protect, async (req, res) => {
 
 router.patch("/:id/deactivate", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
-    const item = await Item.findById(id);
+    const item = await Item.findOne({ _id: id, tenantId });
     if (!item) return res.status(404).json({ message: "Item not found" });
 
     item.isActive = false;
@@ -360,11 +398,15 @@ router.patch("/:id/deactivate", protect, async (req, res) => {
  */
 router.delete("/:id", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
-    const item = await Item.findByIdAndDelete(id);
+    const item = await Item.findOneAndDelete({ _id: id, tenantId });
     if (!item) return res.status(404).json({ message: "Item not found" });
 
     res.json({ message: "Item deleted", id });
@@ -380,11 +422,15 @@ router.delete("/:id", protect, async (req, res) => {
  */
 router.get("/:id/stock-history", protect, async (req, res) => {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(403).json({ message: "Tenant context missing" });
+    }
     const { id } = req.params;
     if (!isValidId(id))
       return res.status(400).json({ message: "Invalid item id" });
 
-    const history = await StockMovement.find({ item: id })
+    const history = await StockMovement.find({ tenantId, item: id })
       .sort({ createdAt: -1 })
       .limit(200);
 

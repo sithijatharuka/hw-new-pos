@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import {
-  createItem,
-  updateItem,
-} from "../../../../api/inventory/items";
+import { createItem, updateItem } from "../../../../api/inventory/items";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import ItemForm from "./ItemForm";
@@ -414,43 +411,36 @@ const AddNewItem = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 sm:px-4 py-4 sm:py-6 overflow-auto">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/60">
+      <div className="w-full max-w-5xl my-auto bg-white border border-gray-200 shadow-2xl rounded-2xl">
         {/* Header */}
-        <FormHeader
-          editingId={editingId}
-          onClose={() => {
-            setShowCategoryDropdown(false);
-          onClose?.();
-        }}
-        />
+        <FormHeader editingId={editingId} onClose={onClose} />
 
         {/* Body */}
-        <ItemForm
-          form={form}
-          errs={errs}
-          hasSubmitted={hasSubmitted}
-          categories={categories}
-          customCategories={customCategories}
-          baseUnits={baseUnits}
-          customBaseUnits={customBaseUnits}
-          suppliers={suppliers}
-        onCategoryAdd={onCategoryAdd}
-        onCategoryDelete={onCategoryDelete}
-        onBaseUnitAdd={onBaseUnitAdd}
-        onBaseUnitDelete={onBaseUnitDelete}
-        updateField={updateField}
-        setError={setError}
-      />
+        <div className="max-h-[60vh] overflow-y-auto">
+          <ItemForm
+            form={form}
+            errs={errs}
+            hasSubmitted={hasSubmitted}
+            categories={categories}
+            customCategories={customCategories}
+            baseUnits={baseUnits}
+            customBaseUnits={customBaseUnits}
+            suppliers={suppliers}
+            onCategoryAdd={onCategoryAdd}
+            onCategoryDelete={onCategoryDelete}
+            onBaseUnitAdd={onBaseUnitAdd}
+            onBaseUnitDelete={onBaseUnitDelete}
+            updateField={updateField}
+            setError={setError}
+          />
+        </div>
 
         {/* Footer */}
         <FormFooter
           saving={saving}
           editingId={editingId}
-          onCancel={() => {
-            setShowCategoryDropdown(false);
-            onClose?.();
-          }}
+          onCancel={onClose}
           onSave={handleSave}
         />
       </div>

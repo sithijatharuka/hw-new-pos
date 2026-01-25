@@ -88,7 +88,7 @@ export default function SupplierFormModal({
 
     // Validate all entered numbers + pending input
     const invalidPhones = (form.phones || []).filter(
-      (phone) => !isValidPhoneNumber(phone)
+      (phone) => !isValidPhoneNumber(phone),
     );
     if (invalidPhones.length > 0)
       e.phones = `Phone number "${invalidPhones[0]}" is invalid.`;
@@ -156,20 +156,33 @@ export default function SupplierFormModal({
       notes: form.notes?.trim() || undefined,
       status: form.status,
     };
-
+    console.log("SupplierFormModal submit called. Payload:", payload);
     await onSubmit(payload);
   };
 
   const pt = useMemo(
     () => normalizePaymentTerms(form.paymentTerms),
-    [form.paymentTerms]
+    [form.paymentTerms],
   );
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+    <div
+      className="
+        fixed inset-0 z-50 flex items-center justify-center p-4
+        bg-background-primary/70 backdrop-blur-sm
+        animate-[fadeIn_180ms_ease-out]
+      "
+    >
+      <div
+        className="
+          w-full max-w-2xl overflow-hidden rounded-3xl
+          border border-border-light bg-background-secondary shadow-lg
+          max-h-[120vh]
+          animate-[popIn_220ms_ease-out]
+        "
+      >
         <SupplierFormHeader isEdit={isEdit} onClose={onClose} />
 
         <SupplierFormBody
@@ -178,6 +191,9 @@ export default function SupplierFormModal({
           isEdit={isEdit}
           onFormChange={updateFormField}
           addPhone={addPhone}
+          pt={pt}
+          PAYMENT_TERM_TYPES={PAYMENT_TERM_TYPES}
+          NET_DAY_OPTIONS={NET_DAY_OPTIONS}
         />
 
         <SupplierFormFooter
