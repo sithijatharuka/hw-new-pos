@@ -41,7 +41,7 @@ const saleItemSchema = new mongoose.Schema(
       get: decimalGetter,
     },
   },
-  { _id: false, toJSON: { getters: true }, toObject: { getters: true } }
+  { _id: false, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 const paymentSchema = new mongoose.Schema(
@@ -59,7 +59,7 @@ const paymentSchema = new mongoose.Schema(
     },
     reference: String,
   },
-  { _id: false, toJSON: { getters: true }, toObject: { getters: true } }
+  { _id: false, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 const saleSchema = new mongoose.Schema(
@@ -113,46 +113,29 @@ const saleSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { getters: true },
     toObject: { getters: true },
-  }
+  },
 );
 
-// Indexes for sale transaction queries
-saleSchema.index({ billNumber: 1 }, { name: "sale_bill_number" });
-saleSchema.index({ customer: 1 }, { name: "sale_customer" });
-saleSchema.index({ status: 1 }, { name: "sale_status" });
-saleSchema.index({ tenantId: 1 }, { name: "sale_tenant" });
+// Optimized indexes for sale transaction queries
 saleSchema.index(
   { tenantId: 1, billNumber: 1 },
-  { unique: true, name: "sale_tenant_bill_number" }
-);
-
-// Date-based indexes for reporting
-saleSchema.index({ createdAt: -1 }, { name: "sale_recent" });
-saleSchema.index({ createdAt: 1, status: 1 }, { name: "sale_date_status" });
-
-// Compound indexes for common queries
-saleSchema.index(
-  { customer: 1, createdAt: -1 },
-  { name: "sale_customer_recent" }
+  { unique: true, name: "sale_tenant_bill_number" },
 );
 saleSchema.index(
-  { customer: 1, status: 1, createdAt: -1 },
-  { name: "sale_customer_status_recent" }
+  { tenantId: 1, customer: 1, createdAt: -1 },
+  { name: "sale_tenant_customer_recent" },
 );
-
-// Index for pending payments
 saleSchema.index(
-  { status: 1, balanceDue: 1 },
-  { name: "sale_pending_payments" }
+  { tenantId: 1, status: 1, createdAt: -1 },
+  { name: "sale_tenant_status_recent" },
 );
-
-// Index for credit sales
 saleSchema.index(
-  { status: 1, customer: 1 },
-  { name: "sale_credit_transactions" }
+  { tenantId: 1, createdAt: -1 },
+  { name: "sale_tenant_recent" },
 );
-
-// Index for tax invoice queries
-saleSchema.index({ isTaxInvoice: 1 }, { name: "sale_tax_invoices" });
+saleSchema.index(
+  { tenantId: 1, status: 1, customer: 1 },
+  { name: "sale_tenant_status_customer" },
+);
 
 export const Sale = mongoose.model("Sale", saleSchema);

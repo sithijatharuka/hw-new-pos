@@ -1,5 +1,6 @@
 // GRNForm.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { createGRN, updateGRN } from "../../../api/supplier/grn";
 import AddNewItem from "../../inventory/product/addProduct/AddNewItem";
@@ -22,6 +23,10 @@ function GRNForm({
   existingGRN = null,
   onSuccess,
   onClose,
+  hideHeader = false,
+  hideActions = false,
+  formId = "grn-form",
+  onSavingChange = null,
 
   // ✅ parent refresh hook: fetch items list again after adding a new item
   onItemsRefresh, // async () => { ...fetch items... }
@@ -145,7 +150,7 @@ function GRNForm({
         acc.grandTotal += base;
         return acc;
       },
-      { totalQty: 0, grandTotal: 0 }
+      { totalQty: 0, grandTotal: 0 },
     );
   }, [form.lines]);
 
@@ -214,6 +219,7 @@ function GRNForm({
 
     try {
       setSaving(true);
+      onSavingChange && onSavingChange(true);
 
       // Clean payload: GRN drives stock movement; server recomputes totals & batches.
       const payload = {
@@ -245,13 +251,20 @@ function GRNForm({
       toast.error(err?.response?.data?.message || "Failed to save GRN");
     } finally {
       setSaving(false);
+      onSavingChange && onSavingChange(false);
     }
   };
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <GRNFormHeader existingGRN={existingGRN} supplier={supplier} />
+      <form id={formId} onSubmit={handleSubmit} className="space-y-6">
+        {!hideHeader && (
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <GRNFormHeader existingGRN={existingGRN} supplier={supplier} />
+            </div>
+          </div>
+        )}
 
         <GRNFormMetadata
           existingGRN={existingGRN}
@@ -278,13 +291,15 @@ function GRNForm({
 
         <GRNRemarksSection form={form} onHeaderChange={handleHeaderChange} />
 
-        <GRNFormActions
-          saving={saving}
-          isEditable={isEditable}
-          existingGRN={existingGRN}
-          onCancel={onClose}
-          onSubmit={handleSubmit}
-        />
+        {!hideActions && (
+          <GRNFormActions
+            saving={saving}
+            isEditable={isEditable}
+            existingGRN={existingGRN}
+            onCancel={onClose}
+            onSubmit={handleSubmit}
+          />
+        )}
       </form>
 
       {/* ✅ Add Product Modal (master-only; no stock fields) */}

@@ -1,12 +1,15 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 const LoadingState = () => {
   return (
-    <div className="flex justify-center items-center py-16">
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-gray-600 font-medium">Loading dashboard...</p>
-      </div>
+    <div className="flex justify-center items-center py-10">
+      <AppLoader
+        open
+        variant="inline"
+        title="Loading dashboard"
+        subtitle="Preparing your latest overview"
+      />
     </div>
   );
 };

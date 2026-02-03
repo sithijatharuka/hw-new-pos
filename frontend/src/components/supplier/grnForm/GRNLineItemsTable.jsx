@@ -15,7 +15,7 @@ const GRNLineItemsTable = ({
   onAddLine,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="-mt-3 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-lg font-semibold text-gray-900">Items</h3>
 
@@ -33,25 +33,25 @@ const GRNLineItemsTable = ({
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                 #
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                 Item
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                 Batch No
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                 Qty
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                 Unit Cost
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600">
                 Total
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">
+              <th className="px-4 py-3 text-xs font-semibold text-center text-gray-600">
                 Action
               </th>
             </tr>

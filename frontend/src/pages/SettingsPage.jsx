@@ -1,30 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { getSettings, updateSettings } from '../api/settings/settings';
+import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
+import { getSettings, updateSettings } from "../api/settings/settings";
+import { colors } from "../themes/colors";
+import { PageHeader } from "../components/common";
 
-const SettingsPage = ({ user }) => {
+const SettingsPage = ({ user, api }) => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'owner';
+  const isAdmin = user?.role === "admin" || user?.role === "owner";
+
+  // Common currency options
+  const currencyOptions = [
+    { code: "LKR", symbol: "Rs.", name: "Sri Lankan Rupee" },
+    { code: "USD", symbol: "$", name: "US Dollar" },
+    { code: "EUR", symbol: "€", name: "Euro" },
+    { code: "GBP", symbol: "£", name: "British Pound" },
+    { code: "INR", symbol: "₹", name: "Indian Rupee" },
+    { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
+    { code: "SAR", symbol: "ر.س", name: "Saudi Riyal" },
+  ];
 
   const loadSettings = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const data = await getSettings();
+      const data = await getSettings(api);
       setSettings({
-        shopName: data.shopName || '',
-        shopAddress: data.shopAddress || '',
-        shopPhone: data.shopPhone || '',
-        shopWhatsapp: data.shopWhatsapp || '',
-        vatRegNo: data.vatRegNo || '',
+        shopName: data.shopName || "",
+        shopAddress: data.shopAddress || "",
+        shopPhone: data.shopPhone || "",
+        shopWhatsapp: data.shopWhatsapp || "",
+        vatRegNo: data.vatRegNo || "",
         vatRate: data.vatRate ?? 0.15,
+        currency: data.currency || "LKR",
+        currencySymbol: data.currencySymbol || "Rs.",
+        currencyPosition: data.currencyPosition || "before",
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load settings');
+      setError(err.response?.data?.message || "Failed to load settings");
     } finally {
       setLoading(false);
     }
@@ -38,176 +55,688 @@ const SettingsPage = ({ user }) => {
     const { name, value } = e.target;
     setSettings((prev) => ({
       ...prev,
-      [name]: name === 'vatRate' ? Number(value) : value,
+      [name]: name === "vatRate" ? Number(value) : value,
     }));
+  };
+
+  const handleCurrencyChange = (e) => {
+    const selectedCode = e.target.value;
+    const selectedCurrency = currencyOptions.find(
+      (c) => c.code === selectedCode,
+    );
+    if (selectedCurrency) {
+      setSettings((prev) => ({
+        ...prev,
+        currency: selectedCurrency.code,
+        currencySymbol: selectedCurrency.symbol,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) {
-      setError('Only admin or owner users can change settings.');
+      setError("Only admin or owner users can change settings.");
       return;
     }
     setSaving(true);
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
     try {
-      const data = await updateSettings(settings);
+      const data = await updateSettings(api, settings);
       setSettings({
-        shopName: data.shopName || '',
-        shopAddress: data.shopAddress || '',
-        shopPhone: data.shopPhone || '',
-        shopWhatsapp: data.shopWhatsapp || '',
-        vatRegNo: data.vatRegNo || '',
+        shopName: data.shopName || "",
+        shopAddress: data.shopAddress || "",
+        shopPhone: data.shopPhone || "",
+        shopWhatsapp: data.shopWhatsapp || "",
+        vatRegNo: data.vatRegNo || "",
         vatRate: data.vatRate ?? 0.15,
+        currency: data.currency || "LKR",
+        currencySymbol: data.currencySymbol || "Rs.",
+        currencyPosition: data.currencyPosition || "before",
       });
-      setMessage('Settings saved successfully.');
+      setMessage("Settings saved successfully.");
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save settings');
+      setError(err.response?.data?.message || "Failed to save settings");
     } finally {
       setSaving(false);
     }
   };
 
+  const labelBase =
+    "block mb-1.5 text-xs font-semibold tracking-wide select-none";
+  const helperBase = "mt-1 text-[10px] leading-4";
+  const inputBase =
+    "w-full rounded-2xl px-3.5 py-2.5 text-sm outline-none transition-all duration-200 " +
+    "shadow-sm focus:shadow-md disabled:opacity-70 disabled:cursor-not-allowed placeholder:opacity-60";
+  const textareaBase =
+    "w-full rounded-2xl px-3.5 py-2.5 text-sm outline-none transition-all duration-200 " +
+    "shadow-sm focus:shadow-md disabled:opacity-70 disabled:cursor-not-allowed resize-y min-h-[84px]";
+  const buttonBase =
+    "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold " +
+    "transition-all duration-200 ease-out shadow-sm hover:shadow-md active:scale-[0.99] " +
+    "disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer";
+  const cardShell = "rounded-3xl p-4 sm:p-5 transition-all duration-300";
+
   if (loading && !settings) {
-    return <div className="text-xs text-gray-500">Loading settings…</div>;
+    return (
+      <div className="flex justify-center items-center py-6">
+        <AppLoader
+          open
+          variant="inline"
+          title="Loading settings"
+          subtitle="Preparing your configuration"
+        />
+      </div>
+    );
   }
 
   if (!settings) {
     return (
-      <div className="text-xs text-red-500">
+      <div
+        className="px-3 py-2 text-sm rounded-2xl"
+        style={{
+          background: colors.error.subtle,
+          border: `1px solid ${colors.border.light}`,
+          color: colors.error.active,
+        }}
+      >
         Failed to load settings. Please try again.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col md:flex-row justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">Shop & VAT Settings</h2>
-          <p className="text-xs text-gray-500">
-            Manage shop details (used on invoices) and VAT rate. Changes affect new bills immediately.
-          </p>
-        </div>
-        <div className="text-[11px] text-right">
-          <p>
-            Logged in as <span className="font-semibold">{user?.name}</span>
-          </p>
-          <p className="capitalize">Role: {user?.role}</p>
-          {!isAdmin && (
-            <p className="text-red-500 mt-1">
-              Only admin or owner can update settings (view only).
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="card max-w-2xl">
-        {error && (
-          <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
-        {message && (
-          <div className="mb-2 text-xs text-green-600 bg-green-50 border border-green-100 px-3 py-2 rounded-lg">
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-          <div>
-            <label className="block mb-1 font-medium">Shop name</label>
-            <input
-              name="shopName"
-              className="w-full border rounded-xl px-3 py-2"
-              value={settings.shopName}
-              onChange={handleChange}
-              disabled={!isAdmin}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Shop address</label>
-            <textarea
-              name="shopAddress"
-              className="w-full border rounded-xl px-3 py-2 min-h-[60px]"
-              value={settings.shopAddress}
-              onChange={handleChange}
-              disabled={!isAdmin}
-            />
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-3">
-            <div>
-              <label className="block mb-1 font-medium">Phone</label>
-              <input
-                name="shopPhone"
-                className="w-full border rounded-xl px-3 py-2"
-                value={settings.shopPhone}
-                onChange={handleChange}
-                disabled={!isAdmin}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">WhatsApp</label>
-              <input
-                name="shopWhatsapp"
-                className="w-full border rounded-xl px-3 py-2"
-                value={settings.shopWhatsapp}
-                onChange={handleChange}
-                disabled={!isAdmin}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">VAT Reg. No.</label>
-              <input
-                name="vatRegNo"
-                className="w-full border rounded-xl px-3 py-2"
-                value={settings.vatRegNo}
-                onChange={handleChange}
-                disabled={!isAdmin}
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-3 items-end">
-            <div>
-              <label className="block mb-1 font-medium">VAT rate (%)</label>
-              <input
-                name="vatRate"
-                type="number"
-                step="0.01"
-                className="w-full border rounded-xl px-3 py-2"
-                value={settings.vatRate}
-                onChange={handleChange}
-                disabled={!isAdmin}
-              />
-              <p className="text-[10px] text-gray-500 mt-1">
-                Example: enter <strong>15</strong> for 15% VAT.
-              </p>
-            </div>
-            <div className="md:col-span-2 text-[11px] text-gray-500">
-              <p>
-                VAT is applied only when issuing a <strong>Tax Invoice</strong> and only on items marked as{' '}
-                <strong>Tax applicable</strong> in the item master.
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t mt-2 flex justify-end">
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={!isAdmin || saving}
+    <div
+      className="min-h-[calc(100vh-2rem)] w-full"
+      style={{ background: colors.background.primary }}
+    >
+      <div className="w-full max-w-6xl px-3 py-4 mx-auto sm:px-4 sm:py-6 lg:px-6">
+        <PageHeader
+          icon="⚙️"
+          title="Shop & VAT Settings"
+          description="Manage shop details (used on invoices) and VAT rate. Changes affect new bills immediately."
+          action={
+            <div
+              className="p-3 rounded-3xl sm:p-4"
+              style={{
+                background: colors.background.secondary,
+                border: `1px solid ${colors.border.light}`,
+                boxShadow: "0 12px 34px rgba(15, 23, 42, 0.06)",
+              }}
             >
-              {saving ? 'Saving…' : 'Save settings'}
-            </button>
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-0.5">
+                  <p
+                    className="text-[11px] sm:text-xs"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    Logged in as{" "}
+                    <span
+                      className="font-extrabold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {user?.name}
+                    </span>
+                  </p>
+                  <p
+                    className="text-[11px] sm:text-xs capitalize"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    Role:{" "}
+                    <span
+                      className="font-semibold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {user?.role}
+                    </span>
+                  </p>
+
+                  {!isAdmin && (
+                    <p
+                      className="mt-1 text-[11px] sm:text-xs font-semibold"
+                      style={{ color: colors.error.DEFAULT }}
+                    >
+                      Only admin or owner can update settings (view only).
+                    </p>
+                  )}
+                </div>
+
+                <div
+                  className="h-9 w-9 shrink-0 rounded-2xl"
+                  style={{
+                    background: isAdmin
+                      ? colors.status.success.bg
+                      : colors.error.subtle,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                  title={isAdmin ? "Admin access" : "Limited access"}
+                />
+              </div>
+            </div>
+          }
+        />
+
+        {/* Main Card */}
+        <div
+          className={cardShell}
+          style={{
+            background: colors.background.secondary,
+            border: `1px solid ${colors.border.light}`,
+            boxShadow: "0 14px 44px rgba(15, 23, 42, 0.08)",
+          }}
+        >
+          {/* Alerts */}
+          <div className="space-y-2">
+            {error && (
+              <div
+                className="rounded-2xl px-3 py-2 text-sm animate-[fadeIn_240ms_ease-out]"
+                style={{
+                  background: colors.error.subtle,
+                  border: `1px solid ${colors.border.light}`,
+                  color: colors.error.active,
+                }}
+              >
+                <div className="flex items-start gap-2">
+                  <span
+                    className="mt-0.5 inline-block h-2 w-2 rounded-full animate-pulse"
+                    style={{ background: colors.error.DEFAULT }}
+                    aria-hidden="true"
+                  />
+                  <p className="leading-5">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {message && (
+              <div
+                className="rounded-2xl px-3 py-2 text-sm animate-[fadeIn_240ms_ease-out]"
+                style={{
+                  background: colors.status.success.bg,
+                  border: `1px solid ${colors.border.light}`,
+                  color: colors.status.success.text,
+                }}
+              >
+                <div className="flex items-start gap-2">
+                  <span
+                    className="mt-0.5 inline-block h-2 w-2 rounded-full animate-pulse"
+                    style={{ background: colors.status.success.DEFAULT }}
+                    aria-hidden="true"
+                  />
+                  <p className="leading-5">{message}</p>
+                </div>
+              </div>
+            )}
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit} className="mt-4 space-y-5">
+            {/* Shop Info */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div>
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  Shop name
+                </label>
+                <input
+                  name="shopName"
+                  className={inputBase}
+                  value={settings.shopName}
+                  onChange={handleChange}
+                  disabled={!isAdmin}
+                  style={{
+                    background: colors.background.secondary,
+                    color: colors.text.primary,
+                    border: `1px solid ${colors.border.light}`,
+                    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  VAT Reg. No.
+                </label>
+                <input
+                  name="vatRegNo"
+                  className={inputBase}
+                  value={settings.vatRegNo}
+                  onChange={handleChange}
+                  disabled={!isAdmin}
+                  style={{
+                    background: colors.background.secondary,
+                    color: colors.text.primary,
+                    border: `1px solid ${colors.border.light}`,
+                    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                  }}
+                />
+              </div>
+
+              <div className="lg:col-span-2">
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  Shop address
+                </label>
+                <textarea
+                  name="shopAddress"
+                  className={textareaBase}
+                  value={settings.shopAddress}
+                  onChange={handleChange}
+                  disabled={!isAdmin}
+                  style={{
+                    background: colors.background.secondary,
+                    color: colors.text.primary,
+                    border: `1px solid ${colors.border.light}`,
+                    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div
+              className="p-4 rounded-3xl sm:p-5"
+              style={{
+                background: colors.background.subtle,
+                border: `1px solid ${colors.border.light}`,
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3
+                    className="text-sm font-extrabold tracking-tight"
+                    style={{ color: colors.text.primary }}
+                  >
+                    Contact Details
+                  </h3>
+                  <p
+                    className="text-[11px] sm:text-xs"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    These are used on invoices and customer receipts.
+                  </p>
+                </div>
+
+                <div
+                  className="w-10 h-10 rounded-2xl"
+                  style={{
+                    background: colors.accent.subtle,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label
+                    className={labelBase}
+                    style={{ color: colors.text.secondary }}
+                  >
+                    Phone
+                  </label>
+                  <input
+                    name="shopPhone"
+                    className={inputBase}
+                    value={settings.shopPhone}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                    style={{
+                      background: colors.background.secondary,
+                      color: colors.text.primary,
+                      border: `1px solid ${colors.border.light}`,
+                      boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className={labelBase}
+                    style={{ color: colors.text.secondary }}
+                  >
+                    WhatsApp
+                  </label>
+                  <input
+                    name="shopWhatsapp"
+                    className={inputBase}
+                    value={settings.shopWhatsapp}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                    style={{
+                      background: colors.background.secondary,
+                      color: colors.text.primary,
+                      border: `1px solid ${colors.border.light}`,
+                      boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                    }}
+                  />
+                </div>
+
+                <div className="hidden md:block" />
+              </div>
+            </div>
+
+            {/* VAT + Currency */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              {/* VAT card */}
+              <div
+                className="p-4 rounded-3xl sm:p-5 lg:col-span-1"
+                style={{
+                  background: colors.background.secondary,
+                  border: `1px solid ${colors.border.light}`,
+                  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+                }}
+              >
+                <h3
+                  className="text-sm font-extrabold tracking-tight"
+                  style={{ color: colors.text.primary }}
+                >
+                  VAT
+                </h3>
+                <p
+                  className="mt-1 text-[11px] sm:text-xs"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  Update the VAT rate for tax invoices.
+                </p>
+
+                <div className="mt-4">
+                  <label
+                    className={labelBase}
+                    style={{ color: colors.text.secondary }}
+                  >
+                    VAT rate (%)
+                  </label>
+                  <input
+                    name="vatRate"
+                    type="number"
+                    step="0.01"
+                    className={inputBase}
+                    value={settings.vatRate}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                    style={{
+                      background: colors.background.secondary,
+                      color: colors.text.primary,
+                      border: `1px solid ${colors.border.light}`,
+                      boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                    }}
+                  />
+                  <p
+                    className={helperBase}
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    Example: enter <span className="font-extrabold">15</span>{" "}
+                    for 15% VAT.
+                  </p>
+                </div>
+
+                <div
+                  className="p-3 mt-4 rounded-2xl"
+                  style={{
+                    background: colors.background.subtle,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                >
+                  <p
+                    className="text-[11px] leading-5"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    VAT is applied only when issuing a{" "}
+                    <span
+                      className="font-extrabold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      Tax Invoice
+                    </span>{" "}
+                    and only on items marked as{" "}
+                    <span
+                      className="font-extrabold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      Tax applicable
+                    </span>{" "}
+                    in the item master.
+                  </p>
+                </div>
+              </div>
+
+              {/* Currency card */}
+              <div
+                className="p-4 rounded-3xl sm:p-5 lg:col-span-2"
+                style={{
+                  background: colors.background.secondary,
+                  border: `1px solid ${colors.border.light}`,
+                  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3
+                      className="text-sm font-extrabold tracking-tight"
+                      style={{ color: colors.text.primary }}
+                    >
+                      Currency Preferences
+                    </h3>
+                    <p
+                      className="mt-1 text-[11px] sm:text-xs"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      Choose currency, symbol and placement for receipts &
+                      invoices.
+                    </p>
+                  </div>
+
+                  <div
+                    className="w-10 h-10 rounded-2xl"
+                    style={{
+                      background: colors.primary.subtle,
+                      border: `1px solid ${colors.border.light}`,
+                    }}
+                  />
+                </div>
+
+                <div className="grid gap-3 mt-4 md:grid-cols-3">
+                  <div>
+                    <label
+                      className={labelBase}
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Currency
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="currency"
+                        className={
+                          inputBase + " cursor-pointer appearance-none pr-10"
+                        }
+                        value={settings.currency}
+                        onChange={handleCurrencyChange}
+                        disabled={!isAdmin}
+                        style={{
+                          background: colors.background.secondary,
+                          color: colors.text.primary,
+                          border: `1px solid ${colors.border.light}`,
+                          boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                        }}
+                      >
+                        {currencyOptions.map((curr) => (
+                          <option key={curr.code} value={curr.code}>
+                            {curr.code} - {curr.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="absolute inset-y-0 flex items-center pointer-events-none right-3">
+                        <div
+                          className="h-2.5 w-2.5 rotate-45 rounded-[3px]"
+                          style={{
+                            borderRight: `2px solid ${colors.text.tertiary}`,
+                            borderBottom: `2px solid ${colors.text.tertiary}`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={labelBase}
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Currency Symbol
+                    </label>
+                    <input
+                      name="currencySymbol"
+                      className={inputBase}
+                      value={settings.currencySymbol}
+                      onChange={handleChange}
+                      disabled={!isAdmin}
+                      placeholder="Rs."
+                      style={{
+                        background: colors.background.secondary,
+                        color: colors.text.primary,
+                        border: `1px solid ${colors.border.light}`,
+                        boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className={labelBase}
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Symbol Position
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="currencyPosition"
+                        className={
+                          inputBase + " cursor-pointer appearance-none pr-10"
+                        }
+                        value={settings.currencyPosition}
+                        onChange={handleChange}
+                        disabled={!isAdmin}
+                        style={{
+                          background: colors.background.secondary,
+                          color: colors.text.primary,
+                          border: `1px solid ${colors.border.light}`,
+                          boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                        }}
+                      >
+                        <option value="before">Before amount (Rs. 100)</option>
+                        <option value="after">After amount (100 Rs.)</option>
+                      </select>
+
+                      <div className="absolute inset-y-0 flex items-center pointer-events-none right-3">
+                        <div
+                          className="h-2.5 w-2.5 rotate-45 rounded-[3px]"
+                          style={{
+                            borderRight: `2px solid ${colors.text.tertiary}`,
+                            borderBottom: `2px solid ${colors.text.tertiary}`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="mt-3 rounded-2xl p-3 sm:p-4 animate-[fadeIn_240ms_ease-out]"
+                  style={{
+                    background: colors.accent.subtle,
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                >
+                  <p
+                    className="text-[11px] sm:text-xs"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <span
+                      className="font-extrabold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      Preview:
+                    </span>{" "}
+                    <span
+                      className="font-semibold"
+                      style={{ color: colors.primary.DEFAULT }}
+                    >
+                      {settings.currencyPosition === "before"
+                        ? `${settings.currencySymbol} 1,234.50`
+                        : `1,234.50 ${settings.currencySymbol}`}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div
+              className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between"
+              style={{ borderTop: `1px solid ${colors.border.light}` }}
+            >
+              <div
+                className="rounded-2xl px-3 py-2 text-[11px] sm:text-xs"
+                style={{
+                  background: colors.background.subtle,
+                  border: `1px solid ${colors.border.light}`,
+                  color: colors.text.tertiary,
+                }}
+              >
+                {isAdmin ? (
+                  <span>
+                    You have permission to update settings. Changes apply
+                    immediately.
+                  </span>
+                ) : (
+                  <span>
+                    View-only mode. Ask an admin/owner to update these settings.
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                className={
+                  buttonBase +
+                  " hover:-translate-y-[1px] active:translate-y-0 bg-primary text-white hover:bg-primary/90"
+                }
+                disabled={!isAdmin || saving}
+              >
+                Save settings
+              </button>
+
+              {saving && (
+                <div className="mt-4">
+                  <AppLoader
+                    open
+                    variant="inline"
+                    title="Saving settings"
+                    subtitle="Applying your configuration updates"
+                  />
+                </div>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* mobile bottom spacing */}
+        <div className="h-2 sm:h-4" />
       </div>
     </div>
   );
 };
 
 export default SettingsPage;
+
+
+
+
+

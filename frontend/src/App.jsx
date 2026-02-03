@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AppShell } from "./components/common/Layout";
+
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import POSPage from "./pages/POSPage";
@@ -15,75 +16,178 @@ import OwnerSignupPage from "./pages/OwnerSignupPage";
 import InvoicePrintA4 from "./pages/InvoicePrintA4";
 import InvoicePrintThermal from "./pages/InvoicePrintThermal";
 import BarcodePrintPage from "./pages/BarcodePrintPage";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
-const ProtectedLayout = ({ children, user, onLogout }) => {
+import GRNListModal from "./components/supplier/grnDetail/GRNListModal";
+import GrnDetailsModal from "./components/supplier/grnDetail/GrnDetailsModal";
+
+import { createApiClient } from "./api/client";
+import AppLoader from "./components/common/AppLoader";
+import setupCacheDebugTools from "./utils/cacheDebugUtils";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+/**
+ * Protected layout wrapper using React Router v6 nested routing.
+ * Renders AppShell and the nested route content via <Outlet />.
+ */
+const ProtectedLayout = ({ user, onLogout, api }) => {
   return (
-    <AppShell user={user} onLogout={onLogout}>
-      {children}
+    <AppShell user={user} onLogout={onLogout} api={api}>
+      <Outlet />
     </AppShell>
   );
 };
 
 const App = () => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    setUser(null);
-  };
+  // Initialize cache debug tools on mount
+  useEffect(() => {
+    setupCacheDebugTools();
+  }, []);
+
+  /**
+   * ✅ Logout: clear refresh cookie on backend + clear local auth state
+   * - Never assume logout API succeeds; always clear local state.
+   */
+  const handleLogout = useCallback(async () => {
+    try {
+      // Clear refresh cookie (server should set cookie expiry / empty cookie)
+      await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e) {
+      // Ignore network/logout errors; still clear local state
+    } finally {
+      setUser(null);
+      setAccessToken(null);
+    }
+  }, []);
+
+  /**
+   * ✅ Create ONE api client instance.
+   * Important: we pass functions so interceptors always pull latest token.
+   * We DO NOT recreate api on re-renders (prevents duplicate interceptors).
+   */
+  const api = useMemo(() => {
+    return createApiClient(
+      () => accessToken, // getter
+      (token) => setAccessToken(token), // setter
+      () => handleLogout(), // logout callback (can be async)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // create once
+
+  /**
+   * ✅ On app load: silently refresh access token using cookie-based refresh token.
+   * - If success: set accessToken and optionally user.
+   * - If fail: clear local auth state.
+   */
+  useEffect(() => {
+    const tryRefresh = async () => {
+      setLoadingAuth(true);
+      try {
+        const res = await fetch(`${API_URL}/auth/refresh-token`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok) throw new Error("Not authenticated");
+
+        const data = await res.json();
+
+        if (data?.accessToken) setAccessToken(data.accessToken);
+
+        // If your refresh endpoint returns user, this will populate immediately
+        if (data?.user) setUser(data.user);
+      } catch (err) {
+        setUser(null);
+        setAccessToken(null);
+      } finally {
+        setLoadingAuth(false);
+      }
+    };
+
+    tryRefresh();
+  }, []);
+
+  const handleLogin = useCallback((userData, token) => {
+    setUser(userData);
+    setAccessToken(token);
+  }, []);
+
+  if (loadingAuth) {
+    return (
+      <AppShell user={user} onLogout={handleLogout} api={api}>
+        <div className="flex items-center justify-center w-full h-full min-h-full">
+          <AppLoader
+            open
+            variant="inline"
+            title="Loading session"
+            subtitle="Checking your session"
+          />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage onLogin={setUser} />} />
-      <Route path="/signup" element={<OwnerSignupPage />} />
+      {/* Public routes */}
       <Route
-        path="/*"
+        path="/login"
+        element={<LoginPage onLogin={handleLogin} api={api} />}
+      />
+      <Route path="/signup" element={<OwnerSignupPage api={api} />} />
+      <Route path="/forgot-password" element={<ForgotPassword api={api} />} />
+      <Route path="/reset-password" element={<ResetPassword api={api} />} />
+
+      {/* Protected routes (nested via Outlet) */}
+      <Route
         element={
           user ? (
-            <ProtectedLayout user={user} onLogout={handleLogout}>
-              <Routes>
-                <Route
-                  path="/"
-                  element={<Navigate to="/dashboard" replace />}
-                />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/pos" element={<POSPage />} />
-                <Route path="/inventory" element={<InventoryPage />} />
-                <Route path="/customers" element={<CustomersPage />} />
-                <Route path="/suppliers" element={<SuppliersPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/expenses" element={<ExpensesPage />} />
-                <Route path="/users" element={<UsersPage user={user} />} />
-                <Route
-                  path="/settings"
-                  element={<SettingsPage user={user} />}
-                />
-                {/* A4 layout */}
-                <Route path="/invoice/a4/:id" element={<InvoicePrintA4 />} />
-                {/* 80mm thermal layout */}
-                <Route
-                  path="/invoice/thermal/:id"
-                  element={<InvoicePrintThermal />}
-                />
-                {/* Backwards compatible: default to A4 */}
-                <Route path="/invoice/:id" element={<InvoicePrintA4 />} />
-                <Route path="/barcode/:id" element={<BarcodePrintPage />} />
-                <Route
-                  path="*"
-                  element={<Navigate to="/dashboard" replace />}
-                />
-              </Routes>
-            </ProtectedLayout>
+            <ProtectedLayout user={user} onLogout={handleLogout} api={api} />
           ) : (
             <Navigate to="/login" replace />
           )
         }
-      />
+      >
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage api={api} />} />
+        <Route path="/pos" element={<POSPage api={api} />} />
+        <Route path="/inventory" element={<InventoryPage api={api} />} />
+        <Route path="/customers" element={<CustomersPage api={api} />} />
+        <Route path="/suppliers" element={<SuppliersPage api={api} />} />
+        <Route path="/reports" element={<ReportsPage api={api} />} />
+        <Route path="/expenses" element={<ExpensesPage api={api} />} />
+        <Route path="/users" element={<UsersPage user={user} api={api} />} />
+        <Route
+          path="/settings"
+          element={<SettingsPage user={user} api={api} />}
+        />
+
+        <Route path="/invoice/a4/:id" element={<InvoicePrintA4 api={api} />} />
+        <Route
+          path="/invoice/thermal/:id"
+          element={<InvoicePrintThermal api={api} />}
+        />
+        <Route path="/invoice/:id" element={<InvoicePrintA4 api={api} />} />
+        <Route path="/barcode/:id" element={<BarcodePrintPage api={api} />} />
+
+        <Route
+          path="/grnDetailsModal"
+          element={<BarcodePrintPage api={api} />}
+        />
+
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Route>
     </Routes>
   );
 };

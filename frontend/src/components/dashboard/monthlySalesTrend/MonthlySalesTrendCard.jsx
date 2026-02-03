@@ -48,7 +48,7 @@ const MonthlySalesTrendCard = ({
   const hasDataForRange = filteredData && filteredData.length > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 sm:p-6 lg:p-7 w-full">
+    <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       <TrendCardHeader range={range} onRangeChange={setRange} />
 
       {loading ? (
@@ -63,7 +63,7 @@ const MonthlySalesTrendCard = ({
             valueKey="totalSales"
             title="Sales Amount"
             subtitle="Y-axis: LKR (sales), X-axis: date/month"
-            color="#2563eb"
+            color="#22c55e" // Tailwind green-500
             height={220}
             range={range}
           />
@@ -74,7 +74,7 @@ const MonthlySalesTrendCard = ({
             valueKey="invoiceCount"
             title="Invoice Count"
             subtitle="Y-axis: number of invoices, X-axis: date/month"
-            color="#7c3aed"
+            color="#6366f1" // Tailwind indigo-500
             height={160}
             range={range}
           />

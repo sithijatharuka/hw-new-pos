@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import AppLoader from "../common/AppLoader";
 import { SearchBar } from "../common";
 import { getItemBatches } from "../../api/inventory/items";
+import { formatCurrency } from "../../utils/currency";
 
 const emptyBatchModal = {
   open: false,
@@ -27,6 +29,8 @@ const POSSearchSection = ({
   isTaxInvoice,
   setIsTaxInvoice,
   recalcLinesForVat,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const [batchModal, setBatchModal] = useState(emptyBatchModal);
 
@@ -182,7 +186,11 @@ const POSSearchSection = ({
 
                       <div className="flex-shrink-0 ml-2 text-right">
                         <div className="text-sm font-semibold text-gray-900">
-                          Rs. {Number(item.sellingPrice || 0).toFixed(2)}
+                          {formatCurrency(
+                            item.sellingPrice,
+                            currencySymbol,
+                            currencyPosition,
+                          )}
                         </div>
                         <div className="text-xs text-gray-500">
                           Stock: {onHand} {item.baseUnit}
@@ -227,8 +235,13 @@ const POSSearchSection = ({
 
                 <div className="p-5">
                   {batchModal.loading && (
-                    <div className="text-sm text-gray-600">
-                      Loading batches…
+                    <div className="flex justify-center items-center py-4">
+                      <AppLoader
+                        open
+                        variant="inline"
+                        title="Loading batches"
+                        subtitle="Checking batch availability"
+                      />
                     </div>
                   )}
 
@@ -285,13 +298,17 @@ const POSSearchSection = ({
                               </div>
                               <div className="text-right">
                                 <div className="text-sm font-semibold text-gray-900">
-                                  Rs.{" "}
-                                  {(typeof batch.sellingPrice === "number"
-                                    ? batch.sellingPrice
-                                    : Number(batch.sellingPrice) ||
-                                      Number(batchModal.item?.sellingPrice) ||
-                                      0
-                                  ).toFixed(2)}
+                                  {formatCurrency(
+                                    typeof batch.sellingPrice === "number"
+                                      ? batch.sellingPrice
+                                      : Number(batch.sellingPrice) ||
+                                          Number(
+                                            batchModal.item?.sellingPrice,
+                                          ) ||
+                                          0,
+                                    currencySymbol,
+                                    currencyPosition,
+                                  )}
                                 </div>
                               </div>
                             </label>
@@ -344,7 +361,7 @@ const POSSearchSection = ({
                 </div>
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-primary text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-primary/90 active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-accent text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-accent/90 active:scale-95 transition-all duration-200 cursor-pointer"
                 >
                   Add
                 </button>
@@ -367,7 +384,7 @@ const POSSearchSection = ({
                 className={[
                   "flex-1 h-10 sm:h-11 rounded-xl border-2 text-sm sm:text-base font-medium transition-all duration-200 active:scale-95",
                   !isTaxInvoice
-                    ? "bg-primary text-white border-primary shadow-md"
+                    ? "bg-accent text-white border-accent shadow-md"
                     : "bg-white text-gray-700 border-gray-300 hover:border-gray-400",
                 ].join(" ")}
                 onClick={() => {
@@ -402,3 +419,5 @@ const POSSearchSection = ({
 };
 
 export default POSSearchSection;
+
+

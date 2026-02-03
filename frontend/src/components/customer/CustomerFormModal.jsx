@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../common/AppLoader";
 import toast from "react-hot-toast";
 import { validateCustomerForm } from "../common/formValidation"; // adjust path
 
@@ -130,9 +131,20 @@ const CustomerFormModal = ({
               className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 cursor-pointer disabled:opacity-60"
               disabled={saving}
             >
-              {saving ? "Saving..." : initialData ? "Update" : "Save"}
+              {initialData ? "Update" : "Save"}
             </button>
           </div>
+
+          {saving && (
+            <div className="pt-4">
+              <AppLoader
+                open
+                variant="inline"
+                title="Saving customer"
+                subtitle="Updating customer details"
+              />
+            </div>
+          )}
         </form>
       </div>
     </div>

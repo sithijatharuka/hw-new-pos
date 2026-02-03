@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 /**
  * Supplier Payables Component
@@ -12,15 +13,15 @@ const SupplierPayablesCard = ({
   loading = false,
 }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 sm:p-6 lg:p-7 w-full">
+    <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
+      <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between sm:mb-6">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="flex items-center gap-2 text-lg font-semibold sm:text-xl text-accent">
             <span className="text-xl">💰</span>
             <span>Supplier Payables (Cash Flow Planning)</span>
           </h3>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
             Monitor what you owe suppliers and prepare for upcoming settlements.
           </p>
         </div>
@@ -28,11 +29,11 @@ const SupplierPayablesCard = ({
 
       {/* Total Outstanding */}
       <div className="mb-6">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">
+        <div className="p-4 border border-red-200 shadow-sm bg-red-50 rounded-xl sm:p-5">
+          <p className="mb-1 text-xs text-gray-600 sm:text-sm">
             Total Outstanding
           </p>
-          <p className="text-2xl sm:text-3xl font-bold text-red-600 leading-tight">
+          <p className="text-2xl font-bold leading-tight text-red-600 sm:text-3xl">
             {typeof totalOutstanding === "number"
               ? `LKR ${totalOutstanding.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -48,16 +49,18 @@ const SupplierPayablesCard = ({
 
       {/* List of supplier payables */}
       <div>
-        <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-3 sm:mb-4">
+        <h4 className="mb-3 text-sm font-semibold text-gray-700 sm:text-base sm:mb-4">
           Top Suppliers with Outstanding Payables
         </h4>
 
         {loading ? (
-          <div className="flex flex-col justify-center items-center py-6">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600 mb-2" />
-            <p className="text-xs sm:text-sm text-gray-500">
-              Loading supplier payables…
-            </p>
+          <div className="flex items-center justify-center py-6">
+            <AppLoader
+              open
+              variant="inline"
+              title="Loading supplier payables"
+              subtitle="Syncing outstanding balances"
+            />
           </div>
         ) : supplierPayables && supplierPayables.length > 0 ? (
           <div className="space-y-3 sm:space-y-4">
@@ -67,9 +70,9 @@ const SupplierPayablesCard = ({
                 className="border border-gray-200 rounded-xl p-4 sm:p-5 bg-white hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md transform hover:-translate-y-0.5 duration-150 cursor-default"
               >
                 {/* Supplier header row */}
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                    <h4 className="text-sm font-medium text-gray-900 sm:text-base">
                       {supplier.supplierName}
                     </h4>
                     {supplier.code && (
@@ -78,7 +81,7 @@ const SupplierPayablesCard = ({
                       </p>
                     )}
                   </div>
-                  <span className="text-sm sm:text-base font-bold text-red-600">
+                  <span className="text-sm font-bold text-red-600 sm:text-base">
                     {typeof supplier.totalPayable === "number"
                       ? `LKR ${supplier.totalPayable.toLocaleString("en-US", {
                           minimumFractionDigits: 0,
@@ -91,8 +94,8 @@ const SupplierPayablesCard = ({
                 {/* Unpaid purchases list */}
                 {supplier.unpaidPurchases &&
                   supplier.unpaidPurchases.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">
+                    <div className="p-3 rounded-lg bg-gray-50 sm:p-4">
+                      <p className="mb-2 text-xs font-medium text-gray-600 sm:text-sm">
                         {supplier.unpaidPurchases.length} unpaid bill
                         {supplier.unpaidPurchases.length > 1 ? "s" : ""}:
                       </p>
@@ -105,7 +108,7 @@ const SupplierPayablesCard = ({
                             .map((purchase, idx) => (
                               <div
                                 key={idx}
-                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-sm"
+                                className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm"
                               >
                                 <span className="text-gray-700">
                                   Bill #{purchase.billNumber}
@@ -119,14 +122,14 @@ const SupplierPayablesCard = ({
                                     {purchase.status}
                                   </span>
                                 </span>
-                                <span className="font-semibold text-gray-900 text-right">
+                                <span className="font-semibold text-right text-gray-900">
                                   {typeof purchase.amount === "number"
                                     ? `LKR ${purchase.amount.toLocaleString(
                                         "en-US",
                                         {
                                           minimumFractionDigits: 0,
                                           maximumFractionDigits: 0,
-                                        }
+                                        },
                                       )}`
                                     : "LKR 0"}
                                 </span>
@@ -142,7 +145,7 @@ const SupplierPayablesCard = ({
                           .map((purchase, idx) => (
                             <div
                               key={idx}
-                              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs flex flex-col gap-1"
+                              className="flex flex-col gap-1 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg"
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-medium text-gray-800">
@@ -169,7 +172,7 @@ const SupplierPayablesCard = ({
                                         {
                                           minimumFractionDigits: 0,
                                           maximumFractionDigits: 0,
-                                        }
+                                        },
                                       )}`
                                     : "LKR 0"}
                                 </span>
@@ -194,11 +197,11 @@ const SupplierPayablesCard = ({
             ))}
           </div>
         ) : (
-          <div className="py-6 sm:py-8 text-center">
-            <p className="text-gray-500 text-sm sm:text-base">
+          <div className="py-6 text-center sm:py-8">
+            <p className="text-sm text-gray-500 sm:text-base">
               ✅ All supplier payments are up to date
             </p>
-            <p className="mt-1 text-xs sm:text-sm text-gray-400">
+            <p className="mt-1 text-xs text-gray-400 sm:text-sm">
               No outstanding payables at the moment.
             </p>
           </div>

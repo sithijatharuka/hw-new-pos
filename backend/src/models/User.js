@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true, index: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
+    phone: { type: String, required: false, unique: true },
     tenantId: { type: String, required: true, index: true },
     role: {
       type: String,
@@ -18,14 +19,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexes for user lookups
-userSchema.index({ username: 1 }, { name: "user_username" });
-userSchema.index({ tenantId: 1 }, { name: "user_tenant" });
-userSchema.index({ role: 1 }, { name: "user_role" });
-userSchema.index({ isActive: 1 }, { name: "user_status" });
+// Optimized indexes for user lookups
+// Primary: username is unique, indexed in schema definition
+userSchema.index({ tenantId: 1, isActive: 1 }, { name: "user_tenant_status" });
 userSchema.index(
-  { isActive: 1, createdAt: -1 },
-  { name: "user_status_recent" },
+  { tenantId: 1, role: 1, isActive: 1 },
+  { name: "user_tenant_role_status" },
 );
 
 // ✅ Async pre-save hook (no next)

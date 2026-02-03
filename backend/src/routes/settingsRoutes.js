@@ -37,6 +37,9 @@ router.put("/", protect, adminOnly, async (req, res) => {
   if (typeof req.body.vatRate !== "undefined") {
     s.vatRate = Number(req.body.vatRate) || 0;
   }
+  s.currency = req.body.currency ?? s.currency;
+  s.currencySymbol = req.body.currencySymbol ?? s.currencySymbol;
+  s.currencyPosition = req.body.currencyPosition ?? s.currencyPosition;
   await s.save();
   res.json(s);
 });

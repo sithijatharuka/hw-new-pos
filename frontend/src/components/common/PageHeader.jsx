@@ -19,15 +19,15 @@ const PageHeader = ({
     <div className={`max-w-7xl mx-auto mb-8 ${className}`}>
       <div className="flex flex-col items-start justify-between gap-6 text-center md:flex-row md:items-center md:text-left">
         <div className="flex flex-col items-center w-full gap-4 md:w-auto sm:flex-row">
-          <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl">
+          <div className="flex items-center justify-center w-12 h-12 bg-transparent rounded-xl">
             <span className="text-2xl">{icon}</span>
           </div>
           <div className="w-full md:w-auto">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 lg:text-4xl">
+            <h1 className="text-3xl font-bold tracking-tight text-primary lg:text-4xl">
               {title}
             </h1>
             {description && (
-              <p className="max-w-2xl mx-auto mt-2 text-sm text-gray-600 md:text-base md:mx-0">
+              <p className="max-w-2xl mx-auto mt-2 text-sm text-accent md:text-base md:mx-0">
                 {description}
               </p>
             )}

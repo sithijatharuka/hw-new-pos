@@ -1,6 +1,6 @@
 // src/components/supplier/SupplierPayModal.jsx
 import React, { useMemo, useState } from "react";
-
+import colors from "../../../themes/colors";
 const validatePayAmount = (value, outstanding) => {
   const amountNum = Number(value);
   if (Number.isNaN(amountNum) || amountNum <= 0)
@@ -37,23 +37,19 @@ export default function SupplierPayModal({
   };
 
   return (
-    <div
-      className={[
-        "fixed inset-0 z-50",
-        "flex items-center justify-center p-4 sm:p-6",
-        "bg-primary/60 backdrop-blur-sm",
-      ].join(" ")}
-    >
-      <div
-        className={[
-          "w-full max-w-md",
-          "rounded-3xl border border-border-light bg-background-secondary",
-          "shadow-2xl",
-          "transition-all duration-200 ease-out",
-        ].join(" ")}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center min-w-full min-h-screen p-4 bg-white backdrop-blur-sm sm:p-6">
+      <div className="relative flex flex-col w-full max-w-md mx-auto my-auto mt-20 overflow-hidden transition-all duration-200 ease-out border border-gray-200 shadow-lg lg:mt-32 rounded-3xl bg-background-secondary">
+        {/* Top accent bar for consistency with SupplierFormModal */}
+        <div className="h-1.5 w-full bg-accent" />
+
+        {/* Soft ambient glows for consistency */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute w-64 h-64 rounded-full -top-24 -right-24 bg-accent-subtle blur-3xl opacity-70" />
+          <div className="absolute rounded-full -bottom-28 -left-28 h-72 w-72 bg-primary-subtle blur-3xl opacity-60" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-border-light sm:p-6">
+        <div className="flex items-start justify-between w-full gap-4 p-5 border-b border-gray-200 sm:p-6">
           <div className="min-w-0">
             <h3 className="text-lg font-extrabold text-text-primary">
               Record Payment
@@ -68,16 +64,7 @@ export default function SupplierPayModal({
               setError("");
               onClose();
             }}
-            className={[
-              "inline-flex h-11 w-11 items-center justify-center",
-              "rounded-2xl border border-border-light",
-              "bg-background-secondary text-text-secondary",
-              "transition-all duration-200 ease-out",
-              "hover:bg-background-subtle hover:shadow-sm",
-              "active:scale-[0.98]",
-              "focus:outline-none focus:ring-2 focus:ring-focus/20",
-              "cursor-pointer",
-            ].join(" ")}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-background-secondary text-text-secondary transition-all duration-200 ease-out hover:bg-background-subtle hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-focus/20 cursor-pointer"
             aria-label="Close"
             title="Close"
           >
@@ -86,8 +73,8 @@ export default function SupplierPayModal({
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-5 sm:p-6">
-          <div className="p-4 border rounded-2xl border-border-light bg-background-subtle">
+        <div className="w-full p-5 space-y-5 sm:p-6">
+          <div className="p-4 border border-gray-200 rounded-2xl bg-background-subtle">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-medium text-text-secondary">
                 Outstanding
@@ -111,12 +98,10 @@ export default function SupplierPayModal({
                 type="number"
                 step="0.01"
                 className={[
-                  "w-full rounded-2xl py-3 pl-12 pr-4 text-sm",
-                  "bg-background-secondary text-text-primary placeholder:text-text-tertiary",
-                  "border focus:outline-none focus:ring-2 focus:border-primary",
+                  "w-full rounded-2xl py-3 pl-12 pr-4 text-sm bg-background-secondary text-text-primary placeholder:text-text-tertiary border focus:outline-none focus:ring-2 focus:border-primary",
                   error
                     ? "border-error bg-error-bg focus:ring-error/20"
-                    : "border-border-light focus:ring-focus/20",
+                    : "border-gray-200 focus:ring-focus/20",
                   "shadow-sm transition-all duration-200 ease-out hover:shadow-md",
                 ].join(" ")}
                 value={amount}
@@ -129,27 +114,20 @@ export default function SupplierPayModal({
               />
             </div>
 
-            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+            {error && (
+              <p className="text-xs font-medium text-red-600">{error}</p>
+            )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col-reverse gap-3 p-5 border-t border-border-light sm:flex-row sm:justify-end sm:p-6">
+        <div className="flex flex-col-reverse w-full gap-3 p-5 border-t border-gray-200 sm:flex-row sm:justify-end sm:p-6">
           <button
             onClick={() => {
               setError("");
               onClose();
             }}
-            className={[
-              "inline-flex items-center justify-center",
-              "rounded-2xl px-5 py-2.5 text-sm font-semibold",
-              "border border-border-light bg-background-secondary text-text-secondary",
-              "transition-all duration-200 ease-out",
-              "hover:bg-background-subtle hover:shadow-sm",
-              "active:scale-[0.98]",
-              "focus:outline-none focus:ring-2 focus:ring-focus/20",
-              "cursor-pointer",
-            ].join(" ")}
+            className="inline-flex items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-semibold border border-gray-200 bg-background-secondary text-text-secondary transition-all duration-200 ease-out hover:bg-background-subtle hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-focus/20 cursor-pointer"
           >
             Cancel
           </button>
@@ -157,17 +135,7 @@ export default function SupplierPayModal({
           <button
             onClick={submit}
             disabled={saving}
-            className={[
-              "inline-flex items-center justify-center",
-              "rounded-2xl px-5 py-2.5 text-sm font-semibold",
-              "bg-primary text-text-inverse",
-              "shadow-md transition-all duration-200 ease-out",
-              "hover:shadow-lg hover:-translate-y-0.5",
-              "active:translate-y-0 active:scale-[0.99]",
-              "focus:outline-none focus:ring-2 focus:ring-focus/20",
-              "disabled:opacity-70 disabled:cursor-not-allowed",
-              "cursor-pointer",
-            ].join(" ")}
+            className="inline-flex bg-primary text-white hover:bg-primary/90 items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-semibold bg-primary text-white shadow-md transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-focus/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
             {saving ? "Processing..." : "Confirm Payment"}
           </button>

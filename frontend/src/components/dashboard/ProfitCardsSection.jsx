@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 /**
  * Profit Cards Component
@@ -40,15 +41,28 @@ const ProfitCardsSection = ({
   ];
 
   const colorClasses = {
-    blue: "from-blue-500 to-blue-600",
-    green: "from-green-500 to-green-600",
-    purple: "from-purple-500 to-purple-600",
+    blue: "from-blue-300 to-blue-400",
+    green: "from-green-300 to-green-400",
+    purple: "from-purple-300 to-purple-400",
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <AppLoader
+          open
+          variant="inline"
+          title="Loading profit metrics"
+          subtitle="Calculating margins and revenue"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
       {/* Desktop / Large Tablet View (original grid layout) */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+      <div className="hidden grid-cols-1 gap-4 md:grid md:grid-cols-3 md:gap-5 lg:gap-6">
         {cards.map((card, idx) => (
           <div
             key={idx}
@@ -57,32 +71,27 @@ const ProfitCardsSection = ({
             } rounded-2xl p-5 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200`}
           >
             {/* Subtle decorative circles */}
-            <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full border border-white/20 opacity-40 pointer-events-none" />
-            <div className="absolute -right-12 top-8 w-20 h-20 rounded-full border border-white/10 opacity-30 pointer-events-none" />
+            <div className="absolute w-24 h-24 border rounded-full pointer-events-none -right-8 -top-8 border-white/20 opacity-40" />
+            <div className="absolute w-20 h-20 border rounded-full pointer-events-none -right-12 top-8 border-white/10 opacity-30" />
 
             <div className="relative z-10 flex items-start justify-between mb-4">
               <span className="text-2xl sm:text-3xl">{card.icon}</span>
-              {loading && (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              )}
             </div>
 
             <h3 className="relative z-10 text-xs sm:text-sm font-medium text-white/90 mb-1.5 tracking-wide uppercase">
               {card.label}
             </h3>
 
-            <p className="relative z-10 text-2xl sm:text-3xl font-bold mb-1">
-              {!loading && typeof card.value === "number"
+            <p className="relative z-10 mb-1 text-2xl font-bold sm:text-3xl">
+              {typeof card.value === "number"
                 ? `LKR ${card.value.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}`
-                : loading
-                ? "..."
                 : "LKR 0.00"}
             </p>
 
-            <p className="relative z-10 text-xs sm:text-sm text-white/80">
+            <p className="relative z-10 text-xs font-semibold text-white sm:text-sm">
               {card.subtext}
             </p>
           </div>
@@ -99,30 +108,25 @@ const ProfitCardsSection = ({
             } rounded-2xl p-4 sm:p-5 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200`}
           >
             {/* Subtle decorative circles (same style, smaller screens) */}
-            <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full border border-white/20 opacity-40 pointer-events-none" />
-            <div className="absolute -right-14 top-6 w-20 h-20 rounded-full border border-white/10 opacity-30 pointer-events-none" />
+            <div className="absolute w-24 h-24 border rounded-full pointer-events-none -right-10 -top-10 border-white/20 opacity-40" />
+            <div className="absolute w-20 h-20 border rounded-full pointer-events-none -right-14 top-6 border-white/10 opacity-30" />
 
             <div className="relative z-10 flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{card.icon}</span>
-                <h3 className="text-xs sm:text-sm font-medium text-white/90 tracking-wide uppercase">
+                <h3 className="text-xs font-medium tracking-wide uppercase sm:text-sm text-white/90">
                   {card.label}
                 </h3>
               </div>
-              {loading && (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              )}
             </div>
 
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+            <div className="relative z-10 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
               <p className="text-2xl font-bold">
-                {!loading && typeof card.value === "number"
+                {typeof card.value === "number"
                   ? `LKR ${card.value.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}`
-                  : loading
-                  ? "..."
                   : "LKR 0.00"}
               </p>
               <p className="text-xs sm:text-sm text-white/80">{card.subtext}</p>

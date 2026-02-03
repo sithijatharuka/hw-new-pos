@@ -91,7 +91,7 @@ export default function SupplierFormModal({
       (phone) => !isValidPhoneNumber(phone),
     );
     if (invalidPhones.length > 0)
-      e.phones = `Phone number "${invalidPhones[0]}" is invalid.`;
+      e.phones = `Phone number \"${invalidPhones[0]}\" is invalid.`;
     else if (phoneInput && !isValidPhoneNumber(phoneInput))
       e.phones = "Enter a valid phone number and click Add.";
     else if (phoneInput && !e.phones)
@@ -104,6 +104,8 @@ export default function SupplierFormModal({
     const ob = Number(form.openingBalance);
     if (Number.isNaN(ob) || ob < 0)
       e.openingBalance = "Opening balance must be 0 or greater.";
+    else if (!Number.isNaN(cl) && ob > cl)
+      e.openingBalance = "Opening balance cannot exceed credit limit.";
 
     if (form.email && !isValidEmail(form.email))
       e.email = "Email address is invalid.";
@@ -137,7 +139,32 @@ export default function SupplierFormModal({
   };
 
   const updateFormField = (updates) => {
-    setForm((p) => ({ ...p, ...updates }));
+    setForm((p) => {
+      const next = { ...p, ...updates };
+      // Immediate validation for openingBalance vs creditLimit
+      const cl = Number(
+        updates.creditLimit !== undefined
+          ? updates.creditLimit
+          : next.creditLimit,
+      );
+      const ob = Number(
+        updates.openingBalance !== undefined
+          ? updates.openingBalance
+          : next.openingBalance,
+      );
+      setErrors((prev) => {
+        const e = { ...prev };
+        if (!Number.isNaN(cl) && !Number.isNaN(ob) && ob > cl) {
+          e.openingBalance = "Opening balance cannot exceed credit limit.";
+        } else if (
+          e.openingBalance === "Opening balance cannot exceed credit limit."
+        ) {
+          delete e.openingBalance;
+        }
+        return e;
+      });
+      return next;
+    });
   };
 
   const submit = async () => {
@@ -168,40 +195,49 @@ export default function SupplierFormModal({
   if (!open) return null;
 
   return (
-    <div
-      className="
-        fixed inset-0 z-50 flex items-center justify-center p-4
-        bg-background-primary/70 backdrop-blur-sm
-        animate-[fadeIn_180ms_ease-out]
-      "
-    >
-      <div
-        className="
-          w-full max-w-2xl overflow-hidden rounded-3xl
-          border border-border-light bg-background-secondary shadow-lg
-          max-h-[120vh]
-          animate-[popIn_220ms_ease-out]
-        "
-      >
-        <SupplierFormHeader isEdit={isEdit} onClose={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm animate-[fadeIn_180ms_ease-out]">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-200 bg-background-secondary shadow-lg max-h-[90vh] flex flex-col animate-[popIn_220ms_ease-out]">
+        {/* Top accent bar for consistency with GRNFormModal */}
+        <div className="h-1.5 w-full bg-accent" />
 
-        <SupplierFormBody
-          form={form}
-          errors={errors}
-          isEdit={isEdit}
-          onFormChange={updateFormField}
-          addPhone={addPhone}
-          pt={pt}
-          PAYMENT_TERM_TYPES={PAYMENT_TERM_TYPES}
-          NET_DAY_OPTIONS={NET_DAY_OPTIONS}
-        />
+        {/* Soft ambient glows for consistency */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute w-64 h-64 rounded-full -top-24 -right-24 bg-accent-subtle blur-3xl opacity-70" />
+          <div className="absolute rounded-full -bottom-28 -left-28 h-72 w-72 bg-primary-subtle blur-3xl opacity-60" />
+        </div>
 
-        <SupplierFormFooter
-          saving={saving}
-          isEdit={isEdit}
-          onCancel={onClose}
-          onSubmit={submit}
-        />
+        {/* Header (non-scrollable, sticky) */}
+        <div className="sticky top-0 z-20 border-b border-gray-200 bg-background-secondary/90 backdrop-blur-md">
+          <SupplierFormHeader isEdit={isEdit} onClose={onClose} />
+        </div>
+
+        {/* Scrollable body */}
+        <div className="relative flex-1 px-4 py-4 overflow-y-auto max-h-[calc(85vh-16rem)]">
+          <div className="rounded-2xl bg-background-secondary shadow-soft">
+            <div className="p-2 sm:p-3 md:p-4">
+              <SupplierFormBody
+                form={form}
+                errors={errors}
+                isEdit={isEdit}
+                onFormChange={updateFormField}
+                addPhone={addPhone}
+                pt={pt}
+                PAYMENT_TERM_TYPES={PAYMENT_TERM_TYPES}
+                NET_DAY_OPTIONS={NET_DAY_OPTIONS}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer (non-scrollable, sticky) */}
+        <div className="sticky bottom-0 z-20 border-t border-gray-200 bg-background-secondary/95 backdrop-blur-md">
+          <SupplierFormFooter
+            saving={saving}
+            isEdit={isEdit}
+            onCancel={onClose}
+            onSubmit={submit}
+          />
+        </div>
       </div>
     </div>
   );

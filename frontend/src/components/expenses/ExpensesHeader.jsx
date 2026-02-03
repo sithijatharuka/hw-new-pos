@@ -1,4 +1,5 @@
 import React from "react";
+import { PageHeader } from "../common";
 
 const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
   const currentMonthTotal = expenses
@@ -13,30 +14,24 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   return (
-    <header className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Expense Management
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base max-w-3xl">
-            Record and track daily expenses including rent, salaries, transport,
-            electricity, and other operational costs. Maintain financial clarity
-            with categorized expense tracking.
-          </p>
-        </div>
-        <div className="flex md:justify-end">
+    <>
+      <PageHeader
+        icon="💸"
+        title="Expense Management"
+        description="Record and track daily expenses including rent, salaries, transport, electricity, and other operational costs. Maintain financial clarity with categorized expense tracking."
+        className="mb-0"
+        action={
           <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-200 min-w-[200px]">
             <p className="text-xs text-gray-500 font-medium">Total Expenses</p>
             <p className="text-xl font-bold text-gray-800 truncate">
               Rs. {totalExpenses.toFixed(2)}
             </p>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 font-medium">Categories</p>
@@ -48,7 +43,6 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
             <span className="text-blue-600 text-lg">📊</span>
           </div>
         </div>
-
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 font-medium">Total Records</p>
@@ -58,7 +52,6 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
             <span className="text-green-600 text-lg">📈</span>
           </div>
         </div>
-
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-xs text-gray-500 font-medium">Current Month</p>
@@ -71,7 +64,7 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 };
 

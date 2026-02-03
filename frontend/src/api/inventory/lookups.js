@@ -1,13 +1,14 @@
-import api from "../client";
-
-export const loadInventoryLookups = async (defaultUnits = []) => {
+// All functions now accept api as the first argument
+export const loadInventoryLookups = async (api, defaultUnits = []) => {
   const [supRes, catRes] = await Promise.allSettled([
     api.get("/suppliers"),
     api.get("/items/categories/list"),
   ]);
 
-  const suppliers = supRes.status === "fulfilled" ? supRes.value.data || [] : [];
-  const categories = catRes.status === "fulfilled" ? catRes.value.data || [] : [];
+  const suppliers =
+    supRes.status === "fulfilled" ? supRes.value.data || [] : [];
+  const categories =
+    catRes.status === "fulfilled" ? catRes.value.data || [] : [];
 
   return {
     suppliers,
@@ -16,7 +17,7 @@ export const loadInventoryLookups = async (defaultUnits = []) => {
   };
 };
 
-export const loadSuppliers = async () => {
+export const loadSuppliers = async (api) => {
   try {
     const { data } = await api.get("/suppliers");
     return data || [];
@@ -26,7 +27,7 @@ export const loadSuppliers = async () => {
   }
 };
 
-export const loadCategories = async () => {
+export const loadCategories = async (api) => {
   try {
     const { data } = await api.get("/items/categories/list");
     return data || [];

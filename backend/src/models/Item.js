@@ -113,8 +113,8 @@ const itemSchema = new Schema(
   },
 );
 
-// Comprehensive indexes for efficient querying and filtering
-// Text indexes for full-text search
+// Optimized indexes for efficient querying
+// Text index for full-text search
 itemSchema.index(
   {
     name: "text",
@@ -126,34 +126,26 @@ itemSchema.index(
   { name: "item_text_search" },
 );
 
-// Single field indexes for exact match queries
-itemSchema.index({ sku: 1 }, { name: "item_sku" });
-itemSchema.index({ barcode: 1 }, { name: "item_barcode", sparse: true });
-itemSchema.index({ category: 1 }, { name: "item_category" });
-itemSchema.index({ name: 1 }, { name: "item_name" });
-itemSchema.index({ isActive: 1 }, { name: "item_status" });
-itemSchema.index({ isBatchTracked: 1 }, { name: "item_batch_tracked" });
-itemSchema.index({ tenantId: 1 }, { name: "item_tenant" });
-itemSchema.index({ tenantId: 1, sku: 1 }, { unique: true, name: "item_tenant_sku" });
-
-// Compound indexes for common filtering patterns
+// Compound indexes: always include tenantId for multi-tenancy queries
 itemSchema.index(
-  { category: 1, isActive: 1 },
-  { name: "item_category_status" },
+  { tenantId: 1, sku: 1 },
+  { unique: true, name: "item_tenant_sku" },
 );
 itemSchema.index(
-  { isActive: 1, createdAt: -1 },
-  { name: "item_status_recent" },
+  { tenantId: 1, barcode: 1 },
+  { sparse: true, name: "item_tenant_barcode" },
 );
-itemSchema.index({ brand: 1, isActive: 1 }, { name: "item_brand_status" });
-
-// Index for low stock alerts
-itemSchema.index({ lowStockLevel: 1, isActive: 1 }, { name: "item_low_stock" });
-
-// Index for batch tracking queries
 itemSchema.index(
-  { isBatchTracked: 1, isActive: 1 },
-  { name: "item_batch_status" },
+  { tenantId: 1, category: 1, isActive: 1 },
+  { name: "item_tenant_category_status" },
+);
+itemSchema.index(
+  { tenantId: 1, isActive: 1, isBatchTracked: 1 },
+  { name: "item_tenant_status_batch" },
+);
+itemSchema.index(
+  { tenantId: 1, isActive: 1, createdAt: -1 },
+  { name: "item_tenant_status_recent" },
 );
 
 itemSchema.virtual("availableStock").get(function () {

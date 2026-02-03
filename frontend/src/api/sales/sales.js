@@ -1,12 +1,17 @@
-import api from "../client";
-
-export const saveSale = async (salePayload) => {
+// All functions now accept api as the first argument
+export const saveSale = async (api, salePayload) => {
   const { data } = await api.post("/sales", salePayload);
   return data;
 };
 
-export const getSale = async (id) => {
+export const getSale = async (api, id) => {
   const { data } = await api.get(`/sales/${id}`);
+  return data;
+};
+
+// Get sales with optional date range and limit
+export const getSales = async (api, params = {}) => {
+  const { data } = await api.get("/sales", { params });
   return data;
 };
 

@@ -1,11 +1,11 @@
-import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
-import { Expense } from '../models/Expense.js';
+import express from "express";
+import { protect } from "../middleware/authMiddleware.js";
+import { Expense } from "../models/Expense.js";
 
 const router = express.Router();
 
 // Create expense
-router.post('/', protect, async (req, res) => {
+router.post("/", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -20,24 +20,51 @@ router.post('/', protect, async (req, res) => {
 });
 
 // List expenses with optional date range
-router.get('/', protect, async (req, res) => {
+router.get("/", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }
-  const { from, to } = req.query;
+  const { from, to, startDate, endDate } = req.query;
   const filter = { tenantId };
-  if (from || to) {
+
+  // Support both 'from/to' and 'startDate/endDate' params
+  const start = startDate || from;
+  const end = endDate || to;
+
+  if (start || end) {
     filter.date = {};
-    if (from) filter.date.$gte = new Date(from);
-    if (to) filter.date.$lte = new Date(to);
+    if (start) {
+      const startDateObj = new Date(start);
+      startDateObj.setHours(0, 0, 0, 0);
+      filter.date.$gte = startDateObj;
+    }
+    if (end) {
+      const endDateObj = new Date(end);
+      endDateObj.setHours(23, 59, 59, 999);
+      filter.date.$lte = endDateObj;
+    }
   }
-  const expenses = await Expense.find(filter).sort({ date: -1, createdAt: -1 });
-  res.json(expenses);
+
+  const expenses = await Expense.find(filter)
+    .populate("createdBy", "username")
+    .sort({ date: -1, createdAt: -1 });
+
+  // Format response for reports
+  const formattedExpenses = expenses.map((exp) => ({
+    expenseId: exp._id,
+    category: exp.category,
+    description: exp.description,
+    amount: exp.amount,
+    expenseDate: exp.date,
+    addedBy: exp.createdBy?.username || "Unknown",
+  }));
+
+  res.json({ expenses: formattedExpenses });
 });
 
 // Update expense
-router.put('/:id', protect, async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -46,17 +73,17 @@ router.put('/:id', protect, async (req, res) => {
   const expense = await Expense.findOneAndUpdate(
     { _id: req.params.id, tenantId },
     { ...safe, updatedBy: req.user?._id },
-    { new: true }
+    { new: true },
   );
   if (!expense) {
     res.status(404);
-    throw new Error('Expense not found');
+    throw new Error("Expense not found");
   }
   res.json(expense);
 });
 
 // Delete expense
-router.delete('/:id', protect, async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -64,10 +91,10 @@ router.delete('/:id', protect, async (req, res) => {
   const expense = await Expense.findOne({ _id: req.params.id, tenantId });
   if (!expense) {
     res.status(404);
-    throw new Error('Expense not found');
+    throw new Error("Expense not found");
   }
   await expense.deleteOne();
-  res.json({ message: 'Expense removed' });
+  res.json({ message: "Expense removed" });
 });
 
 export default router;

@@ -43,7 +43,7 @@ const CustomersPage = () => {
       customer.nic,
       customer.address,
     ],
-    300 // 300ms debounce
+    300, // 300ms debounce
   );
 
   const loadCustomers = async () => {
@@ -66,7 +66,7 @@ const CustomersPage = () => {
         // Update existing
         const updated = await updateCustomer(editingCustomer._id, formData);
         setCustomers((prev) =>
-          prev.map((c) => (c._id === updated._id ? updated : c))
+          prev.map((c) => (c._id === updated._id ? updated : c)),
         );
         toast.success("Customer updated successfully!");
       } else {

@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 /**
  * Expenses Summary Card Component
@@ -11,34 +12,39 @@ const ExpensesSummaryCard = ({
   loading = false,
 }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 sm:p-6 lg:p-7 w-full">
+    <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-1.5">
+          <h3 className="text-lg sm:text-xl font-semibold text-accent/90 flex items-center gap-1.5">
             <span className="text-xl">💰</span>
             <span>Expenses</span>
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
             Breakdown of operating expenses by category
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="flex items-center justify-center py-8">
+          <AppLoader
+            open
+            variant="inline"
+            title="Loading expenses"
+            subtitle="Compiling expense summary"
+          />
         </div>
       ) : (
         <div className="space-y-4">
           {/* Total Expenses Summary */}
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 sm:p-5">
+          <div className="p-4 border border-orange-200 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                <p className="text-xs font-medium text-gray-600 sm:text-sm">
                   Total Expenses
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-orange-600 mt-1">
+                <p className="mt-1 text-2xl font-bold text-orange-600 sm:text-3xl">
                   LKR{" "}
                   {typeof totalExpenses === "number"
                     ? totalExpenses.toLocaleString("en-US", {
@@ -49,7 +55,7 @@ const ExpensesSummaryCard = ({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm sm:text-base font-semibold text-gray-700">
+                <p className="text-sm font-semibold text-gray-700 sm:text-base">
                   {expenseCount}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -62,7 +68,7 @@ const ExpensesSummaryCard = ({
           {/* Category Breakdown */}
           {categoryBreakdown && categoryBreakdown.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold tracking-wide text-gray-700 uppercase">
                 By Category
               </p>
 
@@ -77,11 +83,11 @@ const ExpensesSummaryCard = ({
                     <div key={idx} className="flex items-stretch gap-3 py-1">
                       <div className="flex-1">
                         {/* Desktop / tablet header row */}
-                        <div className="hidden sm:flex items-center justify-between mb-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-700">
+                        <div className="items-center justify-between hidden mb-1 sm:flex">
+                          <p className="text-xs font-medium text-gray-700 sm:text-sm">
                             {item.category}
                           </p>
-                          <p className="text-xs sm:text-sm font-semibold text-gray-900">
+                          <p className="text-xs font-semibold text-gray-900 sm:text-sm">
                             {percentage}%
                           </p>
                         </div>
@@ -102,9 +108,9 @@ const ExpensesSummaryCard = ({
                         </div>
 
                         {/* Progress bar */}
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full h-2 bg-gray-200 rounded-full">
                           <div
-                            className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300"
+                            className="h-2 transition-all duration-300 rounded-full bg-gradient-to-r from-orange-500 to-red-500"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -121,7 +127,7 @@ const ExpensesSummaryCard = ({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-lg">
+            <div className="flex flex-col items-center justify-center py-8 rounded-lg bg-gray-50">
               <p className="text-sm text-gray-500">No expenses recorded</p>
             </div>
           )}

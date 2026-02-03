@@ -31,30 +31,15 @@ const expenseSchema = new mongoose.Schema(
   },
 );
 
-// Indexes for expense queries
-expenseSchema.index({ category: 1 }, { name: "expense_category" });
-expenseSchema.index({ date: -1 }, { name: "expense_date" });
-expenseSchema.index({ createdBy: 1 }, { name: "expense_creator" });
-expenseSchema.index({ createdAt: -1 }, { name: "expense_recent" });
-expenseSchema.index({ tenantId: 1 }, { name: "expense_tenant" });
-
-// Compound indexes for reporting
+// Optimized indexes for expense queries
 expenseSchema.index(
-  { category: 1, date: -1 },
-  { name: "expense_category_date" },
+  { tenantId: 1, category: 1, date: -1 },
+  { name: "expense_tenant_category_date" },
 );
+expenseSchema.index({ tenantId: 1, date: -1 }, { name: "expense_tenant_date" });
 expenseSchema.index(
-  { date: -1, category: 1 },
-  { name: "expense_date_category" },
-);
-
-// Index for amount-based queries
-expenseSchema.index({ amount: 1 }, { name: "expense_amount" });
-
-// Index for user and date tracking
-expenseSchema.index(
-  { createdBy: 1, date: -1 },
-  { name: "expense_creator_date" },
+  { tenantId: 1, createdBy: 1, date: -1 },
+  { name: "expense_tenant_creator_date" },
 );
 
 export const Expense = mongoose.model("Expense", expenseSchema);

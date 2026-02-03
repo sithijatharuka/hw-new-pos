@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import AppLoader from "../components/common/AppLoader";
 import {
   getDailySalesReport,
   getInventoryValue,
@@ -73,7 +74,14 @@ const OwnerDashboardPage = () => {
       </div>
 
       {loading && (
-        <p className="text-xs text-gray-500">Loading summary…</p>
+        <div className="flex justify-start py-2">
+          <AppLoader
+            open
+            variant="inline"
+            title="Loading summary"
+            subtitle="Refreshing owner dashboard"
+          />
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -177,3 +185,5 @@ const OwnerDashboardPage = () => {
 };
 
 export default OwnerDashboardPage;
+
+

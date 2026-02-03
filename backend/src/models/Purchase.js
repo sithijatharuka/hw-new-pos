@@ -29,7 +29,7 @@ const purchaseItemSchema = new mongoose.Schema(
     batchNumber: String,
     expiryDate: Date,
   },
-  { _id: false, toJSON: { getters: true }, toObject: { getters: true } }
+  { _id: false, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 const purchaseSchema = new mongoose.Schema(
@@ -86,40 +86,29 @@ const purchaseSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { getters: true },
     toObject: { getters: true },
-  }
+  },
 );
 
-// Indexes for purchase transaction queries
-purchaseSchema.index({ billNumber: 1 }, { name: "purchase_bill_number" });
-purchaseSchema.index({ supplier: 1 }, { name: "purchase_supplier" });
-purchaseSchema.index({ status: 1 }, { name: "purchase_status" });
-purchaseSchema.index({ tenantId: 1 }, { name: "purchase_tenant" });
-
-// Date-based indexes for reporting
-purchaseSchema.index({ billDate: -1 }, { name: "purchase_bill_date" });
-purchaseSchema.index({ createdAt: -1 }, { name: "purchase_recent" });
-
-// Compound indexes for common queries
+// Optimized indexes for purchase transaction queries
 purchaseSchema.index(
-  { supplier: 1, createdAt: -1 },
-  { name: "purchase_supplier_recent" }
+  { tenantId: 1, billNumber: 1 },
+  { unique: true, name: "purchase_tenant_bill" },
 );
 purchaseSchema.index(
-  { supplier: 1, status: 1, createdAt: -1 },
-  { name: "purchase_supplier_status" }
+  { tenantId: 1, supplier: 1, createdAt: -1 },
+  { name: "purchase_tenant_supplier_recent" },
 );
 purchaseSchema.index(
-  { billDate: -1, status: 1 },
-  { name: "purchase_date_status" }
+  { tenantId: 1, status: 1, createdAt: -1 },
+  { name: "purchase_tenant_status_recent" },
 );
-
-// Index for pending payments
 purchaseSchema.index(
-  { status: 1, balanceDue: 1 },
-  { name: "purchase_pending_payments" }
+  { tenantId: 1, billDate: -1 },
+  { name: "purchase_tenant_date" },
 );
-
-// Index for balance-related queries
-purchaseSchema.index({ amountPaid: 1 }, { name: "purchase_amount_paid" });
+purchaseSchema.index(
+  { tenantId: 1, status: 1 },
+  { name: "purchase_tenant_status" },
+);
 
 export const Purchase = mongoose.model("Purchase", purchaseSchema);

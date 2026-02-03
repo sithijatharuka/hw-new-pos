@@ -6,6 +6,7 @@ import {
   QuickSummarySection,
   DashboardSections,
 } from "../components/dashboard/index";
+
 import {
   getDashboardSummary,
   getDailySalesOverview,
@@ -17,15 +18,21 @@ import {
   getProfitMetrics,
   getExpensesSummary,
 } from "../api/dashboard/dashboard";
+import { createApiClient } from "../api/client";
 
 const DashboardPage = () => {
+  // Dummy access token logic for now (replace with real auth logic as needed)
+  const getAccessToken = () => localStorage.getItem("accessToken") || "";
+  const setAccessToken = (token) => localStorage.setItem("accessToken", token);
+  const logout = () => localStorage.removeItem("accessToken");
+  const api = createApiClient(getAccessToken, setAccessToken, logout);
   // Date range state
   const [dateRange, setDateRange] = useState("today");
   const [customStartDate, setCustomStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [customEndDate, setCustomEndDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
 
   // State for all dashboard data
@@ -106,16 +113,16 @@ const DashboardPage = () => {
         profit,
         expenses,
       ] = await Promise.all([
-        getDailySalesOverview(startDate, endDate),
-        getLowStockItems(),
-        getOutstandingCredits(),
-        getSupplierPayables(),
-        getMonthlySalesTrend({ range: "days", days: 30 }),
-        getMonthlySalesTrend({ range: "months", months: 12 }),
-        getTopCategories("today", startDate, endDate),
-        getTopCategories("month", startDate, endDate),
-        getProfitMetrics(startDate, endDate),
-        getExpensesSummary(startDate, endDate),
+        getDailySalesOverview(api, startDate, endDate),
+        getLowStockItems(api),
+        getOutstandingCredits(api),
+        getSupplierPayables(api),
+        getMonthlySalesTrend(api, { range: "days", days: 30 }),
+        getMonthlySalesTrend(api, { range: "months", months: 12 }),
+        getTopCategories(api, "today", startDate, endDate),
+        getTopCategories(api, "month", startDate, endDate),
+        getProfitMetrics(api, startDate, endDate),
+        getExpensesSummary(api, startDate, endDate),
       ]);
 
       // Update states
@@ -155,9 +162,9 @@ const DashboardPage = () => {
   const isRangeMode = startDate !== endDate;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto space-y-6 pb-10">
+        <div className="pb-10 mx-auto space-y-6 max-w-7xl">
           {/* Page Header with Date Filters */}
           <DashboardHeader
             dateRange={dateRange}

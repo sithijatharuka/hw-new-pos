@@ -1,109 +1,145 @@
 /** @type {import('tailwindcss').Config} */
+
+import colors from "./src/themes/colors";
+
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        /* ===============================
-           BASE / BACKGROUND
-        =============================== */
         background: {
-          primary: "#F4F6F8",
-          secondary: "#FFFFFF",
-          subtle: "#EEF1F4",
-          disabled: "#E2E6EA",
+          primary: colors.background.primary,
+          secondary: colors.background.secondary,
+          subtle: colors.background.subtle,
+          disabled: colors.background.disabled,
         },
 
-        /* ===============================
-           STRUCTURE / UI (PRIMARY)
-        =============================== */
         primary: {
-          DEFAULT: "#1F3A5F",
-          hover: "#162B45",
-          active: "#0F1F33",
-          light: "#2E4C73",
-          subtle: "#DCE4EF",
+          DEFAULT: colors.primary.DEFAULT,
+          hover: colors.primary.hover,
+          active: colors.primary.active,
+          light: colors.primary.light,
+          subtle: colors.primary.subtle,
         },
 
-        /* ===============================
-           ACCENT / ACTION
-        =============================== */
         accent: {
-          DEFAULT: "#F97316",
-          hover: "#EA580C",
-          active: "#C2410C",
-          light: "#FDBA74",
-          subtle: "#FFEDD5",
+          DEFAULT: colors.accent.DEFAULT,
+          hover: colors.accent.hover,
+          active: colors.accent.active,
+          light: colors.accent.light,
+          subtle: colors.accent.subtle,
         },
 
-        /* ===============================
-           TEXT COLORS
-        =============================== */
-        text: {
-          primary: "#0F172A",
-          secondary: "#475569",
-          tertiary: "#64748B",
-          inverse: "#FFFFFF",
-          disabled: "#94A3B8",
-          link: "#1F3A5F",
-          linkHover: "#162B45",
-          error: "#DC2626",
-          success: "#16A34A",
-        },
-
-        /* ===============================
-           STATUS COLORS
-        =============================== */
-        success: {
-          DEFAULT: "#16A34A",
-          bg: "#DCFCE7",
-          text: "#14532D",
-        },
         error: {
-          DEFAULT: "#DC2626",
-          bg: "#FEE2E2",
-          text: "#7F1D1D",
-          "error-text": "#7F1D1D"
-        },
-        warning: {
-          DEFAULT: "#D97706",
-          bg: "#FEF3C7",
-          text: "#78350F",
-        },
-        pending: {
-          DEFAULT: "#2563EB",
-          bg: "#DBEAFE",
-          text: "#1E3A8A",
+          DEFAULT: colors.error.DEFAULT,
+          hover: colors.error.hover,
+          active: colors.error.active,
+          light: colors.error.light,
+          subtle: colors.error.subtle,
         },
 
-        /* ===============================
-           BORDERS / RINGS
-        =============================== */
+        button: {
+          primary: {
+            bg: colors.button.primary.bg,
+            hover: colors.button.primary.hover,
+            active: colors.button.primary.active,
+            text: colors.button.primary.text,
+            disabled: colors.button.primary.disabled,
+          },
+          secondary: {
+            bg: colors.button.secondary.bg,
+            hover: colors.button.secondary.hover,
+            active: colors.button.secondary.active,
+            text: colors.button.secondary.text,
+            disabled: colors.button.secondary.disabled,
+          },
+          ghost: {
+            bg: colors.button.ghost.bg,
+            hover: colors.button.ghost.hover,
+            active: colors.button.ghost.active,
+            text: colors.button.ghost.text,
+          },
+        },
+
+        text: {
+          primary: colors.text.primary,
+          secondary: colors.text.secondary,
+          tertiary: colors.text.tertiary,
+          inverse: colors.text.inverse,
+          disabled: colors.text.disabled,
+          link: colors.text.link,
+          linkHover: colors.text.linkHover,
+        },
+
+        status: {
+          success: {
+            DEFAULT: colors.status.success.DEFAULT,
+            bg: colors.status.success.bg,
+            text: colors.status.success.text,
+          },
+
+          warning: {
+            DEFAULT: colors.status.warning.DEFAULT,
+            bg: colors.status.warning.bg,
+            text: colors.status.warning.text,
+          },
+          pending: {
+            DEFAULT: colors.status.pending.DEFAULT,
+            bg: colors.status.pending.bg,
+            text: colors.status.pending.text,
+          },
+        },
+
         border: {
-          light: "#E2E8F0",
-          DEFAULT: "#CBD5E1",
-          dark: "#94A3B8",
-          focus: "#F97316",
+          light: colors.border.light,
+          DEFAULT: colors.border.DEFAULT,
+          dark: colors.border.dark,
+          focus: colors.border.focus,
+        },
+
+        ring: {
+          focus: colors.ring.focus,
+          subtle: colors.ring.subtle,
+        },
+
+        table: {
+          header: colors.table.header,
+          row: colors.table.row,
+          rowAlt: colors.table.rowAlt,
+          rowHover: colors.table.rowHover,
+          selected: colors.table.selected,
+        },
+
+        icon: {
+          primary: colors.icon.primary,
+          secondary: colors.icon.secondary,
+          accent: colors.icon.accent,
+          success: colors.icon.success,
+          error: colors.icon.error,
+        },
+
+        overlay: {
+          dark: colors.overlay.dark,
+          light: colors.overlay.light,
         },
       },
 
-      /* ===============================
-         SHADOWS (POS SAFE)
-      =============================== */
-      boxShadow: {
-        sm: "0 1px 2px rgba(0,0,0,0.05)",
-        md: "0 4px 8px rgba(0,0,0,0.08)",
-        lg: "0 8px 16px rgba(0,0,0,0.12)",
+      // ✅ Nice default UI primitives for a POS
+      borderRadius: {
+        xl: "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
 
-      /* ===============================
-         RING COLORS
-      =============================== */
-      ringColor: {
-        focus: "#F97316",
-        subtle: "#CBD5E1",
+      // Soft, modern shadows (no hard-coded colors; uses CSS var strategy)
+      // Tailwind shadows don't support theme colors directly, so we keep neutral.
+      boxShadow: {
+        soft: "0 10px 30px -12px rgba(0,0,0,0.18)",
+        card: "0 12px 36px -18px rgba(0,0,0,0.22)",
+        float: "0 18px 50px -24px rgba(0,0,0,0.28)",
       },
     },
   },
+
   plugins: [],
 };

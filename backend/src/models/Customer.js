@@ -35,29 +35,27 @@ const customerSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { getters: true },
     toObject: { getters: true },
-  }
+  },
 );
 
-// Text indexes for full-text search
+// Text index for full-text search
 customerSchema.index(
-  { name: "text", phone: "text" },
-  { name: "customer_text_search" }
+  { name: "text", phone: "text", address: "text" },
+  { name: "customer_text_search" },
 );
 
-// Single field indexes for common queries
-customerSchema.index({ name: 1 }, { name: "customer_name" });
-customerSchema.index({ phone: 1 }, { name: "customer_phone" });
-customerSchema.index({ type: 1 }, { name: "customer_type" });
-customerSchema.index({ tenantId: 1 }, { name: "customer_tenant" });
-
-// Compound indexes for balanced queries
+// Compound indexes: tenantId is always included for multi-tenancy
 customerSchema.index(
-  { type: 1, createdAt: -1 },
-  { name: "customer_type_recent" }
+  { tenantId: 1, name: 1 },
+  { name: "customer_tenant_name" },
 );
-customerSchema.index({ createdAt: -1 }, { name: "customer_recent" });
-
-// Index for filtering by status in queries
-customerSchema.index({ currentBalance: 1 }, { name: "customer_balance" });
+customerSchema.index(
+  { tenantId: 1, phone: 1 },
+  { sparse: true, name: "customer_tenant_phone" },
+);
+customerSchema.index(
+  { tenantId: 1, type: 1, createdAt: -1 },
+  { name: "customer_tenant_type_recent" },
+);
 
 export const Customer = mongoose.model("Customer", customerSchema);

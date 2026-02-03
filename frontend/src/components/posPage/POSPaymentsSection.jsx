@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
 const POSPaymentsSection = ({
   payments,
@@ -8,17 +9,19 @@ const POSPaymentsSection = ({
   deletePaymentRow,
   totalPayments,
   grandTotal,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
-    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-200">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+    <div className="p-4 border border-gray-200 bg-gray-50 rounded-2xl sm:p-6">
+      <div className="flex flex-col items-start justify-between gap-3 mb-4 sm:flex-row sm:items-center">
+        <h3 className="text-base font-bold text-gray-900 sm:text-lg">
           Payments
         </h3>
         <button
           type="button"
           onClick={addPaymentRow}
-          className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 active:scale-95 transition-all duration-200 font-medium cursor-pointer text-sm self-stretch sm:self-auto"
+          className="self-stretch px-4 py-2 text-sm font-medium text-white transition-all duration-200 border rounded-lg cursor-pointer border-accent bg-accent hover:bg-accent/90 active:scale-95 sm:self-auto"
         >
           + Add Payment
         </button>
@@ -35,11 +38,11 @@ const POSPaymentsSection = ({
           return (
             <div
               key={idx}
-              className="bg-white rounded-xl border border-gray-200 p-4 space-y-3"
+              className="p-4 space-y-3 bg-white border border-gray-200 rounded-xl"
             >
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
+              <div className="grid items-end grid-cols-1 gap-3 md:grid-cols-12 md:gap-4">
                 <div className="md:col-span-4">
-                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                  <label className="block mb-2 text-xs font-medium text-gray-700">
                     Method
                   </label>
                   <select
@@ -63,7 +66,7 @@ const POSPaymentsSection = ({
                 </div>
 
                 <div className="md:col-span-4">
-                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                  <label className="block mb-2 text-xs font-medium text-gray-700">
                     Amount
                   </label>
                   <input
@@ -84,7 +87,7 @@ const POSPaymentsSection = ({
                     placeholder="0.00"
                   />
                   {err.amount && (
-                    <p className="mt-1 text-xs text-red-600 text-right">
+                    <p className="mt-1 text-xs text-right text-red-600">
                       {err.amount}
                     </p>
                   )}
@@ -96,8 +99,8 @@ const POSPaymentsSection = ({
                       balance < 0
                         ? "bg-red-50 border-red-200 text-red-700"
                         : balance === 0
-                        ? "bg-green-50 border-green-200 text-green-700"
-                        : "bg-blue-50 border-blue-200 text-blue-700"
+                          ? "bg-green-50 border-green-200 text-green-700"
+                          : "bg-blue-50 border-blue-200 text-blue-700"
                     }`}
                   >
                     {balance.toFixed(2)}
@@ -107,12 +110,12 @@ const POSPaymentsSection = ({
                   </div>
                 </div>
 
-                <div className="md:col-span-1 flex justify-end">
+                <div className="flex justify-end md:col-span-1">
                   {payments.length > 1 && (
                     <button
                       type="button"
                       onClick={() => deletePaymentRow(idx)}
-                      className="w-9 h-9 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="flex items-center justify-center text-red-600 transition-colors rounded-lg cursor-pointer w-9 h-9 hover:bg-red-50"
                       title="Remove payment"
                     >
                       🗑️
@@ -124,13 +127,13 @@ const POSPaymentsSection = ({
           );
         })}
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-gray-700 text-sm">
+        <div className="p-4 bg-white border border-gray-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">
               Total Payments
             </span>
-            <span className="text-lg sm:text-xl font-bold text-gray-900">
-              Rs. {totalPayments.toFixed(2)}
+            <span className="text-lg font-bold text-gray-900 sm:text-xl">
+              {formatCurrency(totalPayments, currencySymbol, currencyPosition)}
             </span>
           </div>
         </div>

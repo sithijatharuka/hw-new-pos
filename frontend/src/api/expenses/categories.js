@@ -1,6 +1,5 @@
-import api from "../client";
-
-export const loadExpenseCategories = async () => {
+// All functions now accept api as the first argument
+export const loadExpenseCategories = async (api) => {
   try {
     const { data } = await api.get("/settings");
     return data.expenseCategories || [];
@@ -10,7 +9,7 @@ export const loadExpenseCategories = async () => {
   }
 };
 
-export const addExpenseCategory = async (category) => {
+export const addExpenseCategory = async (api, category) => {
   const { data } = await api.post("/settings/expense-categories", {
     category,
   });

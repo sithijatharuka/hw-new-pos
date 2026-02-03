@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 /**
  * Outstanding Customer Credit Summary Component
@@ -15,15 +16,15 @@ const CreditSummaryCard = ({
   const hasCustomers = topCustomers && topCustomers.length > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 sm:p-6 lg:p-7 w-full">
+    <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
+      <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between sm:mb-6">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="flex items-center gap-2 text-lg font-semibold sm:text-xl text-accent/90">
             <span className="text-xl sm:text-2xl">💳</span>
             <span>Outstanding Customer Credit Summary</span>
           </h3>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
             Monitor your total credit exposure and keep an eye on customers
             approaching their limits.
           </p>
@@ -31,9 +32,9 @@ const CreditSummaryCard = ({
       </div>
 
       {/* Summary Top Strip for smaller screens */}
-      <div className="sm:hidden mb-5">
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-          <p className="text-xs text-gray-600 mb-1">Total Credit Given</p>
+      <div className="mb-5 sm:hidden">
+        <div className="px-4 py-3 border border-blue-200 bg-blue-50 rounded-xl">
+          <p className="mb-1 text-xs text-gray-600">Total Credit Given</p>
           <p className="text-2xl font-bold text-blue-600">
             {typeof totalCreditGiven === "number"
               ? `LKR ${totalCreditGiven.toLocaleString("en-US", {
@@ -51,12 +52,12 @@ const CreditSummaryCard = ({
       </div>
 
       {/* Main Summary & Stats Row (tablet/desktop) */}
-      <div className="hidden sm:grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-4 flex flex-col justify-center">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">
+      <div className="hidden grid-cols-1 gap-4 mb-6 sm:grid md:grid-cols-3">
+        <div className="flex flex-col justify-center px-4 py-4 border border-amber-200 md:col-span-2 bg-amber-50 rounded-xl">
+          <p className="mb-1 text-xs text-gray-600 sm:text-sm">
             Total Credit Given
           </p>
-          <p className="text-2xl md:text-3xl font-bold text-blue-600">
+          <p className="text-2xl font-bold text-amber-500 md:text-3xl">
             {typeof totalCreditGiven === "number"
               ? `LKR ${totalCreditGiven.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -65,15 +66,20 @@ const CreditSummaryCard = ({
               : "LKR 0.00"}
           </p>
         </div>
-        <div className="flex flex-col justify-center items-start md:items-center bg-white border border-gray-200 rounded-xl px-4 py-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">
+        <div className="flex flex-col items-start justify-center px-4 py-4 bg-white border border-gray-200 md:items-center rounded-xl">
+          <p className="mb-1 text-xs text-red-500 sm:text-sm">
             Credit Limit Alerts
           </p>
-          <p className="font-semibold text-gray-900 text-sm sm:text-base">
+          <p
+            className={`text-sm font-semibold sm:text-base ${
+              warningCount > 0 ? "text-red-700 bg-red-50" : "text-gray-500"
+            }`}
+          >
             {warningCount > 0
               ? `${warningCount} customer(s) nearing limit`
               : "No current alerts"}
           </p>
+
           {warningCount > 0 && (
             <span className="mt-2 inline-flex items-center text-[11px] font-semibold bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
               ⚠️ Attention needed
@@ -83,9 +89,9 @@ const CreditSummaryCard = ({
       </div>
 
       {/* Top Customers Section */}
-      <div className="border-t border-gray-200 pt-5 sm:pt-6">
+      <div className="pt-5 border-t border-gray-200 sm:pt-6">
         <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+          <h4 className="text-sm font-semibold text-gray-800 sm:text-base">
             Top Customers Owing Money
           </h4>
           {hasCustomers && (
@@ -97,21 +103,23 @@ const CreditSummaryCard = ({
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600 mb-2" />
-            <p className="text-xs sm:text-sm text-gray-500">
-              Loading credit data...
-            </p>
+          <div className="flex items-center justify-center py-8">
+            <AppLoader
+              open
+              variant="inline"
+              title="Loading credit data"
+              subtitle="Fetching customer balances"
+            />
           </div>
         ) : hasCustomers ? (
           <>
             {/* Mobile-friendly compact cards */}
-            <div className="sm:hidden space-y-3">
+            <div className="space-y-3 sm:hidden">
               {topCustomers.map((customer) => {
                 const isWarning = customer.status === "warning";
                 const percentage = Math.min(
                   customer.creditPercentage || 0,
-                  100
+                  100,
                 );
 
                 return (
@@ -125,7 +133,7 @@ const CreditSummaryCard = ({
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">
+                        <p className="text-sm font-medium text-gray-900">
                           {customer.name}
                         </p>
                         {customer.phone && (
@@ -151,7 +159,7 @@ const CreditSummaryCard = ({
                                 {
                                   minimumFractionDigits: 0,
                                   maximumFractionDigits: 0,
-                                }
+                                },
                               )}`
                             : "LKR 0"}
                         </p>
@@ -165,7 +173,7 @@ const CreditSummaryCard = ({
                                 {
                                   minimumFractionDigits: 0,
                                   maximumFractionDigits: 0,
-                                }
+                                },
                               )}`
                             : "LKR 0"}
                         </p>
@@ -180,8 +188,8 @@ const CreditSummaryCard = ({
                               percentage >= 80
                                 ? "bg-red-500"
                                 : percentage >= 60
-                                ? "bg-orange-500"
-                                : "bg-green-500"
+                                  ? "bg-orange-500"
+                                  : "bg-green-500"
                             }`}
                             style={{ width: `${percentage}%` }}
                           />
@@ -203,7 +211,7 @@ const CreditSummaryCard = ({
                   const isWarning = customer.status === "warning";
                   const percentage = Math.min(
                     customer.creditPercentage || 0,
-                    100
+                    100,
                   );
 
                   return (
@@ -216,9 +224,9 @@ const CreditSummaryCard = ({
                       }`}
                     >
                       {/* Header row */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                      <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <p className="font-medium text-gray-900 text-sm sm:text-base">
+                          <p className="text-sm font-medium text-gray-900 sm:text-base">
                             {customer.name}
                           </p>
                           {customer.phone && (
@@ -235,7 +243,7 @@ const CreditSummaryCard = ({
                       </div>
 
                       {/* Financials row */}
-                      <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm mb-2">
+                      <div className="grid grid-cols-2 gap-3 mb-2 text-xs sm:text-sm">
                         <div className="pr-2 border-r border-gray-200">
                           <p className="text-[11px] text-gray-600 mb-1">
                             Balance Due
@@ -247,7 +255,7 @@ const CreditSummaryCard = ({
                                   {
                                     minimumFractionDigits: 0,
                                     maximumFractionDigits: 0,
-                                  }
+                                  },
                                 )}`
                               : "LKR 0"}
                           </p>
@@ -263,7 +271,7 @@ const CreditSummaryCard = ({
                                   {
                                     minimumFractionDigits: 0,
                                     maximumFractionDigits: 0,
-                                  }
+                                  },
                                 )}`
                               : "LKR 0"}
                           </p>
@@ -279,8 +287,8 @@ const CreditSummaryCard = ({
                                 percentage >= 80
                                   ? "bg-red-500"
                                   : percentage >= 60
-                                  ? "bg-orange-500"
-                                  : "bg-green-500"
+                                    ? "bg-orange-500"
+                                    : "bg-green-500"
                               }`}
                               style={{ width: `${percentage}%` }}
                             />
@@ -297,11 +305,11 @@ const CreditSummaryCard = ({
             </div>
           </>
         ) : (
-          <div className="py-6 sm:py-8 text-center">
-            <p className="text-sm sm:text-base text-gray-500">
+          <div className="py-6 text-center sm:py-8">
+            <p className="text-sm text-gray-500 sm:text-base">
               ✅ No outstanding credits at the moment
             </p>
-            <p className="mt-1 text-xs sm:text-sm text-gray-400">
+            <p className="mt-1 text-xs text-gray-400 sm:text-sm">
               Customers are all within their credit limits.
             </p>
           </div>

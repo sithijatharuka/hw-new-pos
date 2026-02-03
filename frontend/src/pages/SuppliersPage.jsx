@@ -1,6 +1,8 @@
 // src/pages/SuppliersPage.jsx
 import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
 import toast, { Toaster } from "react-hot-toast";
+import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import EntityCardList from "../components/common/EntityCardList";
 
@@ -27,7 +29,7 @@ import {
 } from "../api/supplier/suppliers";
 import { fetchItemsForGrn } from "../api/inventory/items";
 
-const SuppliersPage = () => {
+const SuppliersPage = ({ api }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -81,7 +83,7 @@ const SuppliersPage = () => {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const data = await getSuppliers(q);
+      const data = await getSuppliers(api, q);
       setSuppliers(data || []);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to load suppliers");
@@ -106,16 +108,30 @@ const SuppliersPage = () => {
     setShowSupplierForm(true);
   };
 
-  const handleDeleteSupplier = async (supplier) => {
-    const ok = window.confirm("Delete this supplier? This cannot be undone.");
-    if (!ok) return;
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTargetSupplier, setDeleteTargetSupplier] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const handleDeleteSupplier = (supplier) => {
+    setDeleteTargetSupplier(supplier);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteSupplier = async () => {
+    if (!deleteTargetSupplier) return;
+    setDeleteLoading(true);
     try {
-      await deleteSupplier(supplier._id);
-      setSuppliers((prev) => prev.filter((s) => s._id !== supplier._id));
+      await deleteSupplier(api, deleteTargetSupplier._id);
+      setSuppliers((prev) =>
+        prev.filter((s) => s._id !== deleteTargetSupplier._id),
+      );
       toast.success("Supplier deleted");
+      setDeleteModalOpen(false);
+      setDeleteTargetSupplier(null);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to delete supplier");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -124,14 +140,14 @@ const SuppliersPage = () => {
       setSavingSupplier(true);
 
       if (editingSupplier) {
-        const updated = await updateSupplier(editingSupplier._id, payload);
+        const updated = await updateSupplier(api, editingSupplier._id, payload);
         setSuppliers((prev) =>
           prev.map((s) => (s._id === updated._id ? updated : s)),
         );
         toast.success("Supplier updated");
       } else {
         // For new suppliers, set currentBalance = openingBalance
-        const created = await createSupplier(payload);
+        const created = await createSupplier(api, payload);
         setSuppliers((prev) => [...prev, created]);
         toast.success("Supplier created");
       }
@@ -157,7 +173,7 @@ const SuppliersPage = () => {
 
     try {
       setPaySaving(true);
-      const updated = await recordSupplierPayment(paySupplier._id, amount);
+      const updated = await recordSupplierPayment(api, paySupplier._id, amount);
 
       setSuppliers((prev) =>
         prev.map((s) => (s._id === updated._id ? updated : s)),
@@ -173,9 +189,10 @@ const SuppliersPage = () => {
   };
 
   // ---------- GRN ----------
+
   const fetchItems = async () => {
     try {
-      const fetched = await fetchItemsForGrn();
+      const fetched = await fetchItemsForGrn(api);
       setItems(fetched);
     } catch {
       toast.error("Failed to load items");
@@ -185,7 +202,7 @@ const SuppliersPage = () => {
   const fetchCategories = async () => {
     try {
       const { categories: cats, baseUnits: units } =
-        await getCategoriesAndUnits(baseUnits);
+        await getCategoriesAndUnits(api, baseUnits);
       setCategories(cats);
       setBaseUnits(units);
     } catch (err) {
@@ -238,7 +255,7 @@ const SuppliersPage = () => {
   const openViewGRNs = async (supplier) => {
     try {
       setLoadingGRNs(true);
-      const grns = await getSupplierGRNs(supplier._id);
+      const grns = await getSupplierGRNs(api, supplier._id);
       setGrnsList(grns || []);
       setGrnSupplier(supplier);
       setShowGRNsList(true);
@@ -346,6 +363,21 @@ const SuppliersPage = () => {
           totalCount={suppliers.length}
         />
 
+        {(loading || isSearching) && (
+          <div className="px-4 py-6">
+            <AppLoader
+              open
+              variant="inline"
+              title={loading ? "Loading suppliers" : "Searching suppliers"}
+              subtitle={
+                loading
+                  ? "Syncing supplier list"
+                  : "Matching suppliers to your query"
+              }
+            />
+          </div>
+        )}
+
         {/* Mobile cards */}
         <div className="block lg:hidden">
           <EntityCardList
@@ -408,17 +440,44 @@ const SuppliersPage = () => {
         </div>
       </div>
 
-      {/* Add/Edit Supplier Modal */}
-      <SupplierFormModal
-        open={showSupplierForm}
-        editingSupplier={editingSupplier}
-        saving={savingSupplier}
-        onClose={() => {
-          setShowSupplierForm(false);
-          setEditingSupplier(null);
+      {/* Add/Edit Supplier Modal with Overlay */}
+      {/* Delete Supplier Confirmation Modal */}
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        title="Delete Supplier?"
+        message={
+          deleteTargetSupplier
+            ? `This action cannot be undone.\nAre you sure you want to delete ${deleteTargetSupplier.name}?`
+            : ""
+        }
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          setDeleteTargetSupplier(null);
         }}
-        onSubmit={handleSaveSupplier}
+        onConfirm={confirmDeleteSupplier}
+        loading={deleteLoading}
+        confirmText="Delete"
+        cancelText="Cancel"
       />
+      {showSupplierForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Overlay */}
+          <div className="absolute inset-0" />
+          {/* Centered Modal */}
+          <div className="relative z-10 flex items-center justify-center w-full h-full">
+            <SupplierFormModal
+              open={true}
+              editingSupplier={editingSupplier}
+              saving={savingSupplier}
+              onClose={() => {
+                setShowSupplierForm(false);
+                setEditingSupplier(null);
+              }}
+              onSubmit={handleSaveSupplier}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Pay Modal */}
       <SupplierPayModal

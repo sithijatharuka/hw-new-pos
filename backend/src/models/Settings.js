@@ -12,6 +12,13 @@ const settingsSchema = new mongoose.Schema(
     shopWhatsapp: { type: String, default: "07X-XXXXXXX" },
     vatRegNo: { type: String, default: "123456789-7000" },
     vatRate: { type: Number, default: 0.15 }, // 15%
+    currency: { type: String, default: "LKR" }, // Currency code
+    currencySymbol: { type: String, default: "Rs." }, // Currency symbol
+    currencyPosition: {
+      type: String,
+      enum: ["before", "after"],
+      default: "before",
+    }, // Symbol position
     expenseCategories: {
       type: [String],
       default: [
@@ -27,7 +34,7 @@ const settingsSchema = new mongoose.Schema(
       ],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Single document collection - minimal indexing needed
@@ -35,7 +42,7 @@ const settingsSchema = new mongoose.Schema(
 settingsSchema.index({ createdAt: -1 }, { name: "settings_recent" });
 settingsSchema.index(
   { tenantId: 1 },
-  { unique: true, name: "settings_tenant_unique" }
+  { unique: true, name: "settings_tenant_unique" },
 );
 
 // There will normally be only one settings document

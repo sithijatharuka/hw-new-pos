@@ -9,15 +9,10 @@ import InventoryTable from "../components/inventory/InventoryTable";
 import InventoryMobileCard from "../components/inventory/InventoryMobileCard";
 import ItemDetailModal from "../components/inventory/ItemDetailModal";
 import { confirmWithToast } from "../components/inventory/confirmDialog.jsx";
-import {
-  loadItems,
-  deleteItem,
-  activateItem,
-  deactivateItem,
-} from "../api/inventory/items";
+import * as itemApi from "../api/inventory/items";
 import { loadInventoryLookups } from "../api/inventory/lookups";
 
-const InventoryPage = () => {
+const InventoryPage = ({ api }) => {
   const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
@@ -60,12 +55,12 @@ const InventoryPage = () => {
         String(inv.onHand ?? ""),
       ];
     },
-    300
+    300,
   );
 
   const fetchItems = async () => {
     try {
-      const items = await loadItems(q, lowStockOnly);
+      const items = await itemApi.loadItems(api, q, lowStockOnly);
       setItems(items);
     } catch (err) {
       toast.error("Failed to load items");
@@ -74,7 +69,7 @@ const InventoryPage = () => {
 
   const fetchLookups = async () => {
     try {
-      const result = await loadInventoryLookups(baseUnits);
+      const result = await loadInventoryLookups(api, baseUnits);
       setSuppliers(result.suppliers);
       setCategories(result.categories);
       setBaseUnits(result.baseUnits);
@@ -88,7 +83,7 @@ const InventoryPage = () => {
     if (!confirmed) return;
 
     try {
-      await deleteItem(id);
+      await itemApi.deleteItem(api, id);
       toast.success("Item deleted");
       await fetchItems();
     } catch (err) {
@@ -119,7 +114,7 @@ const InventoryPage = () => {
 
   const tableCategories = useMemo(() => {
     const fromItems = Array.from(
-      new Set(items.map((i) => i.category).filter(Boolean))
+      new Set(items.map((i) => i.category).filter(Boolean)),
     );
     const fromLookups = (categories || []).filter(Boolean);
     return Array.from(new Set([...fromLookups, ...fromItems]));
@@ -127,13 +122,13 @@ const InventoryPage = () => {
 
   const filteredItems = useMemo(() => {
     return searchFiltered.filter(
-      (i) => !filterCategory || i.category === filterCategory
+      (i) => !filterCategory || i.category === filterCategory,
     );
   }, [searchFiltered, filterCategory]);
 
   const handleActivate = async (id) => {
     try {
-      await activateItem(id);
+      await itemApi.activateItem(api, id);
       toast.success("Item activated");
       fetchItems();
     } catch (err) {
@@ -143,7 +138,7 @@ const InventoryPage = () => {
 
   const handleDeactivate = async (id) => {
     try {
-      await deactivateItem(id);
+      await itemApi.deactivateItem(api, id);
       toast.success("Item deactivated");
       fetchItems();
     } catch (err) {

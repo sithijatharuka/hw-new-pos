@@ -18,7 +18,7 @@ import {
   validatePayment,
   recalcLine,
 } from "../components/posPage";
-import { loadVatRate } from "../api/settings/settings";
+import { loadVatRate, loadCurrencySettings } from "../api/settings/settings";
 import {
   loadActiveItems as loadItems,
   loadItemCategories as loadCategories,
@@ -27,7 +27,7 @@ import {
 import { loadCustomers, createCustomer } from "../api/customer/customers";
 import { saveSale, saveSaleOffline } from "../api/sales/sales";
 
-const POSPage = () => {
+const POSPage = ({ api }) => {
   const navigate = useNavigate();
   const { isOffline } = useOffline();
   const barcodeInputRef = useRef(null);
@@ -66,47 +66,54 @@ const POSPage = () => {
   const [isTaxInvoice, setIsTaxInvoice] = useState(false);
   const [vatRate, setVatRate] = useState(0.15);
 
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
+
   const [payments, setPayments] = useState([emptyPayment()]);
   const [paymentErrors, setPaymentErrors] = useState([{}]);
 
-  // Load VAT rate
+  // Load VAT rate and currency settings
   useEffect(() => {
-    const initVat = async () => {
+    const initSettings = async () => {
       try {
-        const rate = await loadVatRate();
+        const rate = await loadVatRate(api);
         setVatRate(rate);
+
+        const currencySettings = await loadCurrencySettings(api);
+        setCurrencySymbol(currencySettings.currencySymbol);
+        setCurrencyPosition(currencySettings.currencyPosition);
       } catch (error) {
-        toast.error("Failed to load VAT rate. Using default.");
+        toast.error("Failed to load settings. Using defaults.");
       }
     };
-    initVat();
-  }, []);
+    initSettings();
+  }, [api]);
 
   // Load items (✅ must include inventory.onHand + sellingPrice + tax fields)
   useEffect(() => {
     const initItems = async () => {
       try {
-        const items = await loadItems();
+        const items = await loadItems(api);
         setAllItems(items);
       } catch (error) {
         toast.error("Failed to load items.");
       }
     };
     initItems();
-  }, []);
+  }, [api]);
 
   // Load categories
   useEffect(() => {
     const initCategories = async () => {
       try {
-        const cats = await loadCategories();
+        const cats = await loadCategories(api);
         setCategories(cats);
       } catch (error) {
         console.error("Failed to load categories:", error);
       }
     };
     initCategories();
-  }, []);
+  }, [api]);
 
   // Derive categories fallback
   useEffect(() => {
@@ -123,14 +130,14 @@ const POSPage = () => {
   useEffect(() => {
     const initCustomers = async () => {
       try {
-        const custs = await loadCustomers();
+        const custs = await loadCustomers(api);
         setCustomers(custs);
       } catch (error) {
         console.error("Failed to load customers:", error);
       }
     };
     initCustomers();
-  }, []);
+  }, [api]);
 
   // Search results (apply category filter on top of debounced results)
   const filteredByCategory = useMemo(() => {
@@ -599,6 +606,8 @@ const POSPage = () => {
             barcode={barcode}
             setBarcode={setBarcode}
             barcodeInputRef={barcodeInputRef}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
             handleBarcodeSearch={handleBarcodeSearch}
             isTaxInvoice={isTaxInvoice}
             setIsTaxInvoice={setIsTaxInvoice}
@@ -630,6 +639,8 @@ const POSPage = () => {
               <div className="space-y-6">
                 <POSSummarySection
                   baseTotal={baseTotal}
+                  currencySymbol={currencySymbol}
+                  currencyPosition={currencyPosition}
                   taxTotal={taxTotal}
                   discountTotal={discountTotal}
                   setDiscountTotal={setDiscountTotal}
@@ -638,6 +649,8 @@ const POSPage = () => {
 
                 <POSPaymentsSection
                   payments={payments}
+                  currencySymbol={currencySymbol}
+                  currencyPosition={currencyPosition}
                   paymentErrors={paymentErrors}
                   updatePayment={updatePayment}
                   addPaymentRow={addPaymentRow}

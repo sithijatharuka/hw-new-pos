@@ -30,7 +30,7 @@ const CustomerSelector = ({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <div className="max-h-48 overflow-auto border border-gray-200 rounded-xl bg-white">
+      <div className="overflow-auto bg-white border border-gray-200 max-h-48 rounded-xl">
         {filtered.length === 0 ? (
           <p className="px-3 py-2 text-[11px] text-gray-500">
             No customers found. Add a new customer.
@@ -83,7 +83,7 @@ const CustomerSelector = ({
         <button
           type="button"
           onClick={onAddNew}
-          className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-gray-300 text-xs md:text-sm text-gray-700 hover:bg-soft cursor-pointer"
+          className="inline-flex items-center justify-center px-3 py-2 text-xs text-white border cursor-pointer bg-accent rounded-xl border-accent md:text-sm hover:bg-accent/90"
         >
           + Add new customer
         </button>

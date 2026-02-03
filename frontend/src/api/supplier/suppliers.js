@@ -1,11 +1,10 @@
-import api from "../client";
-
-export const getSuppliers = async (query) => {
+// All functions now accept api as the first argument
+export const getSuppliers = async (api, query) => {
   const { data } = await api.get("/suppliers", { params: { q: query } });
   return data || [];
 };
 
-export const createSupplier = async (payload) => {
+export const createSupplier = async (api, payload) => {
   const { data } = await api.post("/suppliers", {
     ...payload,
     currentBalance: payload.openingBalance,
@@ -13,21 +12,21 @@ export const createSupplier = async (payload) => {
   return data;
 };
 
-export const updateSupplier = async (id, payload) => {
+export const updateSupplier = async (api, id, payload) => {
   const { data } = await api.put(`/suppliers/${id}`, payload);
   return data;
 };
 
-export const deleteSupplier = async (id) => {
+export const deleteSupplier = async (api, id) => {
   await api.delete(`/suppliers/${id}`);
 };
 
-export const recordSupplierPayment = async (id, amount) => {
+export const recordSupplierPayment = async (api, id, amount) => {
   const { data } = await api.post(`/suppliers/${id}/pay`, { amount });
   return data?.supplier || data;
 };
 
-export const getCategoriesAndUnits = async (defaultUnits = []) => {
+export const getCategoriesAndUnits = async (api, defaultUnits = []) => {
   const [catRes, unitRes] = await Promise.allSettled([
     api.get("/items/categories/list"),
     api.get("/items/units/list"),
@@ -39,7 +38,7 @@ export const getCategoriesAndUnits = async (defaultUnits = []) => {
     unitRes.status === "fulfilled" ? unitRes.value.data || [] : [];
 
   const baseUnits = Array.from(
-    new Set([...(defaultUnits || []), ...fetchedUnits])
+    new Set([...(defaultUnits || []), ...fetchedUnits]),
   );
   return { categories, baseUnits };
 };

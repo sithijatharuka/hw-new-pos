@@ -32,35 +32,24 @@ const creditPaymentSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { getters: true },
     toObject: { getters: true },
-  }
+  },
 );
 
-// Indexes for credit payment queries
-creditPaymentSchema.index({ customer: 1 }, { name: "credit_payment_customer" });
-creditPaymentSchema.index({ method: 1 }, { name: "credit_payment_method" });
-creditPaymentSchema.index({ createdAt: -1 }, { name: "credit_payment_recent" });
-creditPaymentSchema.index({ tenantId: 1 }, { name: "credit_payment_tenant" });
-
-// Compound indexes for common queries
+// Optimized indexes for credit payment queries
 creditPaymentSchema.index(
-  { customer: 1, createdAt: -1 },
-  { name: "credit_payment_customer_recent" }
+  { tenantId: 1, customer: 1, createdAt: -1 },
+  { name: "credit_payment_tenant_customer_recent" },
 );
 creditPaymentSchema.index(
-  { customer: 1, method: 1 },
-  { name: "credit_payment_customer_method" }
+  { tenantId: 1, method: 1, createdAt: -1 },
+  { name: "credit_payment_tenant_method_recent" },
 );
-
-// Index for applied invoices tracking
 creditPaymentSchema.index(
   { appliedInvoices: 1 },
-  { name: "credit_payment_applied_invoices", sparse: true }
+  { sparse: true, name: "credit_payment_applied_invoices" },
 );
-
-// Index for amount-based queries
-creditPaymentSchema.index({ amount: 1 }, { name: "credit_payment_amount" });
 
 export const CreditPayment = mongoose.model(
   "CreditPayment",
-  creditPaymentSchema
+  creditPaymentSchema,
 );

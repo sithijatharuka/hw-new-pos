@@ -1,5 +1,5 @@
 import React from "react";
-
+import colors from "../../themes/colors";
 const ExpensesForm = ({
   editingId,
   form,
@@ -17,13 +17,13 @@ const ExpensesForm = ({
   resetForm,
 }) => {
   return (
-    <section className="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <section className="p-5 bg-white border border-gray-200 shadow-lg rounded-2xl sm:p-6">
+      <div className="flex flex-col justify-between gap-3 mb-6 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+          <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
             {editingId ? "Edit Expense" : "Add New Expense"}
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-xs text-gray-500 sm:text-sm">
             {editingId
               ? "Update the expense details below."
               : "Fill in the details to record a new expense."}
@@ -33,7 +33,7 @@ const ExpensesForm = ({
           <button
             type="button"
             onClick={resetForm}
-            className="px-4 py-2 rounded-xl border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm active:scale-95 transition-all cursor-pointer self-start sm:self-auto"
+            className="self-start px-4 py-2 text-xs font-medium text-gray-700 transition-all border border-gray-300 cursor-pointer rounded-xl sm:text-sm hover:bg-gray-50 hover:shadow-sm active:scale-95 sm:self-auto"
           >
             Cancel Edit
           </button>
@@ -43,7 +43,7 @@ const ExpensesForm = ({
       <form onSubmit={saveExpense} className="space-y-5" autoComplete="off">
         {/* Category Field */}
         <div>
-          <div className="flex items-center justify-between mb-2 gap-2">
+          <div className="flex items-center justify-between gap-2 mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Category <span className="text-red-500">*</span>
             </label>
@@ -52,7 +52,7 @@ const ExpensesForm = ({
               onClick={() => {
                 setShowAddCategory((prev) => !prev);
               }}
-              className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1"
+              className="flex items-center gap-1 text-xs font-medium cursor-pointer text-accent sm:text-sm hover:text-blue-800 hover:underline"
             >
               <span className="text-base leading-none">＋</span>
               <span>Add Category</span>
@@ -60,8 +60,8 @@ const ExpensesForm = ({
           </div>
 
           {showAddCategory && (
-            <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="p-4 mb-4 space-y-3 border border-gray-200 bg-gray-50 rounded-xl">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1">
                   <input
                     type="text"
@@ -86,7 +86,7 @@ const ExpensesForm = ({
                     }}
                   />
                   {newCategoryError && (
-                    <p className="text-xs text-red-600 mt-2 ml-1">
+                    <p className="mt-2 ml-1 text-xs text-red-600">
                       {newCategoryError}
                     </p>
                   )}
@@ -95,7 +95,7 @@ const ExpensesForm = ({
                   <button
                     type="button"
                     onClick={handleAddCategory}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 active:scale-95 transition-all cursor-pointer shadow-sm"
+                    className="px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent active:scale-95 transition-all cursor-pointer shadow-sm"
                   >
                     Add
                   </button>
@@ -107,7 +107,7 @@ const ExpensesForm = ({
                     }}
                     className="px-3 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
                   >
-                    <span className="text-gray-500 text-sm">✕</span>
+                    <span className="text-sm text-gray-500">✕</span>
                   </button>
                 </div>
               </div>
@@ -136,18 +136,18 @@ const ExpensesForm = ({
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+            <span className="absolute text-xs text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-1/2">
               ▼
             </span>
           </div>
           {errors.category && (
-            <p className="text-xs text-red-600 mt-2 ml-1">{errors.category}</p>
+            <p className="mt-2 ml-1 text-xs text-red-600">{errors.category}</p>
           )}
         </div>
 
         {/* Description Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block mb-2 text-sm font-medium text-gray-700">
             Description
           </label>
           <input
@@ -161,23 +161,23 @@ const ExpensesForm = ({
             placeholder="e.g., Lorry hire for cement delivery, office supplies"
           />
           {errors.description && (
-            <p className="text-xs text-red-600 mt-2 ml-1">
+            <p className="mt-2 ml-1 text-xs text-red-600">
               {errors.description}
             </p>
           )}
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="mt-2 text-xs text-gray-500">
             Optional: Add details to help identify this expense.
           </p>
         </div>
 
         {/* Amount and Date Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
               Amount (Rs.) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+              <span className="absolute text-sm text-gray-500 -translate-y-1/2 left-3 sm:left-4 top-1/2">
                 Rs.
               </span>
               <input
@@ -195,12 +195,12 @@ const ExpensesForm = ({
               />
             </div>
             {errors.amount && (
-              <p className="text-xs text-red-600 mt-2 ml-1">{errors.amount}</p>
+              <p className="mt-2 ml-1 text-xs text-red-600">{errors.amount}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
               Date <span className="text-red-500">*</span>
             </label>
             <input
@@ -214,7 +214,7 @@ const ExpensesForm = ({
               onChange={(e) => handleFieldChange("date", e.target.value)}
             />
             {errors.date && (
-              <p className="text-xs text-red-600 mt-2 ml-1">{errors.date}</p>
+              <p className="mt-2 ml-1 text-xs text-red-600">{errors.date}</p>
             )}
           </div>
         </div>
@@ -223,7 +223,7 @@ const ExpensesForm = ({
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full sm:w-auto px-7 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm sm:text-base hover:from-blue-700 hover:to-blue-800 active:scale-95 transition-all shadow-md hover:shadow-lg cursor-pointer"
+            className="w-full py-3 text-sm font-semibold text-white transition-all shadow-md cursor-pointer bg-primary hover:bg-primary/90 sm:w-auto px-7 sm:px-8 rounded-xl sm:text-base hover:from-blue-700 hover:to-blue-800 active:scale-95 hover:shadow-lg"
           >
             {editingId ? "Update Expense" : "Save Expense"}
           </button>

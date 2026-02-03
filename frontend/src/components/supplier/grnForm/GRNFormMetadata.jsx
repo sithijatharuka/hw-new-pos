@@ -23,7 +23,7 @@ const GRNFormMetadata = ({
       )}
 
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 -mt-3 font-medium text-gray-700 text4-sm">
           GRN Date
         </label>
         <input

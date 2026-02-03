@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 /**
  * Low Stock Items Component
@@ -32,21 +33,21 @@ const LowStockItemsCard = ({ items, loading = false }) => {
   const hasItems = items && items.length > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 sm:p-6 lg:p-7 w-full">
+    <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
+      <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between sm:mb-6">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="flex items-center gap-2 text-lg font-semibold sm:text-xl text-accent/90">
             <span className="text-xl">🚨</span>
             <span>Low Stock Critical Items</span>
           </h3>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
             Keep an eye on critical and low-stock items before they run out.
           </p>
         </div>
         {hasItems && (
           <div className="flex flex-col items-start sm:items-end">
-            <span className="text-base sm:text-lg font-semibold text-gray-900">
+            <span className="text-base font-semibold text-gray-900 sm:text-lg">
               {items.length} item{items.length > 1 ? "s" : ""}
             </span>
           </div>
@@ -55,11 +56,13 @@ const LowStockItemsCard = ({ items, loading = false }) => {
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2" />
-          <p className="text-xs sm:text-sm text-gray-500">
-            Checking stock levels...
-          </p>
+        <div className="flex items-center justify-center py-8">
+          <AppLoader
+            open
+            variant="inline"
+            title="Checking stock levels"
+            subtitle="Reviewing critical inventory"
+          />
         </div>
       ) : hasItems ? (
         <div className="space-y-3 sm:space-y-4">
@@ -67,13 +70,13 @@ const LowStockItemsCard = ({ items, loading = false }) => {
             <div
               key={item._id}
               className={`border rounded-xl px-4 py-3 sm:px-5 sm:py-4 ${getStatusColor(
-                item.status
+                item.status,
               )} transform transition-all duration-150 hover:shadow-sm hover:-translate-y-0.5 cursor-default`}
             >
               {/* Item header row */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5">
                 <div className="min-w-0">
-                  <h4 className="font-medium text-gray-900 text-sm sm:text-base break-words">
+                  <h4 className="text-sm font-medium text-gray-900 break-words sm:text-base">
                     {item.name}
                   </h4>
                   {item.code && (
@@ -84,7 +87,7 @@ const LowStockItemsCard = ({ items, loading = false }) => {
                 </div>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold ${getStatusBadgeColor(
-                    item.status
+                    item.status,
                   )}`}
                 >
                   {item.statusMessage}
@@ -92,7 +95,7 @@ const LowStockItemsCard = ({ items, loading = false }) => {
               </div>
 
               {/* Stock info – desktop/tablet (table-like grid) */}
-              <div className="hidden sm:grid grid-cols-2 gap-3 text-xs sm:text-sm mb-2">
+              <div className="hidden grid-cols-2 gap-3 mb-2 text-xs sm:grid sm:text-sm">
                 <div className="pr-2 border-r border-gray-200">
                   <p className="text-[11px] text-gray-600 mb-1">
                     Current Stock
@@ -112,7 +115,7 @@ const LowStockItemsCard = ({ items, loading = false }) => {
               </div>
 
               {/* Stock info – mobile-friendly stacked layout */}
-              <div className="grid grid-cols-1 gap-2 text-xs mb-2 sm:hidden">
+              <div className="grid grid-cols-1 gap-2 mb-2 text-xs sm:hidden">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-gray-600">Current Stock</p>
                   <p className="font-semibold text-gray-900">
@@ -129,14 +132,14 @@ const LowStockItemsCard = ({ items, loading = false }) => {
 
               {/* Stock Percentage Bar */}
               <div className="mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full h-2 overflow-hidden bg-gray-200 rounded-full">
                   <div
                     className={`h-2 rounded-full transition-all ${
                       item.status === "red"
                         ? "bg-red-500"
                         : item.status === "orange"
-                        ? "bg-orange-500"
-                        : "bg-green-500"
+                          ? "bg-orange-500"
+                          : "bg-green-500"
                     }`}
                     style={{
                       width: `${Math.min(item.stockPercentage, 100)}%`,
@@ -151,11 +154,11 @@ const LowStockItemsCard = ({ items, loading = false }) => {
           ))}
         </div>
       ) : (
-        <div className="py-7 sm:py-8 text-center">
-          <p className="text-sm sm:text-base text-gray-500">
+        <div className="text-center py-7 sm:py-8">
+          <p className="text-sm text-gray-500 sm:text-base">
             ✅ All items are well stocked
           </p>
-          <p className="mt-1 text-xs sm:text-sm text-gray-400">
+          <p className="mt-1 text-xs text-gray-400 sm:text-sm">
             No items are currently below the configured low stock levels.
           </p>
         </div>

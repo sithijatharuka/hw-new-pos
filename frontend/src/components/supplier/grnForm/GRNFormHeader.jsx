@@ -9,40 +9,19 @@ const GRNFormHeader = ({
 }) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900">
-        {existingGRN ? "Edit GRN" : "Create Goods Received Note (GRN)"}
+      <h2 className="text-xl font-bold text-primary">
+        {existingGRN ? "Edit GRN for" : "Create Goods Received Note (GRN) for"}
+
+        {supplier && (
+          <span className="ml-3 text-sm font-semibold text-primary">
+            — {supplier.name}
+          </span>
+        )}
       </h2>
 
-      {supplier && (
-        <div className="p-4 border border-blue-200 bg-blue-50 rounded-xl">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            <div>
-              <p className="text-xs font-medium text-blue-600">Supplier Name</p>
-              <p className="text-sm font-semibold text-gray-900">
-                {supplier.name}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-blue-600">
-                Contact Person
-              </p>
-              <p className="text-sm text-gray-900">
-                {supplier.contactPerson || "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-blue-600">Phone</p>
-              <p className="text-sm text-gray-900">
-                {supplier.phones?.[0] || "-"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {!existingGRN && (
-        <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-          <p className="text-sm text-blue-800">
+        <div className="p-3 mb-0 border border-blue-200 rounded-lg bg-blue-50">
+          <p className="text-sm text-primary">
             GRN Number will be automatically generated when you save this GRN
           </p>
         </div>
@@ -66,7 +45,7 @@ const GRNFormHeader = ({
         <div>
           {existingGRN && (
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
+              <label className="block mb-0 text-sm font-medium text-gray-700">
                 GRN Date
               </label>
               <input

@@ -1,4 +1,5 @@
 import React from "react";
+import AppLoader from "../common/AppLoader";
 
 const ExpensesTable = ({
   expenses,
@@ -35,9 +36,13 @@ const ExpensesTable = ({
 
       <div className="flex-1 overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10 px-4">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-            <p className="text-gray-500 mt-3 text-sm">Loading expenses...</p>
+          <div className="flex justify-center items-center py-10 px-4">
+            <AppLoader
+              open
+              variant="inline"
+              title="Loading expenses"
+              subtitle="Fetching recent expense records"
+            />
           </div>
         ) : expenses.length > 0 ? (
           <>
@@ -151,3 +156,7 @@ const ExpensesTable = ({
 };
 
 export default ExpensesTable;
+
+
+
+

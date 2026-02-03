@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
 import { getSettings } from "../api/settings/settings";
@@ -30,7 +31,16 @@ const InvoicePrintA4 = () => {
   }, [id]);
 
   if (loading || !sale) {
-    return <div className="p-4 text-xs">Loading invoice…</div>;
+    return (
+      <div className="flex justify-center items-center py-6">
+        <AppLoader
+          open
+          variant="inline"
+          title="Loading invoice"
+          subtitle="Preparing A4 invoice"
+        />
+      </div>
+    );
   }
 
   const isTaxInvoice = sale.isTaxInvoice;
@@ -199,3 +209,7 @@ const InvoicePrintA4 = () => {
 };
 
 export default InvoicePrintA4;
+
+
+
+

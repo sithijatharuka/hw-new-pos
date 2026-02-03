@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import { connectDB } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
@@ -19,6 +20,7 @@ import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import grnRoutes from "./routes/grnRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import otpRoutes from "./routes/otpRoutes.js";
 
 dotenv.config();
 
@@ -40,12 +42,22 @@ app.use(morgan("dev"));
 // Body parsing (add a sensible limit for POS payloads)
 app.use(express.json({ limit: "1mb" }));
 
+app.use(cookieParser());
+
 // CORS (keep open for dev; lock down in prod with env var)
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true, // reflect the request origin
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.CORS_ORIGIN
+        : [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173", // ✅ add
+            "http://localhost:5174",
+            "http://127.0.0.1:5174",
+          ],
     credentials: true,
-  })
+  }),
 );
 
 // Health check
@@ -66,6 +78,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/grns", grnRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/otp", otpRoutes);
 
 // 404 + error (keep these LAST)
 app.use(notFound);

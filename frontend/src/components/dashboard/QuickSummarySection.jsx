@@ -9,39 +9,39 @@ const QuickSummarySection = ({
   isRangeMode,
 }) => {
   return (
-    <section className="bg-gradient-to-br from-blue-600 to-blue-700 border border-blue-600 rounded-2xl p-6 sm:p-7 lg:p-8 shadow-lg">
-      <h3 className="font-bold text-white mb-6 text-base sm:text-lg flex items-center gap-2">
+    <section className="p-6 bg-white shadow-lg rounded-2xl sm:p-7 lg:p-8">
+      <h3 className="flex items-center gap-2 mb-6 text-base font-semibold text-accent/90 sm:text-lg">
         <span className="text-xl">📊</span>
         Quick Summary {isRangeMode && `(${startDate} to ${endDate})`}
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 hover:bg-white/15 transition-colors">
-          <p className="text-blue-100 text-xs sm:text-sm mb-2">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 sm:gap-6">
+        <div className="p-4 transition-colors border bg-white/10 backdrop-blur-sm rounded-xl sm:p-5 border-white/20 hover:bg-white/15">
+          <p className="mb-2 text-xs text-green-500 sm:text-sm">
             {isRangeMode ? "Period Revenue" : "Daily Revenue"}
           </p>
-          <p className="font-bold text-lg sm:text-xl text-white">
+          <p className="text-lg font-bold text-green-600 sm:text-xl">
             {typeof dailySalesOverview?.totalSalesAmount === "number"
               ? `LKR ${dailySalesOverview.totalSalesAmount.toLocaleString(
                   "en-US",
                   {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
-                  }
+                  },
                 )}`
               : "LKR 0"}
           </p>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 hover:bg-white/15 transition-colors">
-          <p className="text-blue-100 text-xs sm:text-sm mb-2">
+        <div className="p-4 transition-colors border bg-white/10 backdrop-blur-sm rounded-xl sm:p-5 border-white/20 hover:bg-white/15">
+          <p className="mb-2 text-xs text-green-500 sm:text-sm">
             {isRangeMode ? "Total Invoices" : "Invoices Today"}
           </p>
-          <p className="font-bold text-lg sm:text-xl text-white">
+          <p className="text-lg font-bold text-green-600 sm:text-xl">
             {dailySalesOverview?.invoiceCount || 0}
           </p>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 hover:bg-white/15 transition-colors">
-          <p className="text-blue-100 text-xs sm:text-sm mb-2">Credit Given</p>
-          <p className="font-bold text-lg sm:text-xl text-red-200">
+        <div className="p-4 transition-colors border bg-white/10 backdrop-blur-sm rounded-xl sm:p-5 border-white/20 hover:bg-white/15">
+          <p className="mb-2 text-xs text-red-500 sm:text-sm">Credit Given</p>
+          <p className="text-lg font-bold text-red-600 sm:text-xl">
             {typeof creditSummary?.totalCreditGiven === "number"
               ? `LKR ${creditSummary.totalCreditGiven.toLocaleString("en-US", {
                   minimumFractionDigits: 0,
@@ -50,16 +50,16 @@ const QuickSummarySection = ({
               : "LKR 0"}
           </p>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 hover:bg-white/15 transition-colors">
-          <p className="text-blue-100 text-xs sm:text-sm mb-2">Payables</p>
-          <p className="font-bold text-lg sm:text-xl text-orange-200">
+        <div className="p-4 transition-colors border bg-white/10 backdrop-blur-sm rounded-xl sm:p-5 border-white/20 hover:bg-white/15">
+          <p className="mb-2 text-xs text-amber-400 sm:text-sm">Payables</p>
+          <p className="text-lg font-bold text-amber-500 sm:text-xl">
             {typeof supplierPayables?.totalOutstanding === "number"
               ? `LKR ${supplierPayables.totalOutstanding.toLocaleString(
                   "en-US",
                   {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
-                  }
+                  },
                 )}`
               : "LKR 0"}
           </p>

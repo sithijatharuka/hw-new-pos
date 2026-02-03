@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AppLoader from "../common/AppLoader";
 import toast from "react-hot-toast";
 import { getItemBatches } from "../../api/inventory/items";
 
@@ -125,8 +126,13 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
               </h4>
               <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
                 {batchesLoading ? (
-                  <div className="p-4 text-sm text-gray-600">
-                    Loading batches...
+                  <div className="flex justify-center items-center p-4">
+                    <AppLoader
+                      open
+                      variant="inline"
+                      title="Loading batches"
+                      subtitle="Fetching batch availability"
+                    />
                   </div>
                 ) : batches.length === 0 ? (
                   <div className="p-4 text-sm text-gray-600">
@@ -209,3 +215,7 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
 };
 
 export default ItemDetailModal;
+
+
+
+

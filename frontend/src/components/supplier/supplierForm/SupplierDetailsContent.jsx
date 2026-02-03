@@ -3,6 +3,17 @@ import React from "react";
 import { formatPaymentTerms } from "../../../utils/paymentTerms";
 
 const SupplierDetailsContent = ({ supplier }) => {
+  if (!supplier) {
+    return (
+      <div className="text-center text-text-tertiary py-8">
+        <div className="text-lg font-semibold mb-2">No supplier selected</div>
+        <div className="text-sm">
+          Select a supplier to view details and actions.
+        </div>
+      </div>
+    );
+  }
+
   const outstanding = Number(supplier.currentBalance || 0);
 
   return (
@@ -63,7 +74,7 @@ const SupplierDetailsContent = ({ supplier }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-        <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-subtle">
+        <div className="p-4 border border-gray-200 shadow-sm rounded-2xl bg-background-subtle">
           <span className="text-xs font-semibold tracking-wider text-text-secondary">
             OPENING BALANCE
           </span>
@@ -72,7 +83,7 @@ const SupplierDetailsContent = ({ supplier }) => {
           </p>
         </div>
 
-        <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-subtle">
+        <div className="p-4 border border-gray-200 shadow-sm rounded-2xl bg-background-subtle">
           <span className="text-xs font-semibold tracking-wider text-text-secondary">
             CURRENT BALANCE
           </span>
@@ -113,7 +124,7 @@ const SupplierDetailsContent = ({ supplier }) => {
       </div>
 
       {supplier.notes && (
-        <div className="grid gap-1">
+        <div className="grid gap-1 ">
           <span className="text-xs font-semibold tracking-wider text-text-secondary">
             NOTES
           </span>

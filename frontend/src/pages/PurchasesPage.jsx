@@ -13,13 +13,13 @@ const emptyLine = () => ({
   lineTotal: 0,
 });
 
-const PurchasesPage = () => {
+const PurchasesPage = ({ api }) => {
   const [lines, setLines] = useState([emptyLine()]);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [billNumber, setBillNumber] = useState("");
   const [billDate, setBillDate] = useState(() =>
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -39,7 +39,7 @@ const PurchasesPage = () => {
         setSearchResults([]);
         return;
       }
-      const data = await loadItems(query);
+      const data = await loadItems(api, query);
       setSearchResults(data);
     };
     const id = setTimeout(fetchItems, 300);
@@ -60,17 +60,17 @@ const PurchasesPage = () => {
     return () => clearTimeout(id);
   }, [supplierQuery, supplierId]);
 
-const getUnitOptions = (item) => {
-  if (!item) return [];
-  const baseUnit = item.baseUnit || "base";
-  return [
-    {
-      label: baseUnit,
-      value: baseUnit,
-      factorToBase: 1,
-    },
-  ];
-};
+  const getUnitOptions = (item) => {
+    if (!item) return [];
+    const baseUnit = item.baseUnit || "base";
+    return [
+      {
+        label: baseUnit,
+        value: baseUnit,
+        factorToBase: 1,
+      },
+    ];
+  };
 
   const computeLine = (line) => {
     const qty = Number(line.qty) || 0;
@@ -129,7 +129,7 @@ const getUnitOptions = (item) => {
 
   const subTotal = lines.reduce(
     (sum, l) => sum + (Number(l.lineTotal) || 0),
-    0
+    0,
   );
   const grandTotal = subTotal; // extend with tax/discount later if needed
 
@@ -196,7 +196,8 @@ const getUnitOptions = (item) => {
         <div>
           <h2 className="text-xl font-semibold">Purchases / GRN</h2>
           <p className="text-xs text-gray-500">
-            Record supplier bills; quantities are captured in the item base unit.
+            Record supplier bills; quantities are captured in the item base
+            unit.
           </p>
         </div>
         <div className="text-xs text-right">

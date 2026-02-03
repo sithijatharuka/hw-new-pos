@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
 import { getSettings } from "../api/settings/settings";
@@ -30,7 +31,16 @@ const InvoicePrintThermal = () => {
   }, [id]);
 
   if (loading || !sale) {
-    return <div className="p-3 text-[11px]">Loading receipt…</div>;
+    return (
+      <div className="flex justify-center items-center py-6">
+        <AppLoader
+          open
+          variant="inline"
+          title="Loading receipt"
+          subtitle="Preparing thermal receipt"
+        />
+      </div>
+    );
   }
 
   const isTaxInvoice = sale.isTaxInvoice;
@@ -152,3 +162,7 @@ const InvoicePrintThermal = () => {
 };
 
 export default InvoicePrintThermal;
+
+
+
+

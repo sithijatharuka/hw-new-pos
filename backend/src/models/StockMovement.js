@@ -22,50 +22,28 @@ const stockMovementSchema = new mongoose.Schema(
     note: { type: String, trim: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Indexes for stock movement tracking
-stockMovementSchema.index({ item: 1 }, { name: "stock_movement_item" });
-stockMovementSchema.index({ type: 1 }, { name: "stock_movement_type" });
+// Optimized indexes for stock movement tracking
 stockMovementSchema.index(
-  { direction: 1 },
-  { name: "stock_movement_direction" }
-);
-stockMovementSchema.index({ tenantId: 1 }, { name: "stock_movement_tenant" });
-stockMovementSchema.index(
-  { referenceId: 1 },
-  { name: "stock_movement_reference" }
-);
-stockMovementSchema.index({ createdAt: -1 }, { name: "stock_movement_recent" });
-
-// Compound indexes for efficient filtering
-stockMovementSchema.index(
-  { item: 1, createdAt: -1 },
-  { name: "stock_movement_item_recent" }
+  { tenantId: 1, item: 1, createdAt: -1 },
+  { name: "stock_movement_tenant_item_recent" },
 );
 stockMovementSchema.index(
-  { item: 1, type: 1, createdAt: -1 },
-  { name: "stock_movement_item_type_recent" }
+  { tenantId: 1, type: 1, createdAt: -1 },
+  { name: "stock_movement_tenant_type_recent" },
 );
 stockMovementSchema.index(
-  { type: 1, createdAt: -1 },
-  { name: "stock_movement_type_recent" }
+  { tenantId: 1, referenceId: 1, type: 1 },
+  { name: "stock_movement_tenant_reference_type", sparse: true },
 );
-
-// Index for direction-based queries
 stockMovementSchema.index(
-  { direction: 1, createdAt: -1 },
-  { name: "stock_movement_direction_recent" }
-);
-
-// Index for reference tracking (GRN, sales, purchases)
-stockMovementSchema.index(
-  { referenceId: 1, type: 1 },
-  { name: "stock_movement_reference_type" }
+  { tenantId: 1, createdAt: -1 },
+  { name: "stock_movement_tenant_recent" },
 );
 
 export const StockMovement = mongoose.model(
   "StockMovement",
-  stockMovementSchema
+  stockMovementSchema,
 );

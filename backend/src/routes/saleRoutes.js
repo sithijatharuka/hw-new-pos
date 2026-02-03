@@ -85,7 +85,7 @@ const applySaleEffects = async (sale, tenantId, userId, session) => {
         type: "sale",
         createdBy: userId,
       },
-      session
+      session,
     );
   }
 
@@ -147,7 +147,7 @@ router.post("/", protect, async (req, res) => {
           createdBy: req.user?._id,
         },
       ],
-      { session }
+      { session },
     );
     const sale = saleDocs[0];
 
@@ -197,7 +197,7 @@ router.put("/:id/finalize", protect, async (req, res) => {
         ...req.body,
         savedAsPending: false,
       },
-      tenantId
+      tenantId,
     );
     sale.set(calculated);
     sale.updatedBy = req.user?._id;
@@ -209,31 +209,73 @@ router.put("/:id/finalize", protect, async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    res
-      .status(400)
-      .json({ message: err.message || "Failed to finalize sale" });
+    res.status(400).json({ message: err.message || "Failed to finalize sale" });
   }
 });
 
-// List sales (daily)
+// List sales (daily or range)
 router.get("/", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }
-  const { date } = req.query;
+  const { date, startDate, endDate, limit } = req.query;
   const filter = { tenantId };
-  if (date) {
+
+  if (startDate || endDate) {
+    // Date range query
+    filter.createdAt = {};
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = end;
+    }
+  } else if (date) {
+    // Single date query
     const d = new Date(date);
     const start = new Date(d.setHours(0, 0, 0, 0));
     const end = new Date(d.setHours(23, 59, 59, 999));
     filter.createdAt = { $gte: start, $lte: end };
   }
+
+  const queryLimit = limit ? parseInt(limit) : 500;
   const sales = await Sale.find(filter)
     .populate("customer", "name")
+    .populate({
+      path: "items.item",
+      select: "name costPrice category",
+    })
     .sort({ createdAt: -1 })
-    .limit(500);
-  res.json(sales);
+    .limit(queryLimit);
+
+  // Format response for reports with item details
+  const formattedSales = sales.map((sale) => ({
+    invoiceNo: sale.invoiceNo,
+    customerName: sale.customer?.name || "Walk-in Customer",
+    finalAmount: sale.finalAmount,
+    paymentMethod: sale.paymentMethod,
+    saleDate: sale.createdAt,
+    items: sale.items.map((item) => ({
+      itemName: item.item?.name || item.description || "Unknown",
+      name: item.item?.name || item.description || "Unknown",
+      costPrice: item.item?.costPrice || 0,
+      category: item.item?.category || "Uncategorized",
+      unitPrice: item.unitPrice,
+      qty: item.qty,
+      discount: item.discount,
+      lineTotal: item.lineTotal,
+    })),
+    isTaxInvoice: sale.isTaxInvoice,
+    subTotal: sale.subTotal,
+    taxTotal: sale.taxTotal,
+  }));
+
+  res.json({ sales: formattedSales });
 });
 
 // Get sale
@@ -245,10 +287,7 @@ router.get("/:id", protect, async (req, res) => {
   const sale = await Sale.findOne({
     _id: req.params.id,
     tenantId,
-  }).populate(
-    "customer",
-    "name phone address"
-  );
+  }).populate("customer", "name phone address");
   if (!sale) {
     res.status(404);
     throw new Error("Sale not found");

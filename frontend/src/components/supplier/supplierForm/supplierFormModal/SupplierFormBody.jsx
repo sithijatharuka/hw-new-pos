@@ -4,7 +4,7 @@ import SupplierDetailsSection from "../SupplierDetailsSection";
 
 const SupplierFormBody = ({ form, errors, isEdit, onFormChange, addPhone }) => {
   return (
-    <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+    <div className="p-6 -mt-8">
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* Left */}
         <SupplierContactSection

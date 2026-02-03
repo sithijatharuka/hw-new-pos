@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
 
@@ -24,7 +25,16 @@ const InvoicePrintPage = () => {
   }, [id]);
 
   if (loading || !sale) {
-    return <div className="p-4 text-xs">Loading invoice…</div>;
+    return (
+      <div className="flex justify-center items-center py-6">
+        <AppLoader
+          open
+          variant="inline"
+          title="Loading invoice"
+          subtitle="Preparing invoice preview"
+        />
+      </div>
+    );
   }
 
   const isTaxInvoice = sale.isTaxInvoice;
@@ -200,3 +210,7 @@ const InvoicePrintPage = () => {
 };
 
 export default InvoicePrintPage;
+
+
+
+

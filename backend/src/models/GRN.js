@@ -34,7 +34,7 @@ const grnLineSchema = new Schema(
       get: decimalGetter,
     },
   },
-  { _id: false, toJSON: { getters: true }, toObject: { getters: true } }
+  { _id: false, toJSON: { getters: true }, toObject: { getters: true } },
 );
 
 const grnSchema = new Schema(
@@ -90,36 +90,24 @@ const grnSchema = new Schema(
     timestamps: true,
     toJSON: { getters: true, virtuals: true },
     toObject: { getters: true, virtuals: true },
-  }
+  },
 );
 
-// Indexes for GRN (Goods Receipt Note) queries
-grnSchema.index({ grnNo: 1 }, { name: "grn_number" });
-grnSchema.index({ supplier: 1 }, { name: "grn_supplier" });
-grnSchema.index({ status: 1 }, { name: "grn_status" });
-grnSchema.index({ grnDate: -1 }, { name: "grn_date" });
-grnSchema.index({ createdAt: -1 }, { name: "grn_recent" });
-grnSchema.index({ tenantId: 1 }, { name: "grn_tenant" });
+// Optimized indexes for GRN (Goods Receipt Note) queries
 grnSchema.index(
   { tenantId: 1, grnNo: 1 },
-  { unique: true, name: "grn_tenant_number" }
+  { unique: true, name: "grn_tenant_number" },
 );
-
-// Compound indexes for common queries
-grnSchema.index({ supplier: 1, grnDate: -1 }, { name: "grn_supplier_date" });
 grnSchema.index(
-  { supplier: 1, status: 1, grnDate: -1 },
-  { name: "grn_supplier_status_date" }
+  { tenantId: 1, supplier: 1, grnDate: -1 },
+  { name: "grn_tenant_supplier_date" },
 );
-
-// Index for status-based queries
-grnSchema.index({ status: 1, grnDate: -1 }, { name: "grn_status_date" });
-
-// Index for user-specific GRN tracking
-grnSchema.index({ createdBy: 1, grnDate: -1 }, { name: "grn_user_recent" });
-
-// Index for posted records
-grnSchema.index({ status: 1, postedAt: -1 }, { name: "grn_posted_records" });
+grnSchema.index(
+  { tenantId: 1, status: 1, grnDate: -1 },
+  { name: "grn_tenant_status_date" },
+);
+grnSchema.index({ tenantId: 1, createdAt: -1 }, { name: "grn_tenant_recent" });
+grnSchema.index({ tenantId: 1, status: 1 }, { name: "grn_tenant_status" });
 
 /**
  * v1: Always compute totals server-side

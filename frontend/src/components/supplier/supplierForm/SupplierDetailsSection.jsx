@@ -29,7 +29,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
               "border focus:outline-none focus:ring-2 focus:border-primary",
               errors.address
                 ? "border-error bg-error-bg focus:ring-error/20"
-                : "border-border-light focus:ring-focus/20",
+                : "border-gray-200 focus:ring-focus/20",
               "shadow-sm transition-all duration-200 ease-out",
               "hover:shadow-md",
             ].join(" ")}
@@ -59,7 +59,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
             className={[
               "w-full rounded-2xl px-4 py-3 text-sm",
               "bg-background-secondary text-text-primary",
-              "border border-border-light shadow-sm",
+              "border border-gray-200 shadow-sm",
               "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
               "transition-all duration-200 ease-out hover:shadow-md cursor-pointer",
             ].join(" ")}
@@ -85,7 +85,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
             className={[
               "w-full rounded-2xl px-4 py-3 text-sm",
               "bg-background-secondary text-text-primary",
-              "border border-border-light shadow-sm",
+              "border border-gray-200 shadow-sm",
               "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
               "transition-all duration-200 ease-out",
               pt.type !== "NET"
@@ -113,7 +113,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
         </div>
 
         {pt.type === "NET" && (
-          <div className="p-4 border shadow-sm rounded-2xl border-border-light bg-background-secondary">
+          <div className="p-4 border border-gray-200 shadow-sm rounded-2xl bg-background-secondary">
             <div className="flex items-center justify-between gap-3">
               <label className="block text-xs font-semibold text-text-secondary">
                 Custom Net Days (optional)
@@ -128,7 +128,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
               className={[
                 "mt-3 w-full rounded-2xl px-4 py-2.5 text-sm",
                 "bg-background-secondary text-text-primary",
-                "border border-border-light shadow-sm",
+                "border border-gray-200 shadow-sm",
                 "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
                 "transition-all duration-200 ease-out hover:shadow-md",
               ].join(" ")}
@@ -174,7 +174,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
               "border focus:outline-none focus:ring-2 focus:border-primary",
               errors.openingBalance
                 ? "border-error bg-error-bg focus:ring-error/20"
-                : "border-border-light focus:ring-focus/20",
+                : "border-gray-200 focus:ring-focus/20",
               "shadow-sm transition-all duration-200 ease-out",
               isEdit ? "opacity-70 cursor-not-allowed" : "hover:shadow-md",
             ].join(" ")}
@@ -202,7 +202,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
               "border focus:outline-none focus:ring-2 focus:border-primary",
               errors.creditLimit
                 ? "border-error bg-error-bg focus:ring-error/20"
-                : "border-border-light focus:ring-focus/20",
+                : "border-gray-200 focus:ring-focus/20",
               "shadow-sm transition-all duration-200 ease-out hover:shadow-md",
             ].join(" ")}
             value={form.creditLimit}
@@ -225,7 +225,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
           className={[
             "w-full rounded-2xl px-4 py-3 text-sm",
             "bg-background-secondary text-text-primary",
-            "border border-border-light shadow-sm",
+            "border border-gray-200 shadow-sm",
             "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
             "transition-all duration-200 ease-out hover:shadow-md cursor-pointer",
           ].join(" ")}
@@ -238,7 +238,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
       </div>
 
       {/* Notes */}
-      <div className="space-y-2">
+      <div className="-mb-4 space-y-2">
         <label className="block text-sm font-semibold text-text-primary">
           Notes
         </label>
@@ -247,7 +247,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
           className={[
             "w-full resize-none rounded-2xl px-4 py-3 text-sm",
             "bg-background-secondary text-text-primary placeholder:text-text-tertiary",
-            "border border-border-light shadow-sm",
+            "border border-gray-200 shadow-sm",
             "focus:outline-none focus:ring-2 focus:ring-focus/20 focus:border-primary",
             "transition-all duration-200 ease-out hover:shadow-md",
           ].join(" ")}

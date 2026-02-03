@@ -59,6 +59,7 @@ router.put("/:id", protect, async (req, res) => {
 
 router.get("/", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
+  console.log("Tenant ID:", tenantId);
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }

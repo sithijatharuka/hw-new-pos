@@ -11,7 +11,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
         </label>
         <input
           type="text"
-          className="w-full px-4 py-3 text-sm transition border shadow-sm outline-none rounded-2xl border-border-light bg-background-secondary text-text-primary placeholder:text-text-tertiary hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20"
+          className="w-full px-4 py-3 text-sm transition border border-gray-200 shadow-sm outline-none rounded-2xl bg-background-secondary text-text-primary placeholder:text-text-tertiary hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20"
           value={form.supplierCode}
           onChange={(e) => onFormChange({ supplierCode: e.target.value })}
         />
@@ -28,14 +28,16 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
             "bg-background-secondary placeholder:text-text-tertiary",
             errors.name
               ? "border border-error bg-error-bg focus:ring-4 focus:ring-error/20"
-              : "border border-border-light hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
+              : "border border-gray-200 hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
             "text-text-primary",
           ].join(" ")}
           value={form.name}
           onChange={(e) => onFormChange({ name: e.target.value })}
         />
         {errors.name && (
-          <p className="mt-2 text-xs font-semibold text-red-600">{errors.name}</p>
+          <p className="mt-2 text-xs font-semibold text-red-600">
+            {errors.name}
+          </p>
         )}
       </div>
 
@@ -45,7 +47,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
         </label>
         <input
           type="text"
-          className="w-full px-4 py-3 text-sm transition border shadow-sm outline-none rounded-2xl border-border-light bg-background-secondary text-text-primary placeholder:text-text-tertiary hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20"
+          className="w-full px-4 py-3 text-sm transition border border-gray-200 shadow-sm outline-none rounded-2xl bg-background-secondary text-text-primary placeholder:text-text-tertiary hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20"
           value={form.contactPerson}
           onChange={(e) => onFormChange({ contactPerson: e.target.value })}
         />
@@ -62,7 +64,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
             "bg-background-secondary placeholder:text-text-tertiary",
             errors.email
               ? "border border-error bg-error-bg focus:ring-4 focus:ring-error/20"
-              : "border border-border-light hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
+              : "border border-gray-200 hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
             "text-text-primary",
           ].join(" ")}
           value={form.email}
@@ -88,7 +90,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
               "bg-background-secondary placeholder:text-text-tertiary",
               errors.phones
                 ? "border border-error bg-error-bg focus:ring-4 focus:ring-error/20"
-                : "border border-border-light hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
+                : "border border-gray-200 hover:border-border-default focus:border-border-focus focus:ring-4 focus:ring-focus/20",
               "text-text-primary",
             ].join(" ")}
             placeholder="Add phone number"
@@ -105,10 +107,10 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
           <button
             type="button"
             className="
-              inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-3
+              inline-flex items-center justify-center rounded-2xl bg-accent px-4 py-3
               text-sm font-semibold text-white shadow-md transition duration-200 ease-out
-              hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg
-              active:translate-y-0 active:bg-primary-active
+              hover:-translate-y-0.5 hover:bg-accent-hover hover:shadow-lg
+              active:translate-y-0 active:bg-accent-active
               focus:outline-none focus:ring-4 focus:ring-focus/25
               cursor-pointer
             "
@@ -129,7 +131,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
                 key={idx}
                 className="
                   inline-flex items-center gap-2 rounded-2xl
-                  border border-border-light bg-background-subtle
+                  border border-gray-200 bg-background-subtle
                   px-3 py-1.5 text-xs font-semibold text-text-secondary shadow-sm
                 "
               >
@@ -141,7 +143,7 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
                     onFormChange({ phones: newPhones });
                     toast.dismiss();
                   }}
-                  className="inline-flex items-center justify-center w-6 h-6 text-red-600 transition duration-150 ease-out border cursor-pointer rounded-xl border-border-light bg-background-secondary hover:bg-error-bg hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-error/20"
+                  className="inline-flex items-center justify-center w-6 h-6 text-red-600 transition duration-150 ease-out border border-gray-200 cursor-pointer rounded-xl bg-background-secondary hover:bg-error-bg hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-error/20"
                   aria-label="Remove phone"
                 >
                   ×
@@ -153,7 +155,6 @@ const SupplierContactSection = ({ form, errors, onFormChange, addPhone }) => {
 
         {errors.phones && (
           <p className="mt-2 text-xs font-semibold text-red-600">
-         
             {errors.phones}
           </p>
         )}

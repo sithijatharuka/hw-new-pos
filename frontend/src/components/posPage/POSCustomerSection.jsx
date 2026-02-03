@@ -11,10 +11,10 @@ const POSCustomerSection = ({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">
+        <h3 className="mb-3 text-base font-bold text-gray-900 sm:text-lg sm:mb-4">
           Customer Information
         </h3>
-        <p className="text-xs sm:text-sm text-gray-600 mb-4">
+        <p className="mb-4 text-xs text-gray-600 sm:text-sm">
           Required for{" "}
           <span className="font-semibold text-primary">credit sales</span>,
           optional for cash sales.
