@@ -110,7 +110,7 @@ router.post(
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? "strict" : "lax",
+        sameSite: isProd ? "none" : "lax",
         maxAge: ms(REFRESH_TOKEN_EXPIRES_IN) || 7 * 24 * 60 * 60 * 1000,
         path: "/",
       });
@@ -191,7 +191,7 @@ router.post("/refresh-token", async (req, res) => {
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "none" : "lax",
       maxAge: ms(REFRESH_TOKEN_EXPIRES_IN) || 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -246,7 +246,7 @@ router.post("/logout", async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "none" : "lax",
       path: "/",
     });
 

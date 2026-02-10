@@ -464,45 +464,9 @@ const LoginPage = ({ onLogin, api }) => {
                             animate={{ opacity: 1, rotate: 0, scale: 1 }}
                             exit={{ opacity: 0, rotate: 8, scale: 0.95 }}
                             transition={{ duration: 0.18 }}
-                            className="inline-flex"
+                            className="inline-flex text-lg"
                           >
-                            {showPassword ? (
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-5 h-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 3l18 18M10.58 10.58A2.99 2.99 0 0012 15a3 3 0 002.12-.88M9.88 9.88A3 3 0 0115 12c0 .35-.06.69-.17 1.01M6.23 6.23C4.24 7.62 2.9 9.61 2 12c1.73 4.39 6 7.5 10 7.5 1.55 0 3.05-.38 4.38-1.07M17.77 17.77C19.76 16.38 21.1 14.39 22 12c-1.73-4.39-6-7.5-10-7.5-1.55 0-3.05.38-4.38 1.07"
-                                />
-                              </svg>
-                            ) : (
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-5 h-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                              </svg>
-                            )}
+                            {showPassword ? "👁️" : "👁️‍🗨️"}
                           </motion.span>
                         </button>
                       </div>
