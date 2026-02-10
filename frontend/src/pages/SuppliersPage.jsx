@@ -273,7 +273,7 @@ const SuppliersPage = ({ api }) => {
       });
     }
 
-    toast.success(
+    showSuccess(
       savedGrn && savedGrn._id && wasEditing
         ? successMessages.update("GRN")
         : successMessages.create("GRN"),
@@ -376,39 +376,39 @@ const SuppliersPage = ({ api }) => {
           totalCount={suppliers.length}
         />
 
-        {(loading || isSearching) && (
-          <div className="px-4 py-6">
-            <AppLoader
-              open
-              variant="inline"
-              title={loading ? "Loading suppliers" : "Searching suppliers"}
-              subtitle={
-                loading
-                  ? "Syncing supplier list"
-                  : "Matching suppliers to your query"
-              }
-            />
-          </div>
-        )}
-
         {/* Mobile cards */}
         <div className="block lg:hidden">
-          <EntityCardList
-            items={filtered}
-            renderCard={(s) => (
-              <SupplierMobileCard
-                supplier={s}
-                onViewDetails={showSupplierDetails}
-                onReceiveGoods={openReceiveGoods}
-                onViewGRNs={openViewGRNs}
-                onPay={openPay}
-                onEdit={openEdit}
-                onDelete={handleDeleteSupplier}
-                currencySymbol={currencySymbol}
-                currencyPosition={currencyPosition}
+          {loading || isSearching ? (
+            <div className="px-4 py-6">
+              <AppLoader
+                open
+                variant="inline"
+                title={loading ? "Loading suppliers" : "Searching suppliers"}
+                subtitle={
+                  loading
+                    ? "Syncing supplier list"
+                    : "Matching suppliers to your query"
+                }
               />
-            )}
-          />
+            </div>
+          ) : (
+            <EntityCardList
+              items={filtered}
+              renderCard={(s) => (
+                <SupplierMobileCard
+                  supplier={s}
+                  onViewDetails={showSupplierDetails}
+                  onReceiveGoods={openReceiveGoods}
+                  onViewGRNs={openViewGRNs}
+                  onPay={openPay}
+                  onEdit={openEdit}
+                  onDelete={handleDeleteSupplier}
+                  currencySymbol={currencySymbol}
+                  currencyPosition={currencyPosition}
+                />
+              )}
+            />
+          )}
         </div>
 
         {/* Desktop table */}
@@ -431,26 +431,50 @@ const SuppliersPage = ({ api }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((s) => (
-                <SupplierTableRow
-                  key={s._id}
-                  supplier={s}
-                  onViewDetails={showSupplierDetails}
-                  onReceiveGoods={openReceiveGoods}
-                  onViewGRNs={openViewGRNs}
-                  onPay={openPay}
-                  onEdit={openEdit}
-                  onDelete={handleDeleteSupplier}
-                  currencySymbol={currencySymbol}
-                  currencyPosition={currencyPosition}
-                />
-              ))}
-              {filtered.length === 0 && (
+              {loading || isSearching ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-gray-500">
-                    No suppliers found
+                  <td colSpan={4} className="px-4 py-6">
+                    <AppLoader
+                      open
+                      variant="inline"
+                      title={
+                        loading ? "Loading suppliers" : "Searching suppliers"
+                      }
+                      subtitle={
+                        loading
+                          ? "Syncing supplier list"
+                          : "Matching suppliers to your query"
+                      }
+                    />
                   </td>
                 </tr>
+              ) : (
+                <>
+                  {filtered.map((s) => (
+                    <SupplierTableRow
+                      key={s._id}
+                      supplier={s}
+                      onViewDetails={showSupplierDetails}
+                      onReceiveGoods={openReceiveGoods}
+                      onViewGRNs={openViewGRNs}
+                      onPay={openPay}
+                      onEdit={openEdit}
+                      onDelete={handleDeleteSupplier}
+                      currencySymbol={currencySymbol}
+                      currencyPosition={currencyPosition}
+                    />
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="py-10 text-center text-gray-500"
+                      >
+                        No suppliers found
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
