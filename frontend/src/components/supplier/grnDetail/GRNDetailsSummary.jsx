@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../../utils/currency";
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -11,11 +12,6 @@ const formatDate = (value) => {
   });
 };
 
-const formatMoney = (value) => {
-  const n = Number(value) || 0;
-  return `Rs. ${n.toFixed(2)}`;
-};
-
 const GRNDetailsSummary = ({
   supplier,
   grnDate,
@@ -24,6 +20,8 @@ const GRNDetailsSummary = ({
   poNumber,
   supplierInvoiceNo,
   remarks,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div

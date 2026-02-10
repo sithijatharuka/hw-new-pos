@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { loadItems } from "../api/inventory/items";
 import { getSuppliers } from "../api/supplier/suppliers";
 import { createPurchase } from "../api/purchases/purchases";
+import { loadCurrencySettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const emptyLine = () => ({
   item: null,
@@ -25,6 +27,8 @@ const PurchasesPage = ({ api }) => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   // Supplier selection + payments
   const [supplierQuery, setSupplierQuery] = useState("");
@@ -32,6 +36,20 @@ const PurchasesPage = ({ api }) => {
   const [supplierId, setSupplierId] = useState("");
 
   const [amountPaid, setAmountPaid] = useState(0);
+
+  useEffect(() => {
+    loadCurrency();
+  }, []);
+
+  const loadCurrency = async () => {
+    try {
+      const settings = await loadCurrencySettings(api);
+      setCurrencySymbol(settings.currencySymbol || "Rs.");
+      setCurrencyPosition(settings.currencyPosition || "before");
+    } catch (err) {
+      console.error("Failed to load currency settings:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -202,7 +220,7 @@ const PurchasesPage = ({ api }) => {
         </div>
         <div className="text-xs text-right">
           <p className="font-semibold">
-            Total this GRN: Rs. {grandTotal.toFixed(2)}
+            Total this GRN: {formatCurrency(grandTotal, currencySymbol, currencyPosition)}
           </p>
         </div>
       </div>
@@ -267,7 +285,7 @@ const PurchasesPage = ({ api }) => {
               onChange={(e) => setAmountPaid(e.target.value)}
             />
             <p className="text-[11px] text-gray-500 mt-1">
-              Balance after save: Rs. {balanceDue.toFixed(2)} ({paymentStatus})
+              Balance after save: {formatCurrency(balanceDue, currencySymbol, currencyPosition)} ({paymentStatus})
             </p>
           </div>
         </div>
@@ -297,10 +315,7 @@ const PurchasesPage = ({ api }) => {
                         Stock: {item.currentStock} {item.baseUnit}
                       </span>
                     </div>
-                    <div className="text-[11px] text-gray-500">
-                      Cost (base): Rs. {item.costPrice?.toFixed(2)} /{" "}
-                      {item.baseUnit}
-                    </div>
+                    <div className="text-[11px] text-gray-500\">\n                      Cost (base): {formatCurrency(item.costPrice || 0, currencySymbol, currencyPosition)} /{\" \"}\n                      {item.baseUnit}\n                    </div>
                   </button>
                 ))}
               </div>

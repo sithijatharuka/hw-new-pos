@@ -12,6 +12,8 @@ const InventoryTable = ({
   onPrintBarcode,
   onAddNew,
   lowStockOnly,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="hidden overflow-x-auto lg:block">
@@ -41,6 +43,8 @@ const InventoryTable = ({
             <InventoryTableRow
               key={item._id}
               item={item}
+              currencySymbol={currencySymbol}
+              currencyPosition={currencyPosition}
               onEdit={onEdit}
               onDetails={onDetails}
               onActivate={onActivate}

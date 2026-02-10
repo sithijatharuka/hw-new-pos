@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
 const InventoryTableRow = ({
   item,
@@ -8,6 +9,8 @@ const InventoryTableRow = ({
   onDeactivate,
   onDelete,
   onPrintBarcode,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const inv = item.inventory || {};
   const onHand = Number(inv.onHand || 0);
@@ -63,7 +66,11 @@ const InventoryTableRow = ({
 
       <td className="px-6 py-4">
         <span className="text-sm font-bold text-primary">
-          Rs. {Number(item.sellingPrice || 0).toFixed(2)}
+          {formatCurrency(
+            Number(item.sellingPrice || 0),
+            currencySymbol,
+            currencyPosition,
+          )}
         </span>
       </td>
 

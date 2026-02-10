@@ -3,12 +3,15 @@ import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
 import { getSettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const InvoicePrintThermal = () => {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [shop, setShop] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   useEffect(() => {
     const load = async () => {
@@ -20,6 +23,8 @@ const InvoicePrintThermal = () => {
         ]);
         setSale(saleData);
         setShop(settingsData);
+        setCurrencySymbol(settingsData.currencySymbol || "Rs.");
+        setCurrencyPosition(settingsData.currencyPosition || "before");
         setTimeout(() => {
           window.print();
         }, 200);
@@ -90,7 +95,11 @@ const InvoicePrintThermal = () => {
                     {idx + 1}. {line.description}
                   </span>
                   <span className="min-w-[60px] text-right">
-                    {line.lineTotal.toFixed(2)}
+                    {formatCurrency(
+                      line.lineTotal,
+                      currencySymbol,
+                      currencyPosition,
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between text-[9px] text-gray-500">
@@ -98,7 +107,7 @@ const InvoicePrintThermal = () => {
                     {line.qty} {line.unit} × {rate.toFixed(2)}
                     {discPercent
                       ? ` (-${discAmount.toFixed(2)} / ${discPercent.toFixed(
-                          2
+                          2,
                         )}%)`
                       : ""}
                     {isTaxInvoice && line.taxAmount
@@ -116,29 +125,57 @@ const InvoicePrintThermal = () => {
         <div className="mb-1">
           <div className="flex justify-between">
             <span>Sub total</span>
-            <span>{sale.subTotal.toFixed(2)}</span>
+            <span>
+              {formatCurrency(sale.subTotal, currencySymbol, currencyPosition)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Discount</span>
-            <span>{sale.discountTotal.toFixed(2)}</span>
+            <span>
+              {formatCurrency(
+                sale.discountTotal,
+                currencySymbol,
+                currencyPosition,
+              )}
+            </span>
           </div>
           {isTaxInvoice && (
             <div className="flex justify-between">
               <span>VAT</span>
-              <span>{sale.taxTotal.toFixed(2)}</span>
+              <span>
+                {formatCurrency(
+                  sale.taxTotal,
+                  currencySymbol,
+                  currencyPosition,
+                )}
+              </span>
             </div>
           )}
           <div className="flex justify-between font-semibold border-t border-dashed mt-1 pt-1">
             <span>Net</span>
-            <span>{sale.grandTotal.toFixed(2)}</span>
+            <span>
+              {formatCurrency(
+                sale.grandTotal,
+                currencySymbol,
+                currencyPosition,
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Paid</span>
-            <span>{paidAmount.toFixed(2)}</span>
+            <span>
+              {formatCurrency(paidAmount, currencySymbol, currencyPosition)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Balance</span>
-            <span>{sale.balanceDue.toFixed(2)}</span>
+            <span>
+              {formatCurrency(
+                sale.balanceDue,
+                currencySymbol,
+                currencyPosition,
+              )}
+            </span>
           </div>
         </div>
 
@@ -147,7 +184,9 @@ const InvoicePrintThermal = () => {
           {sale.payments?.map((p, idx) => (
             <div key={idx} className="flex justify-between">
               <span>{p.method.toUpperCase()}</span>
-              <span>{p.amount.toFixed(2)}</span>
+              <span>
+                {formatCurrency(p.amount, currencySymbol, currencyPosition)}
+              </span>
             </div>
           ))}
         </div>
@@ -162,7 +201,3 @@ const InvoicePrintThermal = () => {
 };
 
 export default InvoicePrintThermal;
-
-
-
-

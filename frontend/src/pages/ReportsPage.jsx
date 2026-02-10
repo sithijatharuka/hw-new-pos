@@ -8,6 +8,7 @@ import {
 } from "../api/dashboard/dashboard";
 import { getSales } from "../api/sales/sales";
 import { getExpenses } from "../api/expenses/expenses";
+import { loadCurrencySettings } from "../api/settings/settings";
 
 // Import new report components
 import DateRangeSelector from "../components/report/DateRangeSelector";
@@ -59,11 +60,29 @@ const ReportsPage = ({ api }) => {
   const [dailyBreakdown, setDailyBreakdown] = useState([]);
   const [breakdownError, setBreakdownError] = useState(null);
 
+  // Currency settings
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
+
   // Modal states
   const [activeModal, setActiveModal] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Load currency settings on mount
+  useEffect(() => {
+    const initCurrency = async () => {
+      try {
+        const settings = await loadCurrencySettings(api);
+        setCurrencySymbol(settings.currencySymbol);
+        setCurrencyPosition(settings.currencyPosition);
+      } catch (error) {
+        console.error("Failed to load currency settings:", error);
+      }
+    };
+    initCurrency();
+  }, [api]);
 
   // Format date in local timezone (YYYY-MM-DD)
   const formatLocalDate = (date) => {
@@ -299,25 +318,50 @@ const ReportsPage = ({ api }) => {
   // Handle export CSV with date range
   const handleExportCSV = () => {
     const dateRangeStr = `${reportData.startDate}_to_${reportData.endDate}`;
-    exportToCSV(reportData, dailyBreakdown, dateRangeStr);
+    exportToCSV(
+      reportData,
+      dailyBreakdown,
+      dateRangeStr,
+      currencySymbol,
+      currencyPosition,
+    );
   };
 
   // Handle export PDF with date range
   const handleExportPDF = () => {
     const dateRangeStr = `${reportData.startDate} to ${reportData.endDate}`;
-    exportToPDF(reportData, dailyBreakdown, dateRangeStr);
+    exportToPDF(
+      reportData,
+      dailyBreakdown,
+      dateRangeStr,
+      currencySymbol,
+      currencyPosition,
+    );
   };
 
   // Handle modal CSV export
   const handleModalExportCSV = () => {
     const dateRangeStr = `${reportData.startDate}_to_${reportData.endDate}`;
-    exportModalData(activeModal, modalData, dateRangeStr);
+    exportModalData(
+      activeModal,
+      modalData,
+      dateRangeStr,
+      currencySymbol,
+      currencyPosition,
+    );
   };
 
   // Handle modal PDF export
   const handleModalExportPDF = () => {
     const dateRangeStr = `${reportData.startDate} to ${reportData.endDate}`;
-    exportModalDataAsPDF(activeModal, modalData, dateRangeStr, reportData);
+    exportModalDataAsPDF(
+      activeModal,
+      modalData,
+      dateRangeStr,
+      reportData,
+      currencySymbol,
+      currencyPosition,
+    );
   };
 
   // Error state
@@ -389,13 +433,20 @@ const ReportsPage = ({ api }) => {
           ) : reportData ? (
             <>
               {/* Summary Metrics Component */}
-              <SummaryMetrics reportData={reportData} onCardClick={openModal} />
+              <SummaryMetrics
+                reportData={reportData}
+                onCardClick={openModal}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
+              />
 
               {/* Daily Breakdown Table Component */}
               <DailyBreakdownTable
                 dailyBreakdown={dailyBreakdown}
                 breakdownError={breakdownError}
                 isRangeMode={reportData.isRangeMode}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
               />
             </>
           ) : null}
@@ -413,6 +464,8 @@ const ReportsPage = ({ api }) => {
         onExportCSV={handleModalExportCSV}
         onExportPDF={handleModalExportPDF}
         reportData={reportData}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
       />
     </div>
   );

@@ -1,9 +1,12 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
 const DailyBreakdownTable = ({
   dailyBreakdown,
   breakdownError,
   isRangeMode,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   if (breakdownError) {
     return (
@@ -36,11 +39,13 @@ const DailyBreakdownTable = ({
   }
 
   return (
-    <div className="mt-5 p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900 sm:text-xl">
+    <div className="mt-5 p-4 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
+      <h3 className="mb-4 text-base font-semibold text-gray-900 sm:text-lg lg:text-xl">
         Daily Breakdown
       </h3>
-      <div className="overflow-x-auto">
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -119,6 +124,88 @@ const DailyBreakdownTable = ({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {dailyBreakdown.map((day, index) => (
+          <div
+            key={index}
+            className="p-4 border border-gray-200 rounded-xl bg-gray-50 space-y-3"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-300">
+              <span className="text-sm font-bold text-gray-900">
+                {day.date}
+              </span>
+              <span className="text-xs font-medium text-gray-600">
+                {day.invoiceCount} invoices
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Total Sales</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  LKR{" "}
+                  {day.totalSales.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-600 mb-1">VAT</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  LKR{" "}
+                  {day.totalVAT.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Gross Profit</p>
+                <p className="text-sm font-semibold text-green-600">
+                  LKR{" "}
+                  {day.grossProfit.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Expenses</p>
+                <p className="text-sm font-semibold text-red-600">
+                  LKR{" "}
+                  {day.totalExpenses.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-300">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-gray-700">Net Profit</p>
+                <p
+                  className={`text-base font-bold ${
+                    day.netProfit >= 0 ? "text-emerald-600" : "text-red-600"
+                  }`}
+                >
+                  LKR{" "}
+                  {day.netProfit.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

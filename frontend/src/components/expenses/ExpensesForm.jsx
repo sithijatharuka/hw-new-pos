@@ -1,5 +1,5 @@
 import React from "react";
-import colors from "../../themes/colors";
+import CloseButton from "../common/CloseButton";
 const ExpensesForm = ({
   editingId,
   form,
@@ -99,16 +99,15 @@ const ExpensesForm = ({
                   >
                     Add
                   </button>
-                  <button
-                    type="button"
+                  <CloseButton
                     onClick={() => {
                       setShowAddCategory(false);
                       setNewCategory("");
                     }}
-                    className="px-3 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <span className="text-sm text-gray-500">✕</span>
-                  </button>
+                    size="sm"
+                    variant="subtle"
+                    ariaLabel="Cancel adding category"
+                  />
                 </div>
               </div>
               <p className="text-xs text-gray-500">

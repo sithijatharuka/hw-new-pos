@@ -2,10 +2,18 @@
  * Export utility functions for generating CSV and PDF reports
  */
 
+import { formatCurrency } from "./currency";
+
 /**
  * Exports the main report data to CSV format
  */
-export const exportToCSV = (reportData, dailyBreakdown, dateRange) => {
+export const exportToCSV = (
+  reportData,
+  dailyBreakdown,
+  dateRange,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+) => {
   const headers = [
     "Date",
     "Total Sales",
@@ -59,7 +67,13 @@ export const exportToCSV = (reportData, dailyBreakdown, dateRange) => {
 /**
  * Exports the main report data to PDF format
  */
-export const exportToPDF = (reportData, dailyBreakdown, dateRange) => {
+export const exportToPDF = (
+  reportData,
+  dailyBreakdown,
+  dateRange,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+) => {
   const hasBreakdown = dailyBreakdown && dailyBreakdown.length > 0;
 
   let htmlContent = `
@@ -145,10 +159,7 @@ export const exportToPDF = (reportData, dailyBreakdown, dateRange) => {
       <div class="summary">
         <div class="summary-card">
           <h3>Total Sales</h3>
-          <p>LKR ${reportData.totalSales.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}</p>
+          <p>${formatCurrency(reportData.totalSales, currencySymbol, currencyPosition)}</p>
         </div>
         <div class="summary-card">
           <h3>No. of Invoices</h3>
@@ -156,32 +167,20 @@ export const exportToPDF = (reportData, dailyBreakdown, dateRange) => {
         </div>
         <div class="summary-card">
           <h3>VAT Collected</h3>
-          <p>LKR ${reportData.totalVAT.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}</p>
+          <p>${formatCurrency(reportData.totalVAT, currencySymbol, currencyPosition)}</p>
         </div>
         <div class="summary-card">
           <h3>Gross Profit</h3>
-          <p class="positive">LKR ${reportData.grossProfit.toLocaleString(
-            "en-US",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-          )}</p>
+          <p class="positive">${formatCurrency(reportData.grossProfit, currencySymbol, currencyPosition)}</p>
         </div>
         <div class="summary-card">
           <h3>Total Expenses</h3>
-          <p class="negative">LKR ${reportData.totalExpenses.toLocaleString(
-            "en-US",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-          )}</p>
+          <p class="negative">${formatCurrency(reportData.totalExpenses, currencySymbol, currencyPosition)}</p>
         </div>
         <div class="summary-card">
           <h3>Net Profit</h3>
           <p class="${reportData.netProfit >= 0 ? "positive" : "negative"}">
-            LKR ${reportData.netProfit.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            ${formatCurrency(reportData.netProfit, currencySymbol, currencyPosition)}
           </p>
         </div>
       </div>
@@ -247,7 +246,13 @@ export const exportToPDF = (reportData, dailyBreakdown, dateRange) => {
 /**
  * Exports modal data (sales or expenses details) to CSV format
  */
-export const exportModalData = (modalType, data, dateRange) => {
+export const exportModalData = (
+  modalType,
+  data,
+  dateRange,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+) => {
   if (modalType === "sales") {
     const headers = [
       "Invoice",
@@ -349,6 +354,8 @@ export const exportModalDataAsPDF = (
   data,
   dateRange,
   reportData,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 ) => {
   let htmlContent = `
     <!DOCTYPE html>

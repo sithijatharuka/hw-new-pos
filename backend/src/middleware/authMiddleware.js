@@ -54,3 +54,35 @@ export const adminOnly = (req, res, next) => {
     throw new Error("Admin or owner access only");
   }
 };
+
+/**
+ * Middleware to check if user has access to a specific feature
+ * Usage: router.get("/dashboard", protect, requireFeature("dashboard"), controller)
+ */
+export const requireFeature = (featureId) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error("Not authenticated");
+    }
+
+    // Owners and admins always have full access
+    if (req.user.role === "owner" || req.user.role === "admin") {
+      return next();
+    }
+
+    // Check if user has the required feature permission
+    const hasPermission =
+      Array.isArray(req.user.permissions) &&
+      req.user.permissions.includes(featureId);
+
+    if (!hasPermission) {
+      res.status(403);
+      return res.json({
+        message: `You do not have access to the "${featureId}" feature`,
+      });
+    }
+
+    next();
+  };
+};

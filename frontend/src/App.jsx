@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AppShell } from "./components/common/Layout";
+import FeatureRoute from "./components/common/FeatureRoute";
 
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -19,12 +21,10 @@ import BarcodePrintPage from "./pages/BarcodePrintPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-import GRNListModal from "./components/supplier/grnDetail/GRNListModal";
-import GrnDetailsModal from "./components/supplier/grnDetail/GrnDetailsModal";
-
 import { createApiClient } from "./api/client";
 import AppLoader from "./components/common/AppLoader";
 import setupCacheDebugTools from "./utils/cacheDebugUtils";
+import { showSuccess, showError } from "./utils/toastHelper";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -57,13 +57,20 @@ const App = () => {
   const handleLogout = useCallback(async () => {
     try {
       // Clear refresh cookie (server should set cookie expiry / empty cookie)
-      await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${API_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
+
+      if (response.ok) {
+        showSuccess("Logged out successfully");
+      } else {
+        showError("Logout failed, but clearing session");
+      }
     } catch (e) {
-      // Ignore network/logout errors; still clear local state
+      // Network error or other issues
+      showError("Logout error, but clearing session");
     } finally {
       setUser(null);
       setAccessToken(null);
@@ -139,56 +146,126 @@ const App = () => {
   }
 
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route
-        path="/login"
-        element={<LoginPage onLogin={handleLogin} api={api} />}
+    <>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        containerClassName="pointer-events-none"
       />
-      <Route path="/signup" element={<OwnerSignupPage api={api} />} />
-      <Route path="/forgot-password" element={<ForgotPassword api={api} />} />
-      <Route path="/reset-password" element={<ResetPassword api={api} />} />
-
-      {/* Protected routes (nested via Outlet) */}
-      <Route
-        element={
-          user ? (
-            <ProtectedLayout user={user} onLogout={handleLogout} api={api} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage api={api} />} />
-        <Route path="/pos" element={<POSPage api={api} />} />
-        <Route path="/inventory" element={<InventoryPage api={api} />} />
-        <Route path="/customers" element={<CustomersPage api={api} />} />
-        <Route path="/suppliers" element={<SuppliersPage api={api} />} />
-        <Route path="/reports" element={<ReportsPage api={api} />} />
-        <Route path="/expenses" element={<ExpensesPage api={api} />} />
-        <Route path="/users" element={<UsersPage user={user} api={api} />} />
+      <Routes>
+        {/* Public routes */}
         <Route
-          path="/settings"
-          element={<SettingsPage user={user} api={api} />}
+          path="/login"
+          element={<LoginPage onLogin={handleLogin} api={api} />}
         />
+        <Route path="/signup" element={<OwnerSignupPage api={api} />} />
+        <Route path="/forgot-password" element={<ForgotPassword api={api} />} />
+        <Route path="/reset-password" element={<ResetPassword api={api} />} />
 
-        <Route path="/invoice/a4/:id" element={<InvoicePrintA4 api={api} />} />
+        {/* Protected routes (nested via Outlet) */}
         <Route
-          path="/invoice/thermal/:id"
-          element={<InvoicePrintThermal api={api} />}
-        />
-        <Route path="/invoice/:id" element={<InvoicePrintA4 api={api} />} />
-        <Route path="/barcode/:id" element={<BarcodePrintPage api={api} />} />
+          element={
+            user ? (
+              <ProtectedLayout user={user} onLogout={handleLogout} api={api} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <FeatureRoute featureId="dashboard" user={user}>
+                <DashboardPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/pos"
+            element={
+              <FeatureRoute featureId="pos" user={user}>
+                <POSPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <FeatureRoute featureId="inventory" user={user}>
+                <InventoryPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/customers"
+            element={
+              <FeatureRoute featureId="customers" user={user}>
+                <CustomersPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/suppliers"
+            element={
+              <FeatureRoute featureId="suppliers" user={user}>
+                <SuppliersPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <FeatureRoute featureId="reports" user={user}>
+                <ReportsPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <FeatureRoute featureId="expenses" user={user}>
+                <ExpensesPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <FeatureRoute featureId="users" user={user}>
+                <UsersPage user={user} api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <FeatureRoute featureId="settings" user={user}>
+                <SettingsPage user={user} api={api} />
+              </FeatureRoute>
+            }
+          />
 
-        <Route
-          path="/grnDetailsModal"
-          element={<BarcodePrintPage api={api} />}
-        />
+          <Route
+            path="/invoice/a4/:id"
+            element={<InvoicePrintA4 api={api} />}
+          />
+          <Route
+            path="/invoice/thermal/:id"
+            element={<InvoicePrintThermal api={api} />}
+          />
+          <Route path="/invoice/:id" element={<InvoicePrintA4 api={api} />} />
+          <Route path="/barcode/:id" element={<BarcodePrintPage api={api} />} />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Route>
-    </Routes>
+          <Route
+            path="/grnDetailsModal"
+            element={<BarcodePrintPage api={api} />}
+          />
+
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Routes>
+    </>
   );
 };
 

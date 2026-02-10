@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import mongoose from "mongoose";
 import { Sale } from "../models/Sale.js";
 import { Item } from "../models/Item.js";
@@ -102,8 +102,8 @@ const applySaleEffects = async (sale, tenantId, userId, session) => {
   }
 };
 
-// Create sale
-router.post("/", protect, async (req, res) => {
+// Create sale - requires "pos" feature
+router.post("/", protect, requireFeature("pos"), async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -213,8 +213,8 @@ router.put("/:id/finalize", protect, async (req, res) => {
   }
 });
 
-// List sales (daily or range)
-router.get("/", protect, async (req, res) => {
+// List sales (daily or range) - requires "pos" feature
+router.get("/", protect, requireFeature("pos"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });

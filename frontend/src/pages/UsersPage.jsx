@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Toaster } from "react-hot-toast";
 import AppLoader from "../components/common/AppLoader";
-import toast, { Toaster } from "react-hot-toast";
 import {
   createStaff,
   getUsers,
@@ -11,6 +11,12 @@ import PageHeader from "../components/common/PageHeader";
 import EditStaffModal from "../components/users/EditStaffModal";
 import regexValidations from "../utils/regexValidations";
 import { colors } from "../themes/colors";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../utils/toastHelper";
 
 const roleOptions = [
   { value: "cashier", label: "Cashier" },
@@ -44,7 +50,7 @@ const UsersPage = ({ user, api }) => {
       const data = await getUsers(api);
       setUsers(data || []);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to load users");
+      showError(err?.response?.data?.message || errorMessages.load("users"));
     } finally {
       setLoading(false);
     }
@@ -178,7 +184,7 @@ const UsersPage = ({ user, api }) => {
   // ---------- Create / Edit (same API logic preserved) ----------
   const handleModalSubmit = async (payload) => {
     if (!isAdmin) {
-      toast.error("Only admin or owner can create staff users.");
+      showError("Only admin or owner can create staff users");
       return;
     }
 
@@ -187,7 +193,7 @@ const UsersPage = ({ user, api }) => {
       // Keep same validation behavior + toasts
       const ok = validateCreatePayload(payload);
       if (!ok) {
-        toast.error("Please fix all validation errors before submitting.");
+        showError(errorMessages.validation);
         return;
       }
 
@@ -205,9 +211,9 @@ const UsersPage = ({ user, api }) => {
         setUsers((prev) => [created, ...prev]);
         setErrors({});
         setShowEditModal(false);
-        toast.success("Staff user created successfully!");
+        showSuccess(successMessages.create("Staff user"));
       } catch (err) {
-        toast.error(err?.response?.data?.message || "Failed to create user");
+        showError(err?.response?.data?.message || errorMessages.create("user"));
       } finally {
         setEditSaving(false);
       }
@@ -225,9 +231,9 @@ const UsersPage = ({ user, api }) => {
       setShowEditModal(false);
       setEditingUser(null);
       setErrors({});
-      toast.success("Staff user updated successfully!");
+      showSuccess(successMessages.update("Staff user"));
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update user");
+      showError(err?.response?.data?.message || errorMessages.update("user"));
     } finally {
       setEditSaving(false);
     }
@@ -250,9 +256,9 @@ const UsersPage = ({ user, api }) => {
           u._id === userToDelete._id ? { ...u, isActive: false } : u,
         ),
       );
-      toast.success(`${userToDelete.name} has been deactivated.`);
+      showSuccess(`${userToDelete.name} has been deactivated`);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to deactivate user");
+      showError(err?.response?.data?.message || errorMessages.update("user"));
     } finally {
       setSaving(false);
     }
@@ -269,9 +275,9 @@ const UsersPage = ({ user, api }) => {
       setUsers((prev) =>
         prev.map((u) => (u._id === userToReactivate._id ? updated : u)),
       );
-      toast.success(`${userToReactivate.name} has been reactivated.`);
+      showSuccess(`${userToReactivate.name} has been reactivated`);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to reactivate user");
+      showError(err?.response?.data?.message || errorMessages.update("user"));
     } finally {
       setSaving(false);
     }
@@ -358,10 +364,7 @@ const UsersPage = ({ user, api }) => {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p
-                  className="text-xs"
-                  style={{ color: colors.text.secondary }}
-                >
+                <p className="text-xs" style={{ color: colors.text.secondary }}>
                   Logged in as{" "}
                   <span
                     className="font-extrabold"
@@ -415,9 +418,8 @@ const UsersPage = ({ user, api }) => {
                 type="button"
                 onClick={openCreateModal}
                 disabled={!isAdmin || saving || loading}
-                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                className="group inline-flex w-full cursor-pointer bg-primary items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 style={{
-                  background: colors.button.primary.bg,
                   color: colors.button.primary.text,
                   border: `1px solid ${colors.button.primary.bg}`,
                 }}
@@ -440,7 +442,7 @@ const UsersPage = ({ user, api }) => {
                 }}
               >
                 <span
-                  className="inline-block h-2 w-2 rounded-full"
+                  className="inline-block w-2 h-2 rounded-full"
                   style={{
                     background: colors.primary.DEFAULT,
                   }}
@@ -463,10 +465,7 @@ const UsersPage = ({ user, api }) => {
             {/* Table Header */}
             <div className="flex flex-col gap-2 px-4 py-4 border-b sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <div>
-                <h3
-                  className="text-base font-extrabold tracking-tight"
-                  style={{ color: colors.text.primary }}
-                >
+                <h3 className="text-base font-bold tracking-tight text-accent">
                   Staff List
                 </h3>
                 <p
@@ -501,17 +500,22 @@ const UsersPage = ({ user, api }) => {
                       borderBottom: `1px solid ${colors.border.light}`,
                     }}
                   >
-                    {["Name", "Username", "Role", "Status", "Created", "Actions"].map(
-                      (h) => (
-                        <th
-                          key={h}
-                          className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Name",
+                      "Username",
+                      "Role",
+                      "Status",
+                      "Created",
+                      "Actions",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
 
@@ -525,11 +529,14 @@ const UsersPage = ({ user, api }) => {
                         key={u._id}
                         className="transition-colors duration-200 group"
                         style={{
-                          background: isAlt ? colors.table.rowAlt : colors.table.row,
+                          background: isAlt
+                            ? colors.table.rowAlt
+                            : colors.table.row,
                           borderBottom: `1px solid ${colors.border.light}`,
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = colors.table.rowHover;
+                          e.currentTarget.style.background =
+                            colors.table.rowHover;
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = isAlt
@@ -611,7 +618,9 @@ const UsersPage = ({ user, api }) => {
                           className="px-4 py-3 text-xs"
                           style={{ color: colors.text.tertiary }}
                         >
-                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
+                          {u.createdAt
+                            ? new Date(u.createdAt).toLocaleDateString()
+                            : "-"}
                         </td>
 
                         <td className="px-4 py-3">
@@ -620,12 +629,7 @@ const UsersPage = ({ user, api }) => {
                               type="button"
                               onClick={() => openEditModal(u)}
                               disabled={!isAdmin || saving}
-                              className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                              style={{
-                                background: colors.primary.subtle,
-                                color: colors.primary.DEFAULT,
-                                border: `1px solid ${colors.primary.subtle}`,
-                              }}
+                              className="cursor-pointer rounded-xl text-white bg-amber-400 hover:bg-amber-500 px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                               title="Edit user"
                             >
                               Edit
@@ -636,12 +640,7 @@ const UsersPage = ({ user, api }) => {
                                 type="button"
                                 onClick={() => handleDeleteClick(u)}
                                 disabled={!isAdmin || saving}
-                                className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                                style={{
-                                  background: colors.error.subtle,
-                                  color: colors.error.active,
-                                  border: `1px solid ${colors.error.subtle}`,
-                                }}
+                                className="cursor-pointer text-white bg-red-400 hover:bg-red-500 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                                 title="Deactivate user"
                               >
                                 Deactivate
@@ -717,7 +716,7 @@ const UsersPage = ({ user, api }) => {
                   {loading && (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center">
-                        <div className="flex justify-center items-center">
+                        <div className="flex items-center justify-center">
                           <AppLoader
                             open
                             variant="inline"
@@ -739,8 +738,8 @@ const UsersPage = ({ user, api }) => {
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs" style={{ color: colors.text.tertiary }}>
-                  Tip: Use <span className="font-semibold">Refresh</span> to sync staff list after
-                  creating or updating users.
+                  Tip: Use <span className="font-semibold">Refresh</span> to
+                  sync staff list after creating or updating users.
                 </p>
 
                 <span
@@ -748,13 +747,19 @@ const UsersPage = ({ user, api }) => {
                   style={{
                     background: colors.background.subtle,
                     border: `1px solid ${colors.border.light}`,
-                    color: isAdmin ? colors.primary.DEFAULT : colors.text.secondary,
+                    color: isAdmin
+                      ? colors.primary.DEFAULT
+                      : colors.text.secondary,
                   }}
                 >
                   <span
-                    className={"h-2 w-2 rounded-full " + (isAdmin ? "animate-pulse" : "")}
+                    className={
+                      "h-2 w-2 rounded-full " + (isAdmin ? "animate-pulse" : "")
+                    }
                     style={{
-                      background: isAdmin ? colors.primary.DEFAULT : colors.text.tertiary,
+                      background: isAdmin
+                        ? colors.primary.DEFAULT
+                        : colors.text.tertiary,
                     }}
                   />
                   {isAdmin ? "You can manage users" : "You can view only"}
@@ -787,5 +792,3 @@ const UsersPage = ({ user, api }) => {
 };
 
 export default UsersPage;
-
-

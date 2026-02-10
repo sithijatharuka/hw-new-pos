@@ -15,6 +15,8 @@ const MonthlySalesTrendCard = ({
   trendDaily = [],
   trendMonthly = [],
   loading = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   // If there is absolutely no data at all, don't render the card
   if (
@@ -62,10 +64,12 @@ const MonthlySalesTrendCard = ({
             maxValue={maxSales}
             valueKey="totalSales"
             title="Sales Amount"
-            subtitle="Y-axis: LKR (sales), X-axis: date/month"
+            subtitle={`Y-axis: ${currencySymbol} (sales), X-axis: date/month`}
             color="#22c55e" // Tailwind green-500
             height={220}
             range={range}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
           />
 
           <TrendLineChart
@@ -77,9 +81,15 @@ const MonthlySalesTrendCard = ({
             color="#6366f1" // Tailwind indigo-500
             height={160}
             range={range}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
           />
 
-          <TrendDataTable data={filteredData} />
+          <TrendDataTable
+            data={filteredData}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
+          />
         </div>
       )}
     </div>

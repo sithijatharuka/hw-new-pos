@@ -10,6 +10,8 @@ const CustomerTable = ({
   onDelete,
   onPayment,
   onAddNew,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="overflow-x-auto hidden lg:block">
@@ -66,6 +68,8 @@ const CustomerTable = ({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onPayment={onPayment}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
               />
             ))
           )}

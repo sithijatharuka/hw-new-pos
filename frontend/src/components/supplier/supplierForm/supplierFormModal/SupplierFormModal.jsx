@@ -28,7 +28,7 @@ const empty = {
   notes: "",
   status: "active",
 };
-
+import colors from "../../../../themes/colors";
 export default function SupplierFormModal({
   open,
   editingSupplier, // null or supplier object
@@ -124,10 +124,9 @@ export default function SupplierFormModal({
     const phone = form.phoneInput.trim();
     if (!phone) return;
 
-    if (!isValidPhoneNumber(phone))
-      return toast.error(`Phone number is invalid.`);
+    if (!isValidPhoneNumber(phone)) return showError("Phone number is invalid");
     if (form.phones.includes(phone))
-      return toast.error("This phone number is already added.");
+      return showError("This phone number is already added");
 
     const newPhones = [...form.phones, phone];
     setForm((p) => ({ ...p, phones: newPhones, phoneInput: "" }));
@@ -183,7 +182,6 @@ export default function SupplierFormModal({
       notes: form.notes?.trim() || undefined,
       status: form.status,
     };
-    console.log("SupplierFormModal submit called. Payload:", payload);
     await onSubmit(payload);
   };
 
@@ -196,7 +194,13 @@ export default function SupplierFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm animate-[fadeIn_180ms_ease-out]">
-      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-200 bg-background-secondary shadow-lg max-h-[90vh] flex flex-col animate-[popIn_220ms_ease-out]">
+      <div
+        className="w-full max-w-2xl overflow-hidden rounded-3xl border shadow-lg max-h-[90vh] flex flex-col animate-[popIn_220ms_ease-out]"
+        style={{
+          background: colors.background.secondary,
+          border: `1px solid ${colors.border.light}`,
+        }}
+      >
         {/* Top accent bar for consistency with GRNFormModal */}
         <div className="h-1.5 w-full bg-accent" />
 

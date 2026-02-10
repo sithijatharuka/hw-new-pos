@@ -9,15 +9,3 @@ export { default as CustomerTable } from "./CustomerTable";
 export { default as CustomerTableRow } from "./CustomerTableRow";
 export { default as CustomerMobileCard } from "./CustomerMobileCard";
 export { default as CustomerFooterStats } from "./CustomerFooterStats";
-
-// Customer API functions
-export {
-  fetchCustomers,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
-  receivePayment,
-} from "./api/customerApi";
-
-// Customer hooks
-export { useCustomers } from "../../hooks/useCustomers";

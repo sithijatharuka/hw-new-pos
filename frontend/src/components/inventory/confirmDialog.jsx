@@ -1,15 +1,15 @@
-import toast from "react-hot-toast";
+import { showCustom, dismissToast } from "../../utils/toastHelper";
 
 export const confirmWithToast = (message) =>
   new Promise((resolve) => {
     toast.custom(
       (t) => (
-        <div className="max-w-sm w-full bg-white border border-gray-200 shadow-xl rounded-2xl px-4 py-3 text-sm flex flex-col gap-2">
+        <div className="flex flex-col w-full max-w-sm gap-2 px-4 py-3 text-sm bg-white border border-gray-200 shadow-xl rounded-2xl">
           <p className="font-semibold text-gray-800">Confirm action</p>
           <p className="text-xs text-gray-600">{message}</p>
           <div className="flex justify-end gap-2 pt-1">
             <button
-              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 cursor-pointer active:scale-95 transition-all"
+              className="px-4 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 active:scale-95"
               onClick={() => {
                 toast.dismiss(t.id);
                 resolve(false);
@@ -18,7 +18,7 @@ export const confirmWithToast = (message) =>
               Cancel
             </button>
             <button
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white font-medium cursor-pointer hover:shadow-lg active:scale-95 transition-all"
+              className="px-4 py-2 font-medium text-white transition-all rounded-lg cursor-pointer bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg active:scale-95"
               onClick={() => {
                 toast.dismiss(t.id);
                 resolve(true);
@@ -29,6 +29,6 @@ export const confirmWithToast = (message) =>
           </div>
         </div>
       ),
-      { duration: Infinity }
+      { duration: Infinity },
     );
   });

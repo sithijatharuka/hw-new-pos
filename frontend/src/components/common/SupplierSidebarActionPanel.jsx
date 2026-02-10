@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CloseButton from "./CloseButton";
 import SupplierDetailsContent from "../supplier/supplierForm/SupplierDetailsContent";
 import { useNavigate } from "react-router-dom";
 
@@ -56,14 +57,11 @@ export default function SupplierSidebarActionPanel({
               </p>
             </div>
 
-            <button
+            <CloseButton
               onClick={onClose}
-              className="inline-flex items-center justify-center transition border cursor-pointer h-9 w-9 rounded-xl border-border-light bg-background-secondary text-text-tertiary shadow-soft hover:bg-background-subtle hover:text-text-primary hover:shadow-card focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25"
-              aria-label="Close supplier actions"
-              title="Close"
-            >
-              ✕
-            </button>
+              size="sm"
+              ariaLabel="Close supplier actions"
+            />
           </div>
 
           {/* Actions (vertical list top -> bottom) */}

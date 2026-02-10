@@ -14,6 +14,9 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
     withCredentials: true,
   });
 
+  // Store original adapter from axios
+  const originalAdapter = api.defaults.adapter;
+
   // Attach token
   api.interceptors.request.use((config) => {
     const token = getAccessToken?.();
@@ -26,9 +29,21 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
     if (method === "GET") {
       const cached = apiCache.get(config.url, params);
       if (cached) {
-        // Return cached data by marking the config
-        config._useCached = true;
+        // Store cached data and flag in config
+        config._fromCache = true;
         config._cachedData = cached;
+
+        // Replace adapter with one that returns cached response immediately
+        config.adapter = () => {
+          return Promise.resolve({
+            data: cached,
+            status: 200,
+            statusText: "OK (from cache)",
+            headers: {},
+            config: config,
+            request: null,
+          });
+        };
       }
     }
 
@@ -53,6 +68,11 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
       const config = response.config;
       const method = config.method?.toUpperCase() || "GET";
       const params = config.params || {};
+
+      // Don't re-cache data that came from cache
+      if (config._fromCache) {
+        return response;
+      }
 
       // Cache successful GET responses
       if (method === "GET" && response.data) {

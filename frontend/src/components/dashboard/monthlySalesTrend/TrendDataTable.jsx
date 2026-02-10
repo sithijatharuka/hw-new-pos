@@ -1,6 +1,11 @@
 import React from "react";
+import { formatCurrency } from "../../../utils/currency";
 
-const TrendDataTable = ({ data }) => {
+const TrendDataTable = ({
+  data,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5">
       <h4 className="text-sm sm:text-base font-medium text-gray-700 mb-3">
@@ -14,7 +19,7 @@ const TrendDataTable = ({ data }) => {
                 Period
               </th>
               <th className="text-right px-2 py-2.5 text-gray-600 font-medium">
-                Sales (LKR)
+                Sales ({currencySymbol})
               </th>
               <th className="text-right px-2 py-2.5 text-gray-600 font-medium">
                 Invoices
@@ -29,7 +34,11 @@ const TrendDataTable = ({ data }) => {
               >
                 <td className="px-2 py-2.5 text-gray-700">{row.month}</td>
                 <td className="px-2 py-2.5 text-right text-gray-900 font-semibold">
-                  {row.totalSales.toLocaleString("en-US")}
+                  {formatCurrency(
+                    row.totalSales,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
                 <td className="px-2 py-2.5 text-right text-gray-700">
                   {row.invoiceCount}

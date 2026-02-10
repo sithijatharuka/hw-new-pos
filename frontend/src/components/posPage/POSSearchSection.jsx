@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AppLoader from "../common/AppLoader";
+import CloseButton from "../common/CloseButton";
 import { SearchBar } from "../common";
 import { getItemBatches } from "../../api/inventory/items";
 import { formatCurrency } from "../../utils/currency";
@@ -205,7 +206,7 @@ const POSSearchSection = ({
 
           {/* Batch Modal */}
           {batchModal.open && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
               {/* backdrop click */}
               <button
                 type="button"
@@ -224,13 +225,11 @@ const POSSearchSection = ({
                       {batchModal.item?.name}
                     </p>
                   </div>
-                  <button
-                    type="button"
+                  <CloseButton
                     onClick={closeBatchModal}
-                    className="flex items-center justify-center w-10 h-10 text-gray-500 transition rounded-xl hover:bg-gray-100"
-                  >
-                    ✕
-                  </button>
+                    size="md"
+                    ariaLabel="Close batch modal"
+                  />
                 </div>
 
                 <div className="p-5">
@@ -419,5 +418,3 @@ const POSSearchSection = ({
 };
 
 export default POSSearchSection;
-
-

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { formatCurrency } from "../../utils/currency";
 
 const CustomerSelector = ({
   customers = [],
@@ -7,6 +8,8 @@ const CustomerSelector = ({
   onAddNew,
   showBalances = false,
   compact = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const [search, setSearch] = useState("");
 
@@ -60,7 +63,11 @@ const CustomerSelector = ({
                         c.currentBalance > 0 ? "text-red-600" : "text-green-600"
                       }`}
                     >
-                      Rs. {Number(c.currentBalance).toFixed(2)}
+                      {formatCurrency(
+                        c.currentBalance,
+                        currencySymbol,
+                        currencyPosition,
+                      )}
                     </span>
                   )}
                 </div>
@@ -69,8 +76,8 @@ const CustomerSelector = ({
                     {c.type === "cash"
                       ? "Cash only"
                       : c.type === "credit"
-                      ? "Credit"
-                      : "Cash & Credit"}
+                        ? "Credit"
+                        : "Cash & Credit"}
                   </div>
                 )}
               </button>

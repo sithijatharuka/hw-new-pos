@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
 import CustomerDetailsModal from "../components/customer/CustomerDetailsModal";
 import CustomerFormModal from "../components/customer/CustomerFormModal";
 import ReceivePaymentModal from "../components/customer/ReceivePaymentModal";
@@ -17,9 +16,18 @@ import {
 } from "../api/customer/customers";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import { SearchBar } from "../components/common";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../utils/toastHelper";
+import { loadCurrencySettings } from "../api/settings/settings";
 
-const CustomersPage = () => {
+const CustomersPage = ({ api }) => {
   const [customers, setCustomers] = useState([]);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [formSaving, setFormSaving] = useState(false);
@@ -48,36 +56,53 @@ const CustomersPage = () => {
 
   const loadCustomers = async () => {
     try {
-      const data = await fetchCustomers();
+      const data = await fetchCustomers(api);
       setCustomers(data);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to load customers.");
+      showError(
+        err?.response?.data?.message || errorMessages.load("customers"),
+      );
     }
   };
 
   useEffect(() => {
     loadCustomers();
+    loadCurrency();
   }, []);
+
+  const loadCurrency = async () => {
+    try {
+      const settings = await loadCurrencySettings(api);
+      setCurrencySymbol(settings.currencySymbol || "Rs.");
+      setCurrencyPosition(settings.currencyPosition || "before");
+    } catch (err) {
+      console.error("Failed to load currency settings:", err);
+    }
+  };
 
   const handleCreateOrUpdate = async (formData) => {
     setFormSaving(true);
     try {
       if (editingCustomer) {
         // Update existing
-        const updated = await updateCustomer(editingCustomer._id, formData);
+        const updated = await updateCustomer(
+          api,
+          editingCustomer._id,
+          formData,
+        );
         setCustomers((prev) =>
           prev.map((c) => (c._id === updated._id ? updated : c)),
         );
-        toast.success("Customer updated successfully!");
+        showSuccess(successMessages.update("Customer"));
       } else {
         // Create new
-        const created = await createCustomer(formData);
+        const created = await createCustomer(api, formData);
         setCustomers((prev) => [...prev, created]);
-        toast.success("Customer created successfully!");
+        showSuccess(successMessages.create("Customer"));
       }
       closeFormModal();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to save customer.");
+      showError(err?.response?.data?.message || errorMessages.save("customer"));
     } finally {
       setFormSaving(false);
     }
@@ -88,9 +113,11 @@ const CustomersPage = () => {
     try {
       await deleteCustomer(customer._id);
       setCustomers((prev) => prev.filter((c) => c._id !== customer._id));
-      toast.success("Customer deleted successfully!");
+      showSuccess(successMessages.delete("Customer"));
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete customer.");
+      showError(
+        err?.response?.data?.message || errorMessages.delete("customer"),
+      );
     }
   };
 
@@ -98,12 +125,12 @@ const CustomersPage = () => {
     if (!paymentCustomer) return;
     setPaymentSaving(true);
     try {
-      await receivePayment(paymentCustomer._id, payload);
-      toast.success("Payment received successfully!");
+      await receivePayment(api, paymentCustomer._id, payload);
+      showSuccess("Payment received successfully");
       closePaymentModal();
       loadCustomers(); // Refresh to update balance
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to receive payment.");
+      showError(err?.response?.data?.message || "Failed to receive payment");
     } finally {
       setPaymentSaving(false);
     }
@@ -141,13 +168,7 @@ const CustomersPage = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          className: "text-sm font-medium",
-          duration: 3000,
-        }}
-      />
+      {/* No Toaster component needed - centralized in App.jsx */}
 
       {/* Header Section */}
       <CustomerPageHeader onAddNew={() => openFormModal()} />
@@ -180,6 +201,8 @@ const CustomersPage = () => {
             onDelete={handleDeleteCustomer}
             onPayment={openPaymentModal}
             onAddNew={() => openFormModal()}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
           />
 
           {/* Mobile / Tablet Card List */}
@@ -191,10 +214,16 @@ const CustomersPage = () => {
             onDelete={handleDeleteCustomer}
             onPayment={openPaymentModal}
             onAddNew={() => openFormModal()}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
           />
 
           {/* Table Footer */}
-          <CustomerFooterStats customers={customers} />
+          <CustomerFooterStats
+            customers={customers}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
+          />
         </div>
       </div>
 
@@ -203,6 +232,8 @@ const CustomersPage = () => {
         open={showDetailsModal}
         customer={detailsCustomer}
         onClose={closeDetailsModal}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
       />
 
       {/* Customer Form Modal */}
@@ -212,6 +243,8 @@ const CustomersPage = () => {
         onClose={closeFormModal}
         onSubmit={handleCreateOrUpdate}
         saving={formSaving}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
       />
 
       {/* Receive Payment Modal */}
@@ -221,6 +254,8 @@ const CustomersPage = () => {
         onClose={closePaymentModal}
         onSubmit={handleReceivePayment}
         saving={paymentSaving}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
       />
     </div>
   );

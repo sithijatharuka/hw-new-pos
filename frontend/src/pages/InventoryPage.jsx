@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { loadCurrencySettings } from "../api/settings/settings";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import AddItemModal from "../components/inventory/product/addProduct/AddNewItem";
 import InventoryHeader from "../components/inventory/InventoryHeader";
@@ -11,6 +12,12 @@ import ItemDetailModal from "../components/inventory/ItemDetailModal";
 import { confirmWithToast } from "../components/inventory/confirmDialog.jsx";
 import * as itemApi from "../api/inventory/items";
 import { loadInventoryLookups } from "../api/inventory/lookups";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../utils/toastHelper";
 
 const InventoryPage = ({ api }) => {
   const navigate = useNavigate();
@@ -18,6 +25,8 @@ const InventoryPage = ({ api }) => {
   const [items, setItems] = useState([]);
   const [filterCategory, setFilterCategory] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   // Modal state
   const [showForm, setShowForm] = useState(false);
@@ -63,7 +72,7 @@ const InventoryPage = ({ api }) => {
       const items = await itemApi.loadItems(api, q, lowStockOnly);
       setItems(items);
     } catch (err) {
-      toast.error("Failed to load items");
+      showError(errorMessages.load("items"));
     }
   };
 
@@ -74,7 +83,7 @@ const InventoryPage = ({ api }) => {
       setCategories(result.categories);
       setBaseUnits(result.baseUnits);
     } catch (error) {
-      toast.error("Failed to load inventory lookups");
+      showError(errorMessages.load("inventory lookups"));
     }
   };
 
@@ -111,6 +120,19 @@ const InventoryPage = ({ api }) => {
     fetchLookups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lowStockOnly]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadCurrencySettings(api);
+        setCurrencySymbol(settings.currencySymbol || "Rs.");
+        setCurrencyPosition(settings.currencyPosition || "before");
+      } catch (error) {
+        // Use defaults if error
+      }
+    };
+    loadSettings();
+  }, [api]);
 
   const tableCategories = useMemo(() => {
     const fromItems = Array.from(
@@ -192,6 +214,8 @@ const InventoryPage = ({ api }) => {
           {/* Desktop table */}
           <InventoryTable
             items={filteredItems}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
             onEdit={openEdit}
             onDetails={openDetails}
             onActivate={handleActivate}
@@ -214,6 +238,7 @@ const InventoryPage = ({ api }) => {
 
       {/* Add/Edit Modal */}
       <AddItemModal
+        api={api}
         open={showForm}
         onClose={() => setShowForm(false)}
         item={editingItem}

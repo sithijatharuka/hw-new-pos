@@ -1,23 +1,28 @@
 import React from "react";
+import CloseButton from "../common/CloseButton";
+import { formatCurrency } from "../../utils/currency";
 
-const CustomerDetailsModal = ({ open, customer, onClose }) => {
+const CustomerDetailsModal = ({
+  open,
+  customer,
+  onClose,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   if (!open || !customer) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-3">
+    <div className="fixed inset-0 bg-white/75 backdrop-blur-sm flex items-center justify-center z-50 px-3">
       <div className="bg-white rounded-2xl p-5 w-full max-w-md shadow-lg">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold text-gray-800">
             Customer Details
           </h3>
-          <button
-            type="button"
+          <CloseButton
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 cursor-pointer"
-            aria-label="Close details"
-          >
-            ✕
-          </button>
+            size="md"
+            ariaLabel="Close customer details"
+          />
         </div>
 
         <div className="space-y-2 text-sm text-gray-800">
@@ -28,11 +33,27 @@ const CustomerDetailsModal = ({ open, customer, onClose }) => {
           <DetailRow label="Type" value={customer.type || "-"} />
           <DetailRow
             label="Credit Limit"
-            value={formatCurrency(customer.creditLimit)}
+            value={
+              typeof customer.creditLimit === "number"
+                ? formatCurrency(
+                    customer.creditLimit,
+                    currencySymbol,
+                    currencyPosition,
+                  )
+                : "-"
+            }
           />
           <DetailRow
             label="Outstanding"
-            value={formatCurrency(customer.currentBalance)}
+            value={
+              typeof customer.currentBalance === "number"
+                ? formatCurrency(
+                    customer.currentBalance,
+                    currencySymbol,
+                    currencyPosition,
+                  )
+                : "-"
+            }
           />
           <DetailRow label="Notes" value={customer.notes || "-"} />
         </div>
@@ -57,8 +78,5 @@ const DetailRow = ({ label, value }) => (
     <span className="text-gray-800 text-right flex-1">{value}</span>
   </div>
 );
-
-const formatCurrency = (val) =>
-  typeof val === "number" ? `Rs. ${val.toFixed(2)}` : "-";
 
 export default CustomerDetailsModal;

@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import AppLoader from "../components/common/AppLoader";
 import {
   getDailySalesReport,
@@ -7,7 +6,10 @@ import {
   getProfitReport,
   getCustomerCreditReport,
   getLowStockItems,
-} from '../api/reports/reports';
+} from "../api/reports/reports";
+import { createApiClient } from "../api/client";
+import { loadCurrencySettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const OwnerDashboardPage = () => {
   const [daily, setDaily] = useState(null);
@@ -16,29 +18,42 @@ const OwnerDashboardPage = () => {
   const [customerCredit, setCustomerCredit] = useState(0);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
+
+  const getAccessToken = () => localStorage.getItem("accessToken") || "";
+  const setAccessToken = (token) => localStorage.setItem("accessToken", token);
+  const logout = () => localStorage.removeItem("accessToken");
+  const api = createApiClient(getAccessToken, setAccessToken, logout);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [dailyRes, invRes, profitRes, custRes, lowStockRes] =
-        await Promise.all([
-          getDailySalesReport(),
-          getInventoryValue(),
-          getProfitReport(),
-          getCustomerCreditReport(),
-          getLowStockItems(),
-        ]);
+      const [
+        dailyRes,
+        invRes,
+        profitRes,
+        custRes,
+        lowStockRes,
+        currencySettings,
+      ] = await Promise.all([
+        getDailySalesReport(),
+        getInventoryValue(),
+        getProfitReport(),
+        getCustomerCreditReport(),
+        getLowStockItems(),
+        loadCurrencySettings(api),
+      ]);
 
       setDaily(dailyRes);
       setInventory(invRes);
       setProfit(profitRes);
       setCustomerCredit(
-        (custRes || []).reduce(
-          (sum, c) => sum + (c.currentBalance || 0),
-          0
-        )
+        (custRes || []).reduce((sum, c) => sum + (c.currentBalance || 0), 0),
       );
       setLowStockItems(lowStockRes || []);
+      setCurrencySymbol(currencySettings.currencySymbol);
+      setCurrencyPosition(currencySettings.currencyPosition);
     } catch (e) {
       // basic fail-safe
     } finally {
@@ -89,7 +104,7 @@ const OwnerDashboardPage = () => {
           <div>
             <p className="text-[11px] text-gray-500">Today&apos;s sales</p>
             <p className="mt-1 text-2xl font-semibold text-primary">
-              Rs. {todaySales.toFixed(2)}
+              {formatCurrency(todaySales, currencySymbol, currencyPosition)}
             </p>
             <p className="text-[11px] text-gray-500 mt-1">
               Bills: {todayBills}
@@ -101,7 +116,7 @@ const OwnerDashboardPage = () => {
           <div>
             <p className="text-[11px] text-gray-500">Inventory value</p>
             <p className="mt-1 text-lg font-semibold">
-              Rs. {inventoryValue.toFixed(2)}
+              {formatCurrency(inventoryValue, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -110,7 +125,7 @@ const OwnerDashboardPage = () => {
           <div>
             <p className="text-[11px] text-gray-500">Customer credit</p>
             <p className="mt-1 text-lg font-semibold">
-              Rs. {customerCredit.toFixed(2)}
+              {formatCurrency(customerCredit, currencySymbol, currencyPosition)}
             </p>
             <p className="text-[11px] text-gray-500 mt-1">
               Outstanding across all customers
@@ -122,7 +137,7 @@ const OwnerDashboardPage = () => {
           <div>
             <p className="text-[11px] text-gray-500">Net profit (all time)</p>
             <p className="mt-1 text-lg font-semibold">
-              Rs. {netProfit.toFixed(2)}
+              {formatCurrency(netProfit, currencySymbol, currencyPosition)}
             </p>
             <p className="text-[11px] text-gray-500 mt-1">
               Sales - purchases - expenses
@@ -133,12 +148,8 @@ const OwnerDashboardPage = () => {
 
       <div className="card">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold">
-            Low stock alerts ({lowCount})
-          </p>
-          <p className="text-[11px] text-gray-500">
-            Showing up to 20 items
-          </p>
+          <p className="text-xs font-semibold">Low stock alerts ({lowCount})</p>
+          <p className="text-[11px] text-gray-500">Showing up to 20 items</p>
         </div>
         <div className="max-h-72 overflow-auto -mx-2">
           <table className="min-w-full text-[11px]">
@@ -185,5 +196,3 @@ const OwnerDashboardPage = () => {
 };
 
 export default OwnerDashboardPage;
-
-

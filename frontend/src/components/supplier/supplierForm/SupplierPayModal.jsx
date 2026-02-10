@@ -1,6 +1,8 @@
 // src/components/supplier/SupplierPayModal.jsx
 import React, { useMemo, useState } from "react";
 import colors from "../../../themes/colors";
+import CloseButton from "../../common/CloseButton";
+import { formatCurrency } from "../../../utils/currency";
 const validatePayAmount = (value, outstanding) => {
   const amountNum = Number(value);
   if (Number.isNaN(amountNum) || amountNum <= 0)
@@ -15,6 +17,8 @@ export default function SupplierPayModal({
   onClose,
   onConfirm, // async (amountNumber) => void
   saving,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) {
   const outstanding = useMemo(
     () => Number(supplier?.currentBalance || 0),
@@ -37,7 +41,7 @@ export default function SupplierPayModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center min-w-full min-h-screen p-4 bg-white backdrop-blur-sm sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center min-w-full min-h-screen p-4 bg-white/75 backdrop-blur-sm sm:p-6">
       <div className="relative flex flex-col w-full max-w-md mx-auto my-auto mt-20 overflow-hidden transition-all duration-200 ease-out border border-gray-200 shadow-lg lg:mt-32 rounded-3xl bg-background-secondary">
         {/* Top accent bar for consistency with SupplierFormModal */}
         <div className="h-1.5 w-full bg-accent" />
@@ -59,17 +63,14 @@ export default function SupplierPayModal({
             </p>
           </div>
 
-          <button
+          <CloseButton
             onClick={() => {
               setError("");
               onClose();
             }}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-background-secondary text-text-secondary transition-all duration-200 ease-out hover:bg-background-subtle hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-focus/20 cursor-pointer"
-            aria-label="Close"
-            title="Close"
-          >
-            ✕
-          </button>
+            size="lg"
+            ariaLabel="Close payment modal"
+          />
         </div>
 
         {/* Body */}
@@ -80,7 +81,7 @@ export default function SupplierPayModal({
                 Outstanding
               </span>
               <span className="text-lg font-extrabold text-red-600 tabular-nums">
-                Rs. {outstanding.toFixed(2)}
+                {formatCurrency(outstanding, currencySymbol, currencyPosition)}
               </span>
             </div>
           </div>
@@ -92,7 +93,7 @@ export default function SupplierPayModal({
 
             <div className="relative">
               <span className="absolute text-sm font-semibold -translate-y-1/2 left-4 top-1/2 text-text-tertiary">
-                Rs.
+                {currencySymbol}
               </span>
               <input
                 type="number"

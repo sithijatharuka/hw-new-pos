@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import toast from "react-hot-toast";
+import { showSuccess, showError } from "../../../../../utils/toastHelper";
+import InputModal from "../../../../common/InputModal";
 
 const EssentialInformation = ({
   form,
@@ -19,76 +20,114 @@ const EssentialInformation = ({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
 
+  // Local state for custom categories and units
+  const [localCustomCategories, setLocalCustomCategories] = useState(
+    customCategories || [],
+  );
+  const [localCustomBaseUnits, setLocalCustomBaseUnits] = useState(
+    customBaseUnits || [],
+  );
+
+  // Modal state
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    placeholder: "",
+    onSubmit: null,
+  });
+
   const categoryOptions = Array.from(
-    new Set([...(categories || []), ...customCategories]),
+    new Set([...(categories || []), ...localCustomCategories]),
   );
   const baseUnitOptions = Array.from(
-    new Set([...(baseUnits || []), ...customBaseUnits]),
+    new Set([...(baseUnits || []), ...localCustomBaseUnits]),
   );
 
   const CUSTOM_CATEGORIES_KEY = "pos_custom_item_categories";
   const CUSTOM_UNITS_KEY = "pos_custom_item_units";
 
-  const handleAddCategoryClick = async () => {
+  const handleAddCategoryClick = () => {
     if (onCategoryAdd) return onCategoryAdd();
 
-    const name = window.prompt("Enter new category name");
-    const trimmed = (name || "").trim();
-    if (!trimmed) return;
+    setModalConfig({
+      isOpen: true,
+      title: "Add New Category",
+      placeholder: "Enter category name",
+      onSubmit: (name) => {
+        const trimmed = name.trim();
 
-    const exists = categoryOptions.some(
-      (c) => (c || "").toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (exists) {
-      setError("category", "Category already exists.");
-      return;
-    }
+        const exists = categoryOptions.some(
+          (c) => (c || "").toLowerCase() === trimmed.toLowerCase(),
+        );
+        if (exists) {
+          setError("category", "Category already exists.");
+          showError("Category already exists");
+          setModalConfig((prev) => ({ ...prev, isOpen: false }));
+          return;
+        }
 
-    try {
-      const storedCats = JSON.parse(
-        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]",
-      );
-      const next = [...storedCats, trimmed];
-      localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
-      updateField("category", trimmed);
-      setError("category", "");
-      toast.success("Category added");
-    } catch (err) {
-      console.error("Failed to add category", err);
-    }
+        try {
+          const storedCats = JSON.parse(
+            localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]",
+          );
+          const next = [...storedCats, trimmed];
+          localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+          setLocalCustomCategories(next);
+          updateField("category", trimmed);
+          setError("category", "");
+          showSuccess("Category added");
+        } catch (err) {
+          console.error("Failed to add category", err);
+          showError("Failed to add category");
+        }
+
+        setModalConfig((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
-  const handleAddBaseUnitClick = async () => {
+  const handleAddBaseUnitClick = () => {
     if (onBaseUnitAdd) return onBaseUnitAdd();
 
-    const name = window.prompt("Enter new base unit (e.g., box)");
-    const trimmed = (name || "").trim();
-    if (!trimmed) return;
+    setModalConfig({
+      isOpen: true,
+      title: "Add New Base Unit",
+      placeholder: "Enter base unit (e.g., box, kg, liter)",
+      onSubmit: (name) => {
+        const trimmed = name.trim();
 
-    const exists = baseUnitOptions.some(
-      (u) => (u || "").toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (exists) {
-      setError("baseUnit", "Base unit already exists.");
-      return;
-    }
+        const exists = baseUnitOptions.some(
+          (u) => (u || "").toLowerCase() === trimmed.toLowerCase(),
+        );
+        if (exists) {
+          setError("baseUnit", "Base unit already exists.");
+          showError("Base unit already exists");
+          setModalConfig((prev) => ({ ...prev, isOpen: false }));
+          return;
+        }
 
-    try {
-      const storedUnits = JSON.parse(
-        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]",
-      );
-      const next = [...storedUnits, trimmed];
-      localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
-      updateField("baseUnit", trimmed);
-      setError("baseUnit", "");
-      toast.success("Base unit added");
-    } catch (err) {
-      console.error("Failed to add base unit", err);
-    }
+        try {
+          const storedUnits = JSON.parse(
+            localStorage.getItem(CUSTOM_UNITS_KEY) || "[]",
+          );
+          const next = [...storedUnits, trimmed];
+          localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+          setLocalCustomBaseUnits(next);
+          updateField("baseUnit", trimmed);
+          setError("baseUnit", "");
+          showSuccess("Base unit added");
+        } catch (err) {
+          console.error("Failed to add base unit", err);
+          showError("Failed to add base unit");
+        }
+
+        setModalConfig((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const handleDeleteBaseUnit = (unit) => {
-    const isCustom = customBaseUnits.includes(unit);
+    const isCustom = localCustomBaseUnits.includes(unit);
     if (isCustom) {
       try {
         const storedUnits = JSON.parse(
@@ -96,7 +135,9 @@ const EssentialInformation = ({
         );
         const next = storedUnits.filter((u) => u !== unit);
         localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(next));
+        setLocalCustomBaseUnits(next);
         if (form.baseUnit === unit) updateField("baseUnit", "");
+        showSuccess("Base unit deleted");
       } catch (err) {
         console.error("Failed to delete base unit", err);
       }
@@ -108,7 +149,7 @@ const EssentialInformation = ({
 
   // Handle category deletion
   const handleDeleteCategory = (cat) => {
-    const isCustom = customCategories.includes(cat);
+    const isCustom = localCustomCategories.includes(cat);
     if (isCustom) {
       try {
         const storedCats = JSON.parse(
@@ -116,8 +157,9 @@ const EssentialInformation = ({
         );
         const next = storedCats.filter((c) => c !== cat);
         localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+        setLocalCustomCategories(next);
         if (form.category === cat) updateField("category", "");
-        toast.success("Category deleted");
+        showSuccess("Category deleted");
       } catch (err) {
         console.error("Failed to delete category", err);
       }
@@ -331,6 +373,15 @@ const EssentialInformation = ({
           placeholder="Optional description..."
         />
       </div>
+
+      {/* Input Modal */}
+      <InputModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        onSubmit={modalConfig.onSubmit}
+        title={modalConfig.title}
+        placeholder={modalConfig.placeholder}
+      />
     </div>
   );
 };

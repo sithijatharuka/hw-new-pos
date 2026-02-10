@@ -1,6 +1,7 @@
 // backend/services/notifySmsService.js
 import axios from "axios";
 import { toNotifyMsisdn } from "../utils/phone.js";
+import logger from "../utils/logger.js";
 
 const {
   NOTIFYLK_USER_ID,
@@ -15,7 +16,7 @@ export async function sendSmsViaNotify(
   { unicode = false } = {},
 ) {
   if (!NOTIFYLK_USER_ID || !NOTIFYLK_API_KEY || !NOTIFYLK_SENDER_ID) {
-    console.error("[Notify] Missing env vars", {
+    logger.error("[Notify] Missing env vars", {
       NOTIFYLK_USER_ID,
       hasApiKey: !!NOTIFYLK_API_KEY,
       NOTIFYLK_SENDER_ID,
@@ -24,7 +25,6 @@ export async function sendSmsViaNotify(
   }
 
   const to = toNotifyMsisdn(phone);
-  console.log("[Notify] sending SMS", { to, message });
 
   const params = {
     user_id: NOTIFYLK_USER_ID,
@@ -40,8 +40,6 @@ export async function sendSmsViaNotify(
       params,
       timeout: 10000, // 10 seconds
     });
-
-    console.log("[Notify] response:", res.data);
 
     if (res.data?.status !== "success") {
       throw new Error("NOTIFYLK_SEND_FAILED: " + JSON.stringify(res.data));

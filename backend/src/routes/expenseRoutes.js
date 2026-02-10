@@ -1,11 +1,11 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import { Expense } from "../models/Expense.js";
 
 const router = express.Router();
 
 // Create expense
-router.post("/", protect, async (req, res) => {
+router.post("/", protect, requireFeature("expenses"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -20,7 +20,7 @@ router.post("/", protect, async (req, res) => {
 });
 
 // List expenses with optional date range
-router.get("/", protect, async (req, res) => {
+router.get("/", protect, requireFeature("expenses"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -64,7 +64,7 @@ router.get("/", protect, async (req, res) => {
 });
 
 // Update expense
-router.put("/:id", protect, async (req, res) => {
+router.put("/:id", protect, requireFeature("expenses"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -83,7 +83,7 @@ router.put("/:id", protect, async (req, res) => {
 });
 
 // Delete expense
-router.delete("/:id", protect, async (req, res) => {
+router.delete("/:id", protect, requireFeature("expenses"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });

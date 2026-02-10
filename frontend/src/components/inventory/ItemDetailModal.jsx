@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AppLoader from "../common/AppLoader";
-import toast from "react-hot-toast";
+import CloseButton from "../common/CloseButton";
+import { showError, errorMessages } from "../../utils/toastHelper";
 import { getItemBatches } from "../../api/inventory/items";
 
 const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
@@ -18,7 +19,9 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
         const data = await getItemBatches(item._id);
         setBatches(data?.batches || []);
       } catch (err) {
-        toast.error(err?.response?.data?.message || "Failed to load batches");
+        showError(
+          err?.response?.data?.message || errorMessages.load("batches"),
+        );
       } finally {
         setBatchesLoading(false);
       }
@@ -36,10 +39,10 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
   const openingStock = Number(item.openingStock ?? inv.onHand ?? 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 bg-white/75 backdrop-blur-sm">
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-200">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-5">
+        <div className="sticky top-0 p-5 bg-white border-b border-gray-200">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
@@ -47,18 +50,17 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
                 {item.barcode || "No barcode"}
               </p>
             </div>
-            <button
-              className="w-8 h-8 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+            <CloseButton
               onClick={onClose}
-            >
-              ✕
-            </button>
+              size="sm"
+              ariaLabel="Close item details"
+            />
           </div>
         </div>
 
         {/* Content */}
         <div className="p-5 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Basic Info */}
             <div>
               <h4 className="text-xs font-semibold text-gray-700 uppercase">
@@ -124,9 +126,9 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
               <h4 className="text-xs font-semibold text-gray-700 uppercase">
                 Batches
               </h4>
-              <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
+              <div className="mt-3 overflow-hidden border border-gray-200 rounded-xl">
                 {batchesLoading ? (
-                  <div className="flex justify-center items-center p-4">
+                  <div className="flex items-center justify-center p-4">
                     <AppLoader
                       open
                       variant="inline"
@@ -142,19 +144,19 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                           Batch
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600">
                           Expiry
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600">
                           On-hand
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600">
                           Reserved
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600">
                           Available
                         </th>
                       </tr>
@@ -176,7 +178,7 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
                           <td className="px-4 py-3 text-right">
                             {Number(b.reserved || 0)}
                           </td>
-                          <td className="px-4 py-3 text-right font-semibold">
+                          <td className="px-4 py-3 font-semibold text-right">
                             {Number(b.available || 0)}
                           </td>
                         </tr>
@@ -190,16 +192,16 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-5">
+        <div className="sticky bottom-0 p-5 bg-white border-t border-gray-200">
           <div className="flex justify-end gap-3">
             <button
-              className="px-6 py-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+              className="px-6 py-3 transition-all border-2 border-gray-300 cursor-pointer rounded-xl hover:bg-gray-50 active:scale-95"
               onClick={onClose}
             >
               Close
             </button>
             <button
-              className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl cursor-pointer hover:shadow-lg active:scale-95 transition-all"
+              className="px-6 py-3 text-white transition-all cursor-pointer bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95"
               onClick={() => {
                 onEdit(item);
                 onClose();
@@ -215,7 +217,3 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
 };
 
 export default ItemDetailModal;
-
-
-
-

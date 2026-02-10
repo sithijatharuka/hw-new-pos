@@ -20,6 +20,8 @@ const DashboardSections = ({
   monthlySalesTrend,
   topCategoriesData,
   loading,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <>
@@ -33,6 +35,8 @@ const DashboardSections = ({
           totalExpenses={profitMetrics?.today?.totalExpenses}
           totalVAT={dailySalesOverview?.totalVAT}
           paymentBreakdown={dailySalesOverview?.paymentBreakdown}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </section>
 
@@ -43,6 +47,8 @@ const DashboardSections = ({
           expenseCount={expensesSummary?.expenseCount}
           categoryBreakdown={expensesSummary?.categoryBreakdown}
           loading={loading}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </section>
 
@@ -52,6 +58,8 @@ const DashboardSections = ({
           todayMetrics={profitMetrics?.today}
           monthMetrics={profitMetrics?.month}
           loading={loading}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </section>
 
@@ -69,6 +77,8 @@ const DashboardSections = ({
             topCustomers={creditSummary?.topCustomers}
             warningCount={creditSummary?.warningCount}
             loading={loading}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
           />
         </section>
       </div>
@@ -79,6 +89,8 @@ const DashboardSections = ({
           totalOutstanding={supplierPayables?.totalOutstanding}
           supplierPayables={supplierPayables?.supplierPayables}
           loading={loading}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </section>
 
@@ -88,6 +100,8 @@ const DashboardSections = ({
           trendDaily={monthlySalesTrend.daily}
           trendMonthly={monthlySalesTrend.monthly}
           loading={loading}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </section>
 

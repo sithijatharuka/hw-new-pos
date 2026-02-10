@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../../utils/currency";
 
 const GRNLineItem = ({
   line,
@@ -12,6 +13,8 @@ const GRNLineItem = ({
   onAddProduct,
   onRemoveLine,
   linesLength,
+  currencySymbol = "",
+  currencyPosition = "before",
 }) => {
   const it = line.item ? itemById.get(String(line.item)) : null;
   const isBatchTracked = Boolean(it?.isBatchTracked);
@@ -21,7 +24,7 @@ const GRNLineItem = ({
       <td className="px-4 py-3 text-sm text-gray-600">{lineIndex + 1}</td>
 
       <td className="px-4 py-3">
-        <div className="flex gap-2 items-start">
+        <div className="flex items-start gap-2">
           <div className="flex-1">
             <select
               name="item"
@@ -44,7 +47,7 @@ const GRNLineItem = ({
                 ))}
             </select>
             {errors[`line_${lineIndex}_item`] && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="mt-1 text-xs text-red-600">
                 {errors[`line_${lineIndex}_item`]}
               </p>
             )}
@@ -60,7 +63,7 @@ const GRNLineItem = ({
             type="button"
             onClick={() => onAddProduct(lineIndex)}
             disabled={fieldsDisabled}
-            className="px-3 py-2 text-xs font-semibold bg-primary/10 text-primary rounded-lg hover:bg-primary/15"
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-primary/10 text-primary hover:bg-primary/15"
             title="Add new item"
           >
             + New
@@ -83,7 +86,7 @@ const GRNLineItem = ({
           placeholder={isBatchTracked ? "Batch" : "N/A"}
         />
         {errors[`line_${lineIndex}_batchNumber`] && (
-          <p className="text-xs text-red-600 mt-1">
+          <p className="mt-1 text-xs text-red-600">
             {errors[`line_${lineIndex}_batchNumber`]}
           </p>
         )}
@@ -106,7 +109,7 @@ const GRNLineItem = ({
           placeholder="0"
         />
         {errors[`line_${lineIndex}_qty`] && (
-          <p className="text-xs text-red-600 mt-1">
+          <p className="mt-1 text-xs text-red-600">
             {errors[`line_${lineIndex}_qty`]}
           </p>
         )}
@@ -129,14 +132,14 @@ const GRNLineItem = ({
           placeholder="0.00"
         />
         {errors[`line_${lineIndex}_unitCost`] && (
-          <p className="text-xs text-red-600 mt-1">
+          <p className="mt-1 text-xs text-red-600">
             {errors[`line_${lineIndex}_unitCost`]}
           </p>
         )}
       </td>
 
-      <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
-        Rs. {lineTotal(line).toFixed(2)}
+      <td className="px-4 py-3 text-sm font-medium text-right text-gray-900">
+        {formatCurrency(lineTotal(line), currencySymbol, currencyPosition)}
       </td>
 
       <td className="px-4 py-3 text-center">

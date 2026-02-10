@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import AppLoader from "../common/AppLoader";
-import toast from "react-hot-toast";
-import { validateCustomerForm } from "../common/formValidation"; // adjust path
-
+import CloseButton from "../common/CloseButton";
+import { validateCustomerForm } from "../common/formValidation";
+import colors from "../../themes/colors";
 const defaultForm = {
   name: "",
   phone: "",
@@ -19,8 +19,11 @@ const CustomerFormModal = ({
   onClose,
   onSubmit,
   saving = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const [form, setForm] = useState(defaultForm);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     if (initialData) {
@@ -40,16 +43,40 @@ const CustomerFormModal = ({
     } else {
       setForm(defaultForm);
     }
+    setFieldErrors({});
   }, [initialData, open]);
 
   if (!open) return null;
+
+  const mapErrorsToFields = (errors) => {
+    const fieldErrorMap = {};
+    errors.forEach((error) => {
+      const lowerError = error.toLowerCase();
+      if (lowerError.includes("name")) fieldErrorMap.name = error;
+      else if (lowerError.includes("phone")) fieldErrorMap.phone = error;
+      else if (lowerError.includes("address")) fieldErrorMap.address = error;
+      else if (lowerError.includes("nic")) fieldErrorMap.nic = error;
+      else if (lowerError.includes("type")) fieldErrorMap.type = error;
+      else if (lowerError.includes("credit limit"))
+        fieldErrorMap.creditLimit = error;
+    });
+    return fieldErrorMap;
+  };
+
+  const clearFieldError = (fieldName) => {
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[fieldName];
+      return updated;
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const { isValid, errors, data } = validateCustomerForm(form);
     if (!isValid) {
-      toast.error(errors[0] || "Please fix validation errors.");
+      setFieldErrors(mapErrorsToFields(errors));
       return;
     }
 
@@ -57,122 +84,180 @@ const CustomerFormModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-3">
-      <div className="bg-white rounded-2xl p-5 w-full max-w-md shadow-lg space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 bg-white/75 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md max-h-[80vh] flex flex-col shadow-lg rounded-2xl"
+        style={{
+          background: colors.background.secondary,
+          border: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <div className="flex items-center justify-between p-5 pb-3">
+          <h3 className="text-lg font-semibold text-primary">
             {initialData ? "Update Customer" : "Add New Customer"}
           </h3>
-          <button
-            type="button"
+          <CloseButton
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 cursor-pointer"
-            aria-label="Close customer form"
-          >
-            ✕
-          </button>
+            size="md"
+            variant="subtle"
+            ariaLabel="Close customer form"
+          />
         </div>
 
-        <form className="space-y-3" onSubmit={handleSubmit}>
-          <TextInput
-            label="Name *"
-            value={form.name}
-            onChange={(v) => setForm((p) => ({ ...p, name: v }))}
-          />
-          <TextInput
-            label="Phone *"
-            value={form.phone}
-            onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
-          />
-          <TextInput
-            label="Address *"
-            value={form.address}
-            onChange={(v) => setForm((p) => ({ ...p, address: v }))}
-          />
-          <TextInput
-            label="NIC *"
-            value={form.nic}
-            onChange={(v) => setForm((p) => ({ ...p, nic: v }))}
-          />
-          <SelectInput
-            label="Customer type *"
-            value={form.type}
-            onChange={(v) => setForm((p) => ({ ...p, type: v }))}
-            options={[
-              { value: "cash", label: "Cash only" },
-              { value: "credit", label: "Credit only" },
-              { value: "both", label: "Cash & Credit" },
-            ]}
-          />
-          <TextInput
-            label="Credit limit (Rs.) *"
-            type="number"
-            min="0"
-            value={form.creditLimit}
-            onChange={(v) => setForm((p) => ({ ...p, creditLimit: v }))}
-          />
-          <TextArea
-            label="Notes (optional)"
-            value={form.notes}
-            onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
-          />
+        <form className="flex flex-col flex-1 min-h-0" onSubmit={handleSubmit}>
+          <div className="flex-1 px-5 space-y-3 overflow-y-auto">
+            <TextInput
+              label="Name"
+              required
+              value={form.name}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, name: v }));
+                clearFieldError("name");
+              }}
+              error={fieldErrors.name}
+            />
+            <TextInput
+              label="Phone"
+              required
+              value={form.phone}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, phone: v }));
+                clearFieldError("phone");
+              }}
+              error={fieldErrors.phone}
+            />
+            <TextInput
+              label="Address"
+              required
+              value={form.address}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, address: v }));
+                clearFieldError("address");
+              }}
+              error={fieldErrors.address}
+            />
+            <TextInput
+              label="NIC"
+              required
+              value={form.nic}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, nic: v }));
+                clearFieldError("nic");
+              }}
+              error={fieldErrors.nic}
+            />
+            <SelectInput
+              label="Customer type"
+              required
+              value={form.type}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, type: v }));
+                clearFieldError("type");
+              }}
+              options={[
+                { value: "cash", label: "Cash only" },
+                { value: "credit", label: "Credit only" },
+                { value: "both", label: "Cash & Credit" },
+              ]}
+              error={fieldErrors.type}
+            />
+            <TextInput
+              label={`Credit limit (${currencySymbol})`}
+              required
+              type="number"
+              min="0"
+              value={form.creditLimit}
+              onChange={(v) => {
+                setForm((p) => ({ ...p, creditLimit: v }));
+                clearFieldError("creditLimit");
+              }}
+              error={fieldErrors.creditLimit}
+            />
+            <TextArea
+              label="Notes (optional)"
+              value={form.notes}
+              onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
+            />
 
-          <div className="flex justify-end gap-2 pt-2">
+            {saving && (
+              <div className="pt-4">
+                <AppLoader
+                  open
+                  variant="inline"
+                  title="Saving customer"
+                  subtitle="Updating customer details"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 p-5 pt-3 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-soft cursor-pointer"
+              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 cursor-pointer rounded-xl hover:bg-soft"
               disabled={saving}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 cursor-pointer disabled:opacity-60"
+              className="px-4 py-2 text-sm font-medium text-white cursor-pointer bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-60"
               disabled={saving}
             >
               {initialData ? "Update" : "Save"}
             </button>
           </div>
-
-          {saving && (
-            <div className="pt-4">
-              <AppLoader
-                open
-                variant="inline"
-                title="Saving customer"
-                subtitle="Updating customer details"
-              />
-            </div>
-          )}
         </form>
       </div>
     </div>
   );
 };
 
-const TextInput = ({ label, value, onChange, type = "text", ...rest }) => (
+const TextInput = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  error,
+  ...rest
+}) => (
   <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">
+    <label className="block mb-1 text-xs font-medium text-gray-700">
       {label}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
     <input
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border rounded-xl px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+      className={`w-full px-3 py-2 text-sm text-gray-800 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary ${
+        error ? "border-red-500" : ""
+      }`}
       {...rest}
     />
+    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
   </div>
 );
 
-const SelectInput = ({ label, value, onChange, options }) => (
+const SelectInput = ({
+  label,
+  value,
+  onChange,
+  options,
+  required = false,
+  error,
+}) => (
   <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">
+    <label className="block mb-1 text-xs font-medium text-gray-700">
       {label}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
     <select
-      className="w-full border rounded-xl px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+      className={`w-full px-3 py-2 text-sm text-gray-800 bg-white border cursor-pointer rounded-xl focus:outline-none focus:ring-2 focus:ring-primary ${
+        error ? "border-red-500" : ""
+      }`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -182,19 +267,20 @@ const SelectInput = ({ label, value, onChange, options }) => (
         </option>
       ))}
     </select>
+    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
   </div>
 );
 
 const TextArea = ({ label, value, onChange }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">
+    <label className="block mb-1 text-xs font-medium text-gray-700">
       {label}
     </label>
     <textarea
       rows={2}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border rounded-xl px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+      className="w-full px-3 py-2 text-sm text-gray-800 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
     />
   </div>
 );

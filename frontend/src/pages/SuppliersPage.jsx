@@ -1,10 +1,16 @@
 // src/pages/SuppliersPage.jsx
 import React, { useEffect, useState } from "react";
 import AppLoader from "../components/common/AppLoader";
-import toast, { Toaster } from "react-hot-toast";
+import { loadCurrencySettings } from "../api/settings/settings";
 import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import EntityCardList from "../components/common/EntityCardList";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../utils/toastHelper";
 
 import GrnDetailsModal from "../components/supplier/grnDetail/GrnDetailsModal";
 import { getSupplierGRNs, deleteGRN, postGRN } from "../api/supplier/grn";
@@ -32,6 +38,8 @@ import { fetchItemsForGrn } from "../api/inventory/items";
 const SuppliersPage = ({ api }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   // Modals
   const [showSupplierForm, setShowSupplierForm] = useState(false);
@@ -41,6 +49,9 @@ const SuppliersPage = ({ api }) => {
   const [showPayModal, setShowPayModal] = useState(false);
   const [paySupplier, setPaySupplier] = useState(null);
   const [paySaving, setPaySaving] = useState(false);
+
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [detailsSupplier, setDetailsSupplier] = useState(null);
 
   // GRN State
   const [showGRNForm, setShowGRNForm] = useState(false);
@@ -86,7 +97,9 @@ const SuppliersPage = ({ api }) => {
       const data = await getSuppliers(api, q);
       setSuppliers(data || []);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to load suppliers");
+      showError(
+        err?.response?.data?.message || errorMessages.load("suppliers"),
+      );
     } finally {
       setLoading(false);
     }
@@ -96,6 +109,19 @@ const SuppliersPage = ({ api }) => {
     fetchSuppliers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadCurrencySettings(api);
+        setCurrencySymbol(settings.currencySymbol || "Rs.");
+        setCurrencyPosition(settings.currencyPosition || "before");
+      } catch (error) {
+        // Use defaults if error
+      }
+    };
+    loadSettings();
+  }, [api]);
 
   // ---------- Supplier Actions ----------
   const openCreate = () => {
@@ -125,11 +151,13 @@ const SuppliersPage = ({ api }) => {
       setSuppliers((prev) =>
         prev.filter((s) => s._id !== deleteTargetSupplier._id),
       );
-      toast.success("Supplier deleted");
+      showSuccess(successMessages.delete("Supplier"));
       setDeleteModalOpen(false);
       setDeleteTargetSupplier(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete supplier");
+      showError(
+        err?.response?.data?.message || errorMessages.delete("supplier"),
+      );
     } finally {
       setDeleteLoading(false);
     }
@@ -144,18 +172,18 @@ const SuppliersPage = ({ api }) => {
         setSuppliers((prev) =>
           prev.map((s) => (s._id === updated._id ? updated : s)),
         );
-        toast.success("Supplier updated");
+        showSuccess(successMessages.update("Supplier"));
       } else {
         // For new suppliers, set currentBalance = openingBalance
         const created = await createSupplier(api, payload);
         setSuppliers((prev) => [...prev, created]);
-        toast.success("Supplier created");
+        showSuccess(successMessages.create("Supplier"));
       }
 
       setShowSupplierForm(false);
       setEditingSupplier(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to save supplier");
+      showError(err?.response?.data?.message || errorMessages.save("supplier"));
     } finally {
       setSavingSupplier(false);
     }
@@ -180,9 +208,9 @@ const SuppliersPage = ({ api }) => {
       );
       setShowPayModal(false);
       setPaySupplier(null);
-      toast.success("Payment recorded");
+      showSuccess("Payment recorded");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to record payment");
+      showError(err?.response?.data?.message || "Failed to record payment");
     } finally {
       setPaySaving(false);
     }
@@ -195,7 +223,7 @@ const SuppliersPage = ({ api }) => {
       const fetched = await fetchItemsForGrn(api);
       setItems(fetched);
     } catch {
-      toast.error("Failed to load items");
+      showError(errorMessages.load("items"));
     }
   };
 
@@ -247,8 +275,8 @@ const SuppliersPage = ({ api }) => {
 
     toast.success(
       savedGrn && savedGrn._id && wasEditing
-        ? "GRN updated successfully"
-        : "GRN created successfully",
+        ? successMessages.update("GRN")
+        : successMessages.create("GRN"),
     );
   };
 
@@ -260,7 +288,7 @@ const SuppliersPage = ({ api }) => {
       setGrnSupplier(supplier);
       setShowGRNsList(true);
     } catch {
-      toast.error("Failed to load GRNs");
+      showError(errorMessages.load("GRNs"));
     } finally {
       setLoadingGRNs(false);
     }
@@ -268,7 +296,7 @@ const SuppliersPage = ({ api }) => {
 
   const openEditGRN = async (grn) => {
     if (!grn || grn.status !== "draft") {
-      toast.error("Only draft GRNs can be edited");
+      showError("Only draft GRNs can be edited");
       return;
     }
 
@@ -287,66 +315,51 @@ const SuppliersPage = ({ api }) => {
   const handleDeleteGRN = async () => {
     if (!selectedGRN) return;
     if (selectedGRN.status !== "draft") {
-      toast.error("Only draft GRNs can be deleted");
+      showError("Only draft GRNs can be deleted");
       return;
     }
     try {
-      await deleteGRN(selectedGRN._id);
+      await deleteGRN(api, selectedGRN._id);
       setGrnsList((prev) => prev.filter((g) => g._id !== selectedGRN._id));
       setShowGRNDetails(false);
       setSelectedGRN(null);
-      toast.success("GRN deleted successfully");
+      showSuccess(successMessages.delete("GRN"));
     } catch {
-      toast.error("Failed to delete GRN");
+      showError(errorMessages.delete("GRN"));
     }
   };
 
   const handlePostGRN = async () => {
     if (!selectedGRN) return;
     if (selectedGRN.status !== "draft") {
-      toast.error("Only draft GRNs can be posted");
+      showError("Only draft GRNs can be posted");
       return;
     }
 
     try {
-      const posted = await postGRN(selectedGRN._id);
+      const posted = await postGRN(api, selectedGRN._id);
       setGrnsList((prev) =>
         prev.map((g) => (g._id === posted._id ? posted : g)),
       );
       setSelectedGRN(posted);
       setShowGRNDetails(false);
-      toast.success("GRN posted successfully");
+      showSuccess(successMessages.save("GRN"));
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to post GRN");
+      showError(
+        err?.response?.data?.message || errorMessages.postFailed("GRN"),
+      );
     }
   };
 
   // ---------- Show Supplier Details ----------
   const showSupplierDetails = (supplier) => {
-    toast.custom(
-      (t) => (
-        <div className="w-full max-w-md p-6 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="flex items-start justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">{supplier.name}</h3>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="overflow-y-auto max-h-96">
-            <SupplierDetailsContent supplier={supplier} />
-          </div>
-        </div>
-      ),
-      { duration: Infinity },
-    );
+    setDetailsSupplier(supplier);
+    setShowDetailsModal(true);
   };
 
   return (
     <div className="min-h-screen p-4 md:p-6">
-      <Toaster position="top-right" />
+      {/* No Toaster component needed - centralized in App.jsx */}
 
       {/* Header */}
       <SupplierPageHeader onAddSupplier={openCreate} />
@@ -391,6 +404,8 @@ const SuppliersPage = ({ api }) => {
                 onPay={openPay}
                 onEdit={openEdit}
                 onDelete={handleDeleteSupplier}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
               />
             )}
           />
@@ -426,6 +441,8 @@ const SuppliersPage = ({ api }) => {
                   onPay={openPay}
                   onEdit={openEdit}
                   onDelete={handleDeleteSupplier}
+                  currencySymbol={currencySymbol}
+                  currencyPosition={currencyPosition}
                 />
               ))}
               {filtered.length === 0 && (
@@ -489,14 +506,19 @@ const SuppliersPage = ({ api }) => {
           setPaySupplier(null);
         }}
         onConfirm={handleConfirmPay}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
       />
 
       {/* GRN Form Modal */}
       <GRNFormModal
+        api={api}
         open={showGRNForm}
         supplier={grnSupplier}
         items={items}
         existingGRN={editingGRN}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
         onSuccess={handleGRNSuccess}
         onClose={() => {
           setShowGRNForm(false);
@@ -515,6 +537,8 @@ const SuppliersPage = ({ api }) => {
         supplier={grnSupplier}
         grnsList={grnsList}
         loading={loadingGRNs}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
         onClose={() => {
           setShowGRNsList(false);
           setGrnSupplier(null);
@@ -530,6 +554,8 @@ const SuppliersPage = ({ api }) => {
       <GrnDetailsModal
         open={showGRNDetails}
         grn={selectedGRN}
+        currencySymbol={currencySymbol}
+        currencyPosition={currencyPosition}
         onClose={() => {
           setShowGRNDetails(false);
           setSelectedGRN(null);
@@ -542,6 +568,36 @@ const SuppliersPage = ({ api }) => {
         onDelete={selectedGRN?.status === "draft" ? handleDeleteGRN : null}
         onPost={selectedGRN?.status === "draft" ? handlePostGRN : null}
       />
+
+      {/* Supplier Details Modal */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[80vh] flex flex-col bg-white border border-gray-200 rounded-2xl shadow-2xl">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">
+                {detailsSupplier?.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setDetailsSupplier(null);
+                }}
+                className="text-gray-400 transition-colors hover:text-gray-600"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 p-6 overflow-y-auto">
+              <SupplierDetailsContent
+                supplier={detailsSupplier}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

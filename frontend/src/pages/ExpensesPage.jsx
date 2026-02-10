@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { loadCurrencySettings } from "../api/settings/settings";
 import {
   ExpensesHeader,
   ExpensesForm,
@@ -21,12 +22,20 @@ import {
   loadExpenseCategories,
   addExpenseCategory,
 } from "../api/expenses";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../utils/toastHelper";
 
-const ExpensesPage = () => {
+const ExpensesPage = ({ api }) => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [newCategoryError, setNewCategoryError] = useState("");
@@ -83,7 +92,7 @@ const ExpensesPage = () => {
             </div>
           </div>
         ),
-        { duration: Infinity }
+        { duration: Infinity },
       );
     });
 
@@ -92,12 +101,10 @@ const ExpensesPage = () => {
   const loadExpensesData = async () => {
     setLoading(true);
     try {
-      const expenses = await loadExpenses();
+      const expenses = await loadExpenses(api);
       setExpenses(expenses);
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Failed to load expenses. Try again."
-      );
+      showError(err?.response?.data?.message || errorMessages.load("expenses"));
     } finally {
       setLoading(false);
     }
@@ -105,7 +112,7 @@ const ExpensesPage = () => {
 
   const loadCategoriesData = async () => {
     try {
-      const cats = await loadExpenseCategories();
+      const cats = await loadExpenseCategories(api);
       setCategories(cats);
     } catch (error) {
       console.error("Failed to load categories:", error);
@@ -116,6 +123,19 @@ const ExpensesPage = () => {
     loadExpensesData();
     loadCategoriesData();
   }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadCurrencySettings(api);
+        setCurrencySymbol(settings.currencySymbol || "Rs.");
+        setCurrencyPosition(settings.currencyPosition || "before");
+      } catch (error) {
+        // Use defaults if error
+      }
+    };
+    loadSettings();
+  }, [api]);
 
   // ---------- Form handlers ----------
 
@@ -137,7 +157,7 @@ const ExpensesPage = () => {
     e.preventDefault();
 
     if (!handleValidateForm()) {
-      toast.error("Please fix the errors before saving.");
+      showError(errorMessages.validation);
       return;
     }
 
@@ -150,18 +170,16 @@ const ExpensesPage = () => {
 
     try {
       if (editingId) {
-        await updateExpense(editingId, payload);
-        toast.success("Expense updated successfully.");
+        await updateExpense(api, editingId, payload);
+        showSuccess(successMessages.update("Expense"));
       } else {
-        await createExpense(payload);
-        toast.success("Expense saved successfully.");
+        await createExpense(api, payload);
+        showSuccess(successMessages.create("Expense"));
       }
       resetForm();
       await loadExpensesData();
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Failed to save expense. Try again."
-      );
+      showError(err?.response?.data?.message || errorMessages.save("expense"));
     }
   };
 
@@ -182,16 +200,19 @@ const ExpensesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await confirmWithToast("Delete this expense?");
+    const confirmed = await confirmAction(
+      "Are you sure you want to delete this expense?",
+      "Delete Expense",
+    );
     if (!confirmed) return;
 
     try {
-      await deleteExpense(id);
-      toast.success("Expense deleted successfully.");
+      await deleteExpense(api, id);
+      showSuccess(successMessages.delete("Expense"));
       await loadExpensesData();
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Failed to delete expense. Try again."
+      showError(
+        err?.response?.data?.message || errorMessages.delete("expense"),
       );
     }
   };
@@ -206,28 +227,28 @@ const ExpensesPage = () => {
     const value = newCategory.trim();
     if (!handleValidateNewCategory(value)) {
       if (newCategoryError) {
-        toast.error(newCategoryError);
+        showError(newCategoryError);
       }
       return;
     }
 
     try {
-      const result = await addExpenseCategory(value);
+      const result = await addExpenseCategory(api, value);
       setCategories(result.expenseCategories || []);
       setForm((f) => ({ ...f, category: value }));
       setNewCategory("");
       setNewCategoryError("");
       setShowAddCategory(false);
-      toast.success("Category added successfully.");
+      showSuccess("Category added successfully");
     } catch (error) {
-      toast.error("Failed to add category. Try again.");
+      showError("Failed to add category. Try again");
     }
   };
 
   // Totals (used in multiple places)
   const totalExpenses = expenses.reduce(
     (sum, e) => sum + (Number(e.amount) || 0),
-    0
+    0,
   );
 
   const currentMonthTotal = expenses
@@ -243,19 +264,15 @@ const ExpensesPage = () => {
 
   return (
     <div className="min-h-screen px-3 py-4 sm:px-4 md:px-6 lg:px-8">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          className: "text-sm font-medium shadow-lg rounded-xl",
-          duration: 3000,
-        }}
-      />
+      {/* No Toaster component needed - centralized in App.jsx */}
 
       <div className="max-w-7xl mx-auto space-y-6 pb-10">
         <ExpensesHeader
           totalExpenses={totalExpenses}
           categories={categories}
           expenses={expenses}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
 
         {/* Main Content */}
@@ -281,6 +298,8 @@ const ExpensesPage = () => {
             expenses={expenses}
             loading={loading}
             totalExpenses={totalExpenses}
+            currencySymbol={currencySymbol}
+            currencyPosition={currencyPosition}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
             loadExpenses={loadExpensesData}

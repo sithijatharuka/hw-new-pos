@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
 /**
  * Daily Sales Card Component
@@ -14,6 +15,8 @@ const DailySalesCard = ({
   totalExpenses,
   totalVAT,
   paymentBreakdown,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
@@ -39,11 +42,8 @@ const DailySalesCard = ({
             <p className="mb-1 text-xs text-gray-600 sm:text-sm">Total Sales</p>
             <p className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
               {typeof totalSales === "number"
-                ? `LKR ${totalSales.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(totalSales, currencySymbol, currencyPosition)
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -68,11 +68,8 @@ const DailySalesCard = ({
             </p>
             <p className="text-xl font-bold leading-tight text-green-600 sm:text-2xl">
               {typeof grossProfit === "number"
-                ? `LKR ${grossProfit.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(grossProfit, currencySymbol, currencyPosition)
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -87,11 +84,8 @@ const DailySalesCard = ({
               }`}
             >
               {typeof netProfit === "number"
-                ? `LKR ${netProfit.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(netProfit, currencySymbol, currencyPosition)
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -104,11 +98,8 @@ const DailySalesCard = ({
             </p>
             <p className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
               {typeof totalVAT === "number"
-                ? `LKR ${totalVAT.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(totalVAT, currencySymbol, currencyPosition)
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -121,11 +112,12 @@ const DailySalesCard = ({
             </p>
             <p className="text-xl font-bold leading-tight text-red-600 sm:text-2xl">
               {typeof totalExpenses === "number"
-                ? `LKR ${totalExpenses.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(
+                    totalExpenses,
+                    currencySymbol,
+                    currencyPosition,
+                  )
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
           </div>
         </div>
@@ -149,11 +141,12 @@ const DailySalesCard = ({
               <p className="text-[11px] sm:text-xs text-gray-600 mb-1">Cash</p>
               <p className="text-sm font-semibold text-gray-900">
                 {paymentBreakdown?.cash
-                  ? `LKR ${paymentBreakdown.cash.toLocaleString("en-US", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}`
-                  : "LKR 0"}
+                  ? formatCurrency(
+                      paymentBreakdown.cash,
+                      currencySymbol,
+                      currencyPosition,
+                    )
+                  : formatCurrency(0, currencySymbol, currencyPosition)}
               </p>
             </div>
 
@@ -161,11 +154,12 @@ const DailySalesCard = ({
               <p className="text-[11px] sm:text-xs text-gray-600 mb-1">Card</p>
               <p className="text-sm font-semibold text-gray-900">
                 {paymentBreakdown?.card
-                  ? `LKR ${paymentBreakdown.card.toLocaleString("en-US", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}`
-                  : "LKR 0"}
+                  ? formatCurrency(
+                      paymentBreakdown.card,
+                      currencySymbol,
+                      currencyPosition,
+                    )
+                  : formatCurrency(0, currencySymbol, currencyPosition)}
               </p>
             </div>
 
@@ -175,11 +169,12 @@ const DailySalesCard = ({
               </p>
               <p className="text-sm font-semibold text-gray-900">
                 {paymentBreakdown?.credit
-                  ? `LKR ${paymentBreakdown.credit.toLocaleString("en-US", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}`
-                  : "LKR 0"}
+                  ? formatCurrency(
+                      paymentBreakdown.credit,
+                      currencySymbol,
+                      currencyPosition,
+                    )
+                  : formatCurrency(0, currencySymbol, currencyPosition)}
               </p>
             </div>
 
@@ -187,11 +182,12 @@ const DailySalesCard = ({
               <p className="text-[11px] sm:text-xs text-gray-600 mb-1">Bank</p>
               <p className="text-sm font-semibold text-gray-900">
                 {paymentBreakdown?.bank
-                  ? `LKR ${paymentBreakdown.bank.toLocaleString("en-US", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}`
-                  : "LKR 0"}
+                  ? formatCurrency(
+                      paymentBreakdown.bank,
+                      currencySymbol,
+                      currencyPosition,
+                    )
+                  : formatCurrency(0, currencySymbol, currencyPosition)}
               </p>
             </div>
           </div>
@@ -203,11 +199,12 @@ const DailySalesCard = ({
                 <p className="text-[11px] text-gray-600">Cash</p>
                 <p className="text-xs font-semibold text-gray-900">
                   {paymentBreakdown?.cash
-                    ? `LKR ${paymentBreakdown.cash.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}`
-                    : "LKR 0"}
+                    ? formatCurrency(
+                        paymentBreakdown.cash,
+                        currencySymbol,
+                        currencyPosition,
+                      )
+                    : formatCurrency(0, currencySymbol, currencyPosition)}
                 </p>
               </div>
             </div>
@@ -217,11 +214,12 @@ const DailySalesCard = ({
                 <p className="text-[11px] text-gray-600">Card</p>
                 <p className="text-xs font-semibold text-gray-900">
                   {paymentBreakdown?.card
-                    ? `LKR ${paymentBreakdown.card.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}`
-                    : "LKR 0"}
+                    ? formatCurrency(
+                        paymentBreakdown.card,
+                        currencySymbol,
+                        currencyPosition,
+                      )
+                    : formatCurrency(0, currencySymbol, currencyPosition)}
                 </p>
               </div>
             </div>
@@ -231,11 +229,12 @@ const DailySalesCard = ({
                 <p className="text-[11px] text-gray-600">Credit</p>
                 <p className="text-xs font-semibold text-gray-900">
                   {paymentBreakdown?.credit
-                    ? `LKR ${paymentBreakdown.credit.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}`
-                    : "LKR 0"}
+                    ? formatCurrency(
+                        paymentBreakdown.credit,
+                        currencySymbol,
+                        currencyPosition,
+                      )
+                    : formatCurrency(0, currencySymbol, currencyPosition)}
                 </p>
               </div>
             </div>
@@ -245,11 +244,12 @@ const DailySalesCard = ({
                 <p className="text-[11px] text-gray-600">Bank</p>
                 <p className="text-xs font-semibold text-gray-900">
                   {paymentBreakdown?.bank
-                    ? `LKR ${paymentBreakdown.bank.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}`
-                    : "LKR 0"}
+                    ? formatCurrency(
+                        paymentBreakdown.bank,
+                        currencySymbol,
+                        currencyPosition,
+                      )
+                    : formatCurrency(0, currencySymbol, currencyPosition)}
                 </p>
               </div>
             </div>

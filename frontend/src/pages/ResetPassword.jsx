@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from "react";
 import AppLoader from "../components/common/AppLoader";
 import { useNavigate, useLocation } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import regexValidations from "../utils/regexValidations";
+import { showSuccess, showError } from "../utils/toastHelper";
 
 export default function ResetPassword({ api }) {
   const location = useLocation();
@@ -53,10 +53,10 @@ export default function ResetPassword({ api }) {
           phone,
           password: form.password,
         });
-        toast.success("Password reset successful. Please log in.");
+        showSuccess("Password reset successful. Please log in.");
         setTimeout(() => navigate("/login"), 1000);
       } catch (err) {
-        toast.error(err?.response?.data?.message || "Failed to reset password");
+        showError(err?.response?.data?.message || "Failed to reset password");
       } finally {
         setSaving(false);
       }
@@ -72,8 +72,6 @@ export default function ResetPassword({ api }) {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background-primary">
-      <Toaster position="top-right" />
-
       {/* Ambient background (tokens only) */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-28 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary-subtle blur-3xl opacity-70 motion-safe:animate-pulse" />

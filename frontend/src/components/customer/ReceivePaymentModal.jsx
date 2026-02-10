@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import CloseButton from "../common/CloseButton";
+import { formatCurrency } from "../../utils/currency";
 
 const defaultForm = {
   amount: "",
@@ -8,7 +9,15 @@ const defaultForm = {
   note: "",
 };
 
-const ReceivePaymentModal = ({ open, customer, onClose, onSubmit, saving }) => {
+const ReceivePaymentModal = ({
+  open,
+  customer,
+  onClose,
+  onSubmit,
+  saving,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   const [form, setForm] = useState(defaultForm);
 
   useEffect(() => {
@@ -23,12 +32,12 @@ const ReceivePaymentModal = ({ open, customer, onClose, onSubmit, saving }) => {
     e.preventDefault();
     const amountNum = Number(form.amount);
     if (Number.isNaN(amountNum) || amountNum <= 0)
-      return toast.error("Please enter a valid amount.");
+      return showError("Please enter a valid amount");
     if (
       typeof customer.currentBalance === "number" &&
       amountNum > customer.currentBalance
     )
-      return toast.error("Payment cannot exceed outstanding balance.");
+      return showError("Payment cannot exceed outstanding balance");
 
     onSubmit({
       amount: amountNum,
@@ -39,20 +48,17 @@ const ReceivePaymentModal = ({ open, customer, onClose, onSubmit, saving }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-3">
+    <div className="fixed inset-0 bg-white/75 backdrop-blur-sm flex items-center justify-center z-50 px-3">
       <div className="bg-white rounded-2xl p-5 w-full max-w-md shadow-lg">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold text-gray-800">
             Receive Payment
           </h3>
-          <button
-            type="button"
+          <CloseButton
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 cursor-pointer"
-            aria-label="Close payment modal"
-          >
-            ✕
-          </button>
+            size="md"
+            ariaLabel="Close payment modal"
+          />
         </div>
 
         <form className="space-y-3" onSubmit={handleSubmit}>
@@ -67,7 +73,12 @@ const ReceivePaymentModal = ({ open, customer, onClose, onSubmit, saving }) => {
               disabled
             />
             <p className="text-[11px] text-gray-500 mt-1">
-              Outstanding: Rs. {Number(customer.currentBalance || 0).toFixed(2)}
+              Outstanding:{" "}
+              {formatCurrency(
+                Number(customer.currentBalance || 0),
+                currencySymbol,
+                currencyPosition,
+              )}
             </p>
           </div>
 

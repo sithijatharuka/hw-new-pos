@@ -3,12 +3,15 @@ import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
 import { getSettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const InvoicePrintA4 = () => {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [shop, setShop] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   useEffect(() => {
     const load = async () => {
@@ -20,6 +23,8 @@ const InvoicePrintA4 = () => {
         ]);
         setSale(saleData);
         setShop(settingsData);
+        setCurrencySymbol(settingsData.currencySymbol || "Rs.");
+        setCurrencyPosition(settingsData.currencyPosition || "before");
         setTimeout(() => {
           window.print();
         }, 300);
@@ -109,7 +114,12 @@ const InvoicePrintA4 = () => {
                 <td className="py-0.5 pr-1">
                   {line.description}
                   <span className="block text-[10px] text-gray-500">
-                    {line.unit} @ Rs. {line.unitPrice.toFixed(2)}
+                    {line.unit} @{" "}
+                    {formatCurrency(
+                      line.unitPrice,
+                      currencySymbol,
+                      currencyPosition,
+                    )}
                   </span>
                 </td>
                 <td className="py-0.5 text-right">
@@ -141,20 +151,32 @@ const InvoicePrintA4 = () => {
               <tr>
                 <td className="pr-4 py-0.5">Sub total</td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.subTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.subTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Discount</td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.discountTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.discountTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               {isTaxInvoice && (
                 <tr>
                   <td className="pr-4 py-0.5">VAT</td>
                   <td className="text-right py-0.5">
-                    Rs. {sale.taxTotal.toFixed(2)}
+                    {formatCurrency(
+                      sale.taxTotal,
+                      currencySymbol,
+                      currencyPosition,
+                    )}
                   </td>
                 </tr>
               )}
@@ -163,19 +185,27 @@ const InvoicePrintA4 = () => {
                   Net amount
                 </td>
                 <td className="text-right py-0.5 font-semibold border-t">
-                  Rs. {sale.grandTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.grandTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Paid</td>
                 <td className="text-right py-0.5">
-                  Rs. {paidAmount.toFixed(2)}
+                  {formatCurrency(paidAmount, currencySymbol, currencyPosition)}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Balance</td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.balanceDue.toFixed(2)}
+                  {formatCurrency(
+                    sale.balanceDue,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -187,7 +217,8 @@ const InvoicePrintA4 = () => {
           <p className="font-semibold">Payment method(s):</p>
           {sale.payments?.map((p, idx) => (
             <p key={idx}>
-              • {p.method.toUpperCase()} - Rs. {p.amount.toFixed(2)}
+              • {p.method.toUpperCase()} -{" "}
+              {formatCurrency(p.amount, currencySymbol, currencyPosition)}
               {p.reference ? ` (Ref: ${p.reference})` : ""}
             </p>
           ))}
@@ -209,7 +240,3 @@ const InvoicePrintA4 = () => {
 };
 
 export default InvoicePrintA4;
-
-
-
-

@@ -1,6 +1,7 @@
 import React from "react";
 import { EmptyState, ActionButton } from "../common";
 import EntityCardList from "../common/EntityCardList";
+import { formatCurrency } from "../../utils/currency";
 
 const CustomerMobileCard = ({
   customers,
@@ -10,6 +11,8 @@ const CustomerMobileCard = ({
   onDelete,
   onPayment,
   onAddNew,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const renderCard = (c) => {
     const creditLimit = Number(c.creditLimit || 0);
@@ -19,8 +22,8 @@ const CustomerMobileCard = ({
       ratio > 0.8
         ? "bg-red-500"
         : ratio > 0.5
-        ? "bg-yellow-500"
-        : "bg-green-500";
+          ? "bg-yellow-500"
+          : "bg-green-500";
 
     return (
       <div
@@ -52,15 +55,15 @@ const CustomerMobileCard = ({
                       c.type === "cash"
                         ? "bg-yellow-100 text-yellow-800"
                         : c.type === "credit"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-blue-100 text-blue-800"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-blue-100 text-blue-800"
                     }`}
                   >
                     {c.type === "cash"
                       ? "Cash Only"
                       : c.type === "credit"
-                      ? "Credit Only"
-                      : "Cash & Credit"}
+                        ? "Credit Only"
+                        : "Cash & Credit"}
                   </span>
                 </div>
                 {c.address && (
@@ -76,7 +79,11 @@ const CustomerMobileCard = ({
                     currentBalance > 0 ? "text-red-600" : "text-green-600"
                   }`}
                 >
-                  Rs. {currentBalance.toFixed(2)}
+                  {formatCurrency(
+                    currentBalance,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </p>
               </div>
             </div>
@@ -101,7 +108,7 @@ const CustomerMobileCard = ({
           <div className="flex justify-between text-xs">
             <span className="text-gray-600">Credit Limit</span>
             <span className="font-medium text-gray-900">
-              Rs. {creditLimit.toFixed(2)}
+              {formatCurrency(creditLimit, currencySymbol, currencyPosition)}
             </span>
           </div>
           {creditLimit > 0 && (

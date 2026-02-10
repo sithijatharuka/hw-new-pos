@@ -1,11 +1,11 @@
 import React from "react";
+import { formatCurrency } from "../../../utils/currency";
 
-const formatMoney = (value) => {
-  const n = Number(value) || 0;
-  return `Rs. ${n.toFixed(2)}`;
-};
-
-const GRNDetailsLineItemsTable = ({ lines }) => {
+const GRNDetailsLineItemsTable = ({
+  lines,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   const calcLineTotal = (line) => {
     const qty = Number(line.qty) || 0;
     const cost = Number(line.unitCost) || 0;
@@ -141,7 +141,11 @@ const GRNDetailsLineItemsTable = ({ lines }) => {
                         color: "#666",
                       }}
                     >
-                      {formatMoney(line.unitCost)}
+                      {formatCurrency(
+                        line.unitCost,
+                        currencySymbol,
+                        currencyPosition,
+                      )}
                     </td>
                     <td
                       style={{
@@ -151,7 +155,11 @@ const GRNDetailsLineItemsTable = ({ lines }) => {
                         fontWeight: "600",
                       }}
                     >
-                      {formatMoney(calcLineTotal(line))}
+                      {formatCurrency(
+                        calcLineTotal(line),
+                        currencySymbol,
+                        currencyPosition,
+                      )}
                     </td>
                   </tr>
                 );

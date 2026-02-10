@@ -2,18 +2,29 @@ import React, { useEffect, useState } from "react";
 import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import { getSale } from "../api/sales/sales";
+import { getSettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const InvoicePrintPage = () => {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [shop, setShop] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getSale(id);
-        setSale(data);
+        const [saleData, settingsData] = await Promise.all([
+          getSale(id),
+          getSettings(),
+        ]);
+        setSale(saleData);
+        setShop(settingsData);
+        setCurrencySymbol(settingsData.currencySymbol || "Rs.");
+        setCurrencyPosition(settingsData.currencyPosition || "before");
         setTimeout(() => {
           window.print();
         }, 300);
@@ -47,15 +58,18 @@ const InvoicePrintPage = () => {
         {/* Header */}
         <div className="border-b pb-2 mb-2 text-center">
           <h1 className="text-lg font-semibold text-primary">
-            Your Hardware Shop Name
+            {shop?.shopName || "Your Hardware Shop Name"}
           </h1>
           <p className="text-[11px]">
-            No. 123, Main Street, Colombo 10, Sri Lanka
+            {shop?.shopAddress || "No. 123, Main Street, Colombo 10, Sri Lanka"}
           </p>
           <p className="text-[11px]">
-            Tel: 011-2345678 | WhatsApp: 07X-XXXXXXX
+            Tel: {shop?.shopPhone || "011-2345678"}
+            {shop?.shopWhatsapp ? ` | WhatsApp: ${shop.shopWhatsapp}` : ""}
           </p>
-          <p className="text-[11px]">VAT Reg No: 123456789-7000</p>
+          <p className="text-[11px]">
+            VAT Reg No: {shop?.vatRegNo || "123456789-7000"}
+          </p>
         </div>
 
         <div className="flex justify-between items-start mb-2">
@@ -107,7 +121,8 @@ const InvoicePrintPage = () => {
                   <td className="py-0.5 pr-1">
                     {line.description}
                     <span className="block text-[10px] text-gray-500">
-                      {line.unit} @ Rs. {rate.toFixed(2)}
+                      {line.unit} @{" "}
+                      {formatCurrency(rate, currencySymbol, currencyPosition)}
                     </span>
                   </td>
                   <td className="py-0.5 text-right">
@@ -142,20 +157,32 @@ const InvoicePrintPage = () => {
                   Sub total (after line discounts, before VAT)
                 </td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.subTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.subTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Bill discount</td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.discountTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.discountTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               {isTaxInvoice && (
                 <tr>
                   <td className="pr-4 py-0.5">VAT</td>
                   <td className="text-right py-0.5">
-                    Rs. {sale.taxTotal.toFixed(2)}
+                    {formatCurrency(
+                      sale.taxTotal,
+                      currencySymbol,
+                      currencyPosition,
+                    )}
                   </td>
                 </tr>
               )}
@@ -164,19 +191,27 @@ const InvoicePrintPage = () => {
                   Net amount
                 </td>
                 <td className="text-right py-0.5 font-semibold border-t">
-                  Rs. {sale.grandTotal.toFixed(2)}
+                  {formatCurrency(
+                    sale.grandTotal,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Paid</td>
                 <td className="text-right py-0.5">
-                  Rs. {paidAmount.toFixed(2)}
+                  {formatCurrency(paidAmount, currencySymbol, currencyPosition)}
                 </td>
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Balance</td>
                 <td className="text-right py-0.5">
-                  Rs. {sale.balanceDue.toFixed(2)}
+                  {formatCurrency(
+                    sale.balanceDue,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -188,7 +223,8 @@ const InvoicePrintPage = () => {
           <p className="font-semibold">Payment method(s):</p>
           {sale.payments?.map((p, idx) => (
             <p key={idx}>
-              • {p.method.toUpperCase()} - Rs. {p.amount.toFixed(2)}
+              • {p.method.toUpperCase()} -{" "}
+              {formatCurrency(p.amount, currencySymbol, currencyPosition)}
               {p.reference ? ` (Ref: ${p.reference})` : ""}
             </p>
           ))}
@@ -210,7 +246,3 @@ const InvoicePrintPage = () => {
 };
 
 export default InvoicePrintPage;
-
-
-
-

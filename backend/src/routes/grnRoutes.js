@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import {
   createGRN,
   getSupplierGRNs,
@@ -14,23 +14,28 @@ import {
 const router = express.Router();
 
 // Create DRAFT GRN
-router.post("/", protect, createGRN);
+router.post("/", protect, requireFeature("purchases"), createGRN);
 
 // List all GRNs
-router.get("/", protect, getAllGRNs);
+router.get("/", protect, requireFeature("purchases"), getAllGRNs);
 
 // Supplier GRNs (must be before "/:id")
-router.get("/supplier/:supplierId", protect, getSupplierGRNs);
+router.get(
+  "/supplier/:supplierId",
+  protect,
+  requireFeature("purchases"),
+  getSupplierGRNs,
+);
 
 // Post / Cancel (locking actions)
-router.post("/:id/post", protect, postGRN);
-router.post("/:id/cancel", protect, cancelGRN);
+router.post("/:id/post", protect, requireFeature("purchases"), postGRN);
+router.post("/:id/cancel", protect, requireFeature("purchases"), cancelGRN);
 
 // Single GRN
-router.get("/:id", protect, getGRN);
+router.get("/:id", protect, requireFeature("purchases"), getGRN);
 
 // Update/Delete only draft
-router.put("/:id", protect, updateGRN);
-router.delete("/:id", protect, deleteGRN);
+router.put("/:id", protect, requireFeature("purchases"), updateGRN);
+router.delete("/:id", protect, requireFeature("purchases"), deleteGRN);
 
 export default router;

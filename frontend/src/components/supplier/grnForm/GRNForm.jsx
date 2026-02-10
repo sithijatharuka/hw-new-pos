@@ -1,7 +1,5 @@
 // GRNForm.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import toast from "react-hot-toast";
 import { createGRN, updateGRN } from "../../../api/supplier/grn";
 import AddNewItem from "../../inventory/product/addProduct/AddNewItem";
 import GRNFormHeader from "./GRNFormHeader";
@@ -10,6 +8,12 @@ import GRNLineItemsTable from "./GRNLineItemsTable";
 import GRNTotalsSection from "./GRNTotalsSection";
 import GRNRemarksSection from "./GRNRemarksSection";
 import GRNFormActions from "./GRNFormActions";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../../../utils/toastHelper";
 
 /**
  * New workflow assumptions:
@@ -18,6 +22,7 @@ import GRNFormActions from "./GRNFormActions";
  * - For batch-tracked items, GRN creates/updates batches; item endpoints never mutate batches.
  */
 function GRNForm({
+  api,
   supplier,
   items = [],
   existingGRN = null,
@@ -27,8 +32,10 @@ function GRNForm({
   hideActions = false,
   formId = "grn-form",
   onSavingChange = null,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 
-  // ✅ parent refresh hook: fetch items list again after adding a new item
+  // parent refresh hook: fetch items list again after adding a new item
   onItemsRefresh, // async () => { ...fetch items... }
 
   // lookups for product modal
@@ -36,20 +43,25 @@ function GRNForm({
   categories = [],
   baseUnits = [],
 }) {
+  const emptyLine = useMemo(
+    () => ({ item: "", batchNumber: "", qty: "", unitCost: "" }),
+    [],
+  );
+
   const [form, setForm] = useState({
     grnDate: new Date().toISOString().substring(0, 10),
     remarks: "",
-    lines: [{ item: "", batchNumber: "", qty: "", unitCost: "" }],
+    lines: [emptyLine],
   });
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+
   const isEditable = !existingGRN || existingGRN.status === "draft";
   const fieldsDisabled = saving || !isEditable;
 
   // Add Product modal state
   const [showAddItem, setShowAddItem] = useState(false);
-  const [activeLineIndex, setActiveLineIndex] = useState(null);
 
   // Build item map
   const itemById = useMemo(() => {
@@ -73,16 +85,9 @@ function GRNForm({
             qty: l.qty ?? "",
             unitCost: l.unitCost === 0 || l.unitCost ? String(l.unitCost) : "",
           }))
-        : [
-            {
-              item: "",
-              batchNumber: "",
-              qty: "",
-              unitCost: "",
-            },
-          ],
+        : [emptyLine],
     });
-  }, [existingGRN]);
+  }, [existingGRN, emptyLine]);
 
   const clearError = (key) => {
     if (!errors[key]) return;
@@ -121,17 +126,14 @@ function GRNForm({
   const addLine = () => {
     setForm((prev) => ({
       ...prev,
-      lines: [
-        ...prev.lines,
-        { item: "", batchNumber: "", qty: "", unitCost: "" },
-      ],
+      lines: [...prev.lines, { ...emptyLine }],
     }));
   };
 
   const removeLine = (index) => {
     setForm((prev) => {
       const next = prev.lines.filter((_, i) => i !== index);
-      return { ...prev, lines: next.length ? next : prev.lines };
+      return { ...prev, lines: next.length ? next : [{ ...emptyLine }] };
     });
   };
 
@@ -164,29 +166,37 @@ function GRNForm({
     form.lines.forEach((line, idx) => {
       const it = line.item ? itemById.get(String(line.item)) : null;
 
-      // ✅ do not allow selecting inactive items
-      if (it && it.isActive === false)
+      // do not allow selecting inactive items
+      if (it && it.isActive === false) {
         newErrors[`line_${idx}_item`] = "This item is inactive";
+      }
 
       const isBatchTracked = Boolean(it?.isBatchTracked);
 
       if (!line.item) newErrors[`line_${idx}_item`] = "Item is required";
-      if (!line.qty || Number(line.qty) <= 0)
+
+      if (!line.qty || Number(line.qty) <= 0) {
         newErrors[`line_${idx}_qty`] = "Qty must be > 0";
+      }
 
       if (
         line.unitCost === "" ||
         line.unitCost === null ||
         line.unitCost === undefined
-      )
+      ) {
         newErrors[`line_${idx}_unitCost`] = "Unit Cost is required";
-      if (Number.isNaN(Number(line.unitCost)) || Number(line.unitCost) < 0)
+      } else if (
+        Number.isNaN(Number(line.unitCost)) ||
+        Number(line.unitCost) < 0
+      ) {
         newErrors[`line_${idx}_unitCost`] = "Unit Cost must be >= 0";
+      }
 
-      // ✅ batch fields required only for batch-tracked
+      // batch required only for batch-tracked
       if (isBatchTracked) {
-        if (!line.batchNumber?.trim())
+        if (!line.batchNumber?.trim()) {
           newErrors[`line_${idx}_batchNumber`] = "Batch number is required";
+        }
       }
     });
 
@@ -194,26 +204,25 @@ function GRNForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const openAddProductForLine = (idx) => {
-    setActiveLineIndex(idx);
+  const openAddProductForLine = () => {
     setShowAddItem(true);
   };
 
   const onItemCreatedFromModal = async () => {
     if (onItemsRefresh) await onItemsRefresh();
-    // Optional auto-select: if your AddNewItem can return created item, set it here.
+    // Optional: if AddNewItem returns created item, you can auto-select it here.
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isEditable && existingGRN) {
-      toast.error("Posted GRNs cannot be edited");
+      showError("Posted GRNs cannot be edited");
       return;
     }
 
     if (!validateForm()) {
-      toast.error("Please fix validation errors");
+      showError(errorMessages.validation);
       return;
     }
 
@@ -238,17 +247,17 @@ function GRNForm({
 
       let saved;
       if (existingGRN) {
-        saved = await updateGRN(existingGRN._id, payload);
-        toast.success("GRN updated successfully");
+        saved = await updateGRN(api, existingGRN._id, payload);
+        showSuccess(successMessages.update("GRN"));
       } else {
-        saved = await createGRN(payload);
-        toast.success("GRN created successfully");
+        saved = await createGRN(api, payload);
+        showSuccess(successMessages.create("GRN"));
       }
 
       onSuccess && onSuccess(saved);
       onClose && onClose();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to save GRN");
+      showError(err?.response?.data?.message || errorMessages.save("GRN"));
     } finally {
       setSaving(false);
       onSavingChange && onSavingChange(false);
@@ -281,13 +290,19 @@ function GRNForm({
           isEditable={isEditable}
           itemById={itemById}
           lineTotal={lineTotal}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
           onLineChange={handleLineChange}
           onAddProduct={openAddProductForLine}
           onRemoveLine={removeLine}
           onAddLine={addLine}
         />
 
-        <GRNTotalsSection totals={totals} />
+        <GRNTotalsSection
+          totals={totals}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
+        />
 
         <GRNRemarksSection form={form} onHeaderChange={handleHeaderChange} />
 
@@ -302,20 +317,19 @@ function GRNForm({
         )}
       </form>
 
-      {/* ✅ Add Product Modal (master-only; no stock fields) */}
+      {/* Add Product Modal (master-only; no stock fields) */}
       <AddNewItem
+        api={api}
         open={showAddItem}
         onClose={() => setShowAddItem(false)}
         onSuccess={async () => {
           await onItemCreatedFromModal();
           setShowAddItem(false);
-          setActiveLineIndex(null);
         }}
         item={null}
         suppliers={suppliers}
         categories={categories}
         baseUnits={baseUnits}
-        // IMPORTANT: AddNewItem should respect mode and hide/ignore inventory/batches/openingStock
         mode="master-only"
         defaultSupplierId={supplier?._id}
       />

@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
 const CustomerTableRow = ({
   customer,
@@ -6,6 +7,8 @@ const CustomerTableRow = ({
   onEdit,
   onDelete,
   onPayment,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const c = customer;
   const creditLimit = Number(c.creditLimit || 0);
@@ -14,7 +17,7 @@ const CustomerTableRow = ({
 
   return (
     <tr
-      className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
+      className="transition-colors cursor-pointer hover:bg-gray-50/50 group"
       onClick={() => onDetails(c)}
     >
       {/* Customer Details */}
@@ -30,7 +33,7 @@ const CustomerTableRow = ({
             <span className="text-lg">{currentBalance > 0 ? "💳" : "✅"}</span>
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-gray-900 flex items-center gap-2">
+            <div className="flex items-center gap-2 font-semibold text-gray-900">
               <span className="truncate max-w-[160px] sm:max-w-xs md:max-w-none">
                 {c.name}
               </span>
@@ -39,19 +42,19 @@ const CustomerTableRow = ({
                   c.type === "cash"
                     ? "bg-yellow-100 text-yellow-800"
                     : c.type === "credit"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-blue-100 text-blue-800"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-blue-100 text-blue-800"
                 }`}
               >
                 {c.type === "cash"
                   ? "Cash Only"
                   : c.type === "credit"
-                  ? "Credit Only"
-                  : "Cash & Credit"}
+                    ? "Credit Only"
+                    : "Cash & Credit"}
               </span>
             </div>
             {c.address && (
-              <p className="text-sm text-gray-500 mt-1 max-w-xs truncate">
+              <p className="max-w-xs mt-1 text-sm text-gray-500 truncate">
                 📍 {c.address}
               </p>
             )}
@@ -78,7 +81,7 @@ const CustomerTableRow = ({
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm text-gray-600">Credit Limit:</span>
             <span className="font-medium text-gray-900">
-              Rs. {creditLimit.toFixed(2)}
+              {formatCurrency(creditLimit, currencySymbol, currencyPosition)}
             </span>
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -88,18 +91,18 @@ const CustomerTableRow = ({
                 currentBalance > 0 ? "text-red-600" : "text-green-600"
               }`}
             >
-              Rs. {currentBalance.toFixed(2)}
+              {formatCurrency(currentBalance, currencySymbol, currencyPosition)}
             </span>
           </div>
           {creditLimit > 0 && (
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full h-2 bg-gray-200 rounded-full">
               <div
                 className={`h-2 rounded-full ${
                   ratio > 0.8
                     ? "bg-red-500"
                     : ratio > 0.5
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
                 }`}
                 style={{
                   width: `${Math.min(ratio * 100, 100)}%`,
@@ -112,14 +115,14 @@ const CustomerTableRow = ({
 
       {/* Actions */}
       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           {currentBalance > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onPayment(c);
               }}
-              className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-md active:scale-95 transition-all duration-200 font-medium cursor-pointer"
+              className="px-4 py-2 font-medium text-white transition-all duration-200 rounded-lg cursor-pointer bg-gradient-to-r from-green-500 to-green-600 hover:shadow-md active:scale-95"
             >
               💳 Pay
             </button>
@@ -129,16 +132,16 @@ const CustomerTableRow = ({
               e.stopPropagation();
               onEdit(c);
             }}
-            className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg hover:shadow-md active:scale-95 transition-all duration-200 font-medium cursor-pointer"
+            className="px-4 py-2 font-medium text-blue-700 transition-all duration-200 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 hover:shadow-md active:scale-95"
           >
-            ✏️ Edit
+            ✏️
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(c);
             }}
-            className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg hover:shadow-md active:scale-95 transition-all duration-200 font-medium cursor-pointer"
+            className="px-4 py-2 font-medium text-red-600 transition-all duration-200 bg-red-100 rounded-lg cursor-pointer hover:bg-red-200 hover:shadow-md active:scale-95"
             title="Delete customer"
           >
             🗑️

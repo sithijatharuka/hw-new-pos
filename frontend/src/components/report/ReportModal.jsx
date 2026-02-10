@@ -1,4 +1,6 @@
 import React from "react";
+import CloseButton from "../common/CloseButton";
+import { formatCurrency } from "../../utils/currency";
 
 const ReportModal = ({
   activeModal,
@@ -10,6 +12,8 @@ const ReportModal = ({
   onExportCSV,
   onExportPDF,
   reportData,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   if (!activeModal) return null;
 
@@ -93,13 +97,21 @@ const ReportModal = ({
                 </div>
               </td>
               <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
-                LKR {sale.totalAmount.toFixed(2)}
+                {formatCurrency(
+                  sale.totalAmount,
+                  currencySymbol,
+                  currencyPosition,
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-right text-gray-600">
-                LKR {sale.vatAmount.toFixed(2)}
+                {formatCurrency(
+                  sale.vatAmount,
+                  currencySymbol,
+                  currencyPosition,
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-right font-medium text-green-600">
-                LKR {sale.profit.toFixed(2)}
+                {formatCurrency(sale.profit, currencySymbol, currencyPosition)}
               </td>
             </tr>
           ))}
@@ -148,7 +160,11 @@ const ReportModal = ({
                 {expense.createdBy?.username || "N/A"}
               </td>
               <td className="px-4 py-3 text-sm text-right font-medium text-red-600">
-                LKR {expense.amount.toFixed(2)}
+                {formatCurrency(
+                  expense.amount,
+                  currencySymbol,
+                  currencyPosition,
+                )}
               </td>
             </tr>
           ))}
@@ -164,13 +180,21 @@ const ReportModal = ({
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-gray-600">Gross Profit</p>
           <p className="text-2xl font-bold text-green-700">
-            LKR {reportData.grossProfit.toFixed(2)}
+            {formatCurrency(
+              reportData.grossProfit,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-gray-600">Total Expenses</p>
           <p className="text-2xl font-bold text-red-700">
-            LKR {reportData.totalExpenses.toFixed(2)}
+            {formatCurrency(
+              reportData.totalExpenses,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
         <div
@@ -186,7 +210,11 @@ const ReportModal = ({
               reportData.netProfit >= 0 ? "text-emerald-700" : "text-red-700"
             }`}
           >
-            LKR {reportData.netProfit.toFixed(2)}
+            {formatCurrency(
+              reportData.netProfit,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
       </div>
@@ -198,26 +226,43 @@ const ReportModal = ({
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="text-gray-600">Total Sales</span>
             <span className="font-medium">
-              LKR {reportData.totalSales.toFixed(2)}
+              {formatCurrency(
+                reportData.totalSales,
+                currencySymbol,
+                currencyPosition,
+              )}
             </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="text-gray-600">Cost of Goods Sold (COGS)</span>
             <span className="font-medium text-red-600">
-              - LKR{" "}
-              {(reportData.totalSales - reportData.grossProfit).toFixed(2)}
+              -{" "}
+              {formatCurrency(
+                reportData.totalSales - reportData.grossProfit,
+                currencySymbol,
+                currencyPosition,
+              )}
             </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-300 font-semibold">
             <span className="text-gray-700">Gross Profit</span>
             <span className="text-green-600">
-              LKR {reportData.grossProfit.toFixed(2)}
+              {formatCurrency(
+                reportData.grossProfit,
+                currencySymbol,
+                currencyPosition,
+              )}
             </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="text-gray-600">Operating Expenses</span>
             <span className="font-medium text-red-600">
-              - LKR {reportData.totalExpenses.toFixed(2)}
+              -{" "}
+              {formatCurrency(
+                reportData.totalExpenses,
+                currencySymbol,
+                currencyPosition,
+              )}
             </span>
           </div>
           <div className="flex justify-between py-3 bg-white rounded px-2 font-bold text-base">
@@ -233,7 +278,11 @@ const ReportModal = ({
                 reportData.netProfit >= 0 ? "text-emerald-700" : "text-red-700"
               }
             >
-              LKR {reportData.netProfit.toFixed(2)}
+              {formatCurrency(
+                reportData.netProfit,
+                currencySymbol,
+                currencyPosition,
+              )}
             </span>
           </div>
         </div>
@@ -291,7 +340,7 @@ const ReportModal = ({
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
         <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          className="fixed inset-0 transition-opacity bg-white/75 backdrop-blur-sm"
           onClick={onClose}
         ></div>
 
@@ -303,24 +352,13 @@ const ReportModal = ({
               <h3 className="text-xl font-semibold text-white">
                 {getModalTitle()}
               </h3>
-              <button
+              <CloseButton
                 onClick={onClose}
-                className="text-white hover:text-gray-200 transition-colors"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                variant="subtle"
+                size="md"
+                ariaLabel="Close modal"
+                className="text-white hover:text-gray-200"
+              />
             </div>
           </div>
 

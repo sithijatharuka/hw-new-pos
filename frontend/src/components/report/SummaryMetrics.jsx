@@ -1,6 +1,12 @@
 import React from "react";
+import { formatCurrency } from "../../utils/currency";
 
-const SummaryMetrics = ({ reportData, onCardClick }) => {
+const SummaryMetrics = ({
+  reportData,
+  onCardClick,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   return (
     <div className="p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
       <h2 className="mb-5 text-lg font-semibold text-gray-900 sm:text-xl">
@@ -30,11 +36,11 @@ const SummaryMetrics = ({ reportData, onCardClick }) => {
             </svg>
           </div>
           <p className="mt-2 text-2xl font-bold text-blue-700 sm:text-3xl">
-            LKR{" "}
-            {reportData.totalSales.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatCurrency(
+              reportData.totalSales,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
           <p className="text-xs text-blue-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             Click for details →
@@ -53,11 +59,11 @@ const SummaryMetrics = ({ reportData, onCardClick }) => {
         <div className="p-5 border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
           <p className="text-sm font-medium text-gray-700">VAT Collected</p>
           <p className="mt-2 text-2xl font-bold text-orange-700 sm:text-3xl">
-            LKR{" "}
-            {reportData.totalVAT.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatCurrency(
+              reportData.totalVAT,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
 
@@ -65,11 +71,11 @@ const SummaryMetrics = ({ reportData, onCardClick }) => {
         <div className="p-5 border border-green-200 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
           <p className="text-sm font-medium text-gray-700">Gross Profit</p>
           <p className="mt-2 text-2xl font-bold text-green-700 sm:text-3xl">
-            LKR{" "}
-            {reportData.grossProfit.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatCurrency(
+              reportData.grossProfit,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
 
@@ -95,11 +101,11 @@ const SummaryMetrics = ({ reportData, onCardClick }) => {
             </svg>
           </div>
           <p className="mt-2 text-2xl font-bold text-red-700 sm:text-3xl">
-            LKR{" "}
-            {reportData.totalExpenses.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatCurrency(
+              reportData.totalExpenses,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
           <p className="text-xs text-red-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             Click for details →
@@ -138,11 +144,11 @@ const SummaryMetrics = ({ reportData, onCardClick }) => {
               reportData.netProfit >= 0 ? "text-emerald-700" : "text-red-700"
             }`}
           >
-            LKR{" "}
-            {reportData.netProfit.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatCurrency(
+              reportData.netProfit,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
           <p
             className={`text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${

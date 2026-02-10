@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import GRNForm from "../GRNForm";
 import GRNFormHeader from "../GRNFormHeader";
 import GRNFormActions from "../GRNFormActions";
-
+import CloseButton from "../../../common/CloseButton";
+import { colors } from "../../../../themes/colors";
 const GRNFormModal = ({
   open,
   supplier,
@@ -16,6 +17,8 @@ const GRNFormModal = ({
   categories,
   baseUnits,
   api,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   if (!open || !supplier) return null;
 
@@ -38,7 +41,11 @@ const GRNFormModal = ({
 
           <motion.div
             key="grn-modal-panel"
-            className="relative w-full max-w-4xl overflow-hidden border border-gray-200 rounded-3xl bg-background-secondary shadow-float"
+            className="relative w-full max-w-4xl overflow-hidden rounded-3xl shadow-float"
+            style={{
+              background: colors.background.secondary,
+              border: `1px solid ${colors.border.light}`,
+            }}
             initial={{ opacity: 0, y: 18, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.99 }}
@@ -64,17 +71,12 @@ const GRNFormModal = ({
                 </div>
 
                 <div className="flex-none">
-                  <motion.button
-                    type="button"
+                  <CloseButton
                     onClick={onClose}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="inline-flex items-center justify-center w-10 h-10 mb-20 transition border border-gray-200 cursor-pointer sm:mb-20 lg:mb-12 group rounded-2xl bg-background-secondary text-text-tertiary shadow-soft hover:bg-background-subtle hover:text-text-primary hover:shadow-card focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25"
-                    aria-label="Close modal"
-                    title="Close"
-                  >
-                    <span className="text-lg leading-none">✕</span>
-                  </motion.button>
+                    size="md"
+                    isAnimated={true}
+                    ariaLabel="Close modal"
+                  />
                 </div>
               </div>
             </div>
@@ -85,9 +87,12 @@ const GRNFormModal = ({
               <div className="rounded-2xl bg-background-secondary shadow-soft">
                 <div className="p-2 -mt-3 sm:p-3 md:p-4">
                   <GRNForm
+                    api={api}
                     supplier={supplier}
                     items={items}
                     existingGRN={existingGRN}
+                    currencySymbol={currencySymbol}
+                    currencyPosition={currencyPosition}
                     onSuccess={onSuccess}
                     onClose={onClose}
                     onItemsRefresh={onItemsRefresh}

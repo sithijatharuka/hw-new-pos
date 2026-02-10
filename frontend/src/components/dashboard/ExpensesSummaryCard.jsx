@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoader from "../common/AppLoader";
+import { formatCurrency } from "../../utils/currency";
 
 /**
  * Expenses Summary Card Component
@@ -10,6 +11,8 @@ const ExpensesSummaryCard = ({
   expenseCount = 0,
   categoryBreakdown = [],
   loading = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
@@ -45,13 +48,13 @@ const ExpensesSummaryCard = ({
                   Total Expenses
                 </p>
                 <p className="mt-1 text-2xl font-bold text-orange-600 sm:text-3xl">
-                  LKR{" "}
                   {typeof totalExpenses === "number"
-                    ? totalExpenses.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : "0.00"}
+                    ? formatCurrency(
+                        totalExpenses,
+                        currencySymbol,
+                        currencyPosition,
+                      )
+                    : formatCurrency(0, currencySymbol, currencyPosition)}
                 </p>
               </div>
               <div className="text-right">
@@ -118,7 +121,13 @@ const ExpensesSummaryCard = ({
                         {/* Amount */}
                         <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 flex justify-between sm:justify-start sm:gap-2">
                           <span className="hidden sm:inline">Amount:</span>
-                          <span>LKR {item.amount.toLocaleString("en-US")}</span>
+                          <span>
+                            {formatCurrency(
+                              item.amount,
+                              currencySymbol,
+                              currencyPosition,
+                            )}
+                          </span>
                         </p>
                       </div>
                     </div>

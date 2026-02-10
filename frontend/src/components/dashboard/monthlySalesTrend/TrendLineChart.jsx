@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from "../../../utils/currency";
 
 const TrendLineChart = ({
   data,
@@ -9,6 +10,8 @@ const TrendLineChart = ({
   color = "#2563eb",
   height = 220,
   range = "7d",
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const paddingLeft = 50;
   const paddingRight = 20;
@@ -55,7 +58,7 @@ const TrendLineChart = ({
   // Format value for tooltip
   const formatValue = (value) => {
     if (valueKey === "totalSales") {
-      return `LKR ${value.toLocaleString("en-US")}`;
+      return formatCurrency(value, currencySymbol, currencyPosition);
     }
     return `${value} invoices`;
   };

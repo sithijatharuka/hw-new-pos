@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useCallback } from "react";
 import AppLoader from "../components/common/AppLoader";
 import { useNavigate, Link } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { createOwner } from "../api/users/users";
 import regexValidations from "../utils/regexValidations";
+import { showSuccess, showError } from "../utils/toastHelper";
 
 const OwnerSignupPage = ({ api }) => {
   const [form, setForm] = useState({
@@ -152,10 +152,10 @@ const OwnerSignupPage = ({ api }) => {
         password: form.password,
       });
 
-      toast.success("Owner account created. Please log in.");
+      showSuccess("Owner account created. Please log in.");
       setTimeout(() => navigate("/login"), 800);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to create owner");
+      showError(err?.response?.data?.message || "Failed to create owner");
     } finally {
       setSaving(false);
     }
@@ -181,8 +181,6 @@ const OwnerSignupPage = ({ api }) => {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background-primary">
-      <Toaster position="top-right" />
-
       {/* Ambient background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-28 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary-subtle blur-3xl opacity-70 motion-safe:animate-pulse" />

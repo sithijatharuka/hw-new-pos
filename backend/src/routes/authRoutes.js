@@ -6,7 +6,17 @@ import dotenv from "dotenv";
 
 import { User } from "../models/User.js";
 import { RefreshToken } from "../models/RefreshToken.js";
-import { toE164FromAny } from "../utils/phone.js"; // ✅ adjust path if needed
+import { toE164FromAny } from "../utils/phone.js";
+import {
+  authLimiter,
+  signupLimiter,
+} from "../middleware/rateLimitMiddleware.js";
+import logger from "../utils/logger.js";
+import {
+  validateLogin,
+  validateOwnerSignup,
+  handleValidationErrors,
+} from "../middleware/validationMiddleware.js";
 
 dotenv.config();
 
@@ -64,51 +74,62 @@ const generateRefreshToken = async (user) => {
 };
 
 // ✅ login: access token in JSON + refresh token in HttpOnly cookie
-router.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body || {};
-    if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "username and password required" });
+router.post(
+  "/login",
+  authLimiter,
+  validateLogin,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { username, password } = req.body || {};
+      if (!username || !password) {
+        return res
+          .status(400)
+          .json({ message: "username and password required" });
+      }
+
+      const isProd = process.env.NODE_ENV === "production";
+
+      const user = await User.findOne({ username }).select("+password");
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: "Invalid username or password" });
+      }
+
+      const ok = await user.matchPassword(password);
+      if (!ok) {
+        return res
+          .status(401)
+          .json({ message: "Invalid username or password" });
+      }
+
+      const accessToken = generateAccessToken(user);
+      const refreshToken = await generateRefreshToken(user);
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? "strict" : "lax",
+        maxAge: ms(REFRESH_TOKEN_EXPIRES_IN) || 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+
+      return res.json({
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+        tenantId: user.tenantId,
+        permissions: user.permissions,
+        accessToken,
+      });
+    } catch (err) {
+      logger.error("[login] error:", { error: err.message });
+      return res.status(500).json({ message: "Login failed" });
     }
-
-    const isProd = process.env.NODE_ENV === "production";
-
-    const user = await User.findOne({ username }).select("+password");
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const ok = await user.matchPassword(password);
-    if (!ok) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const accessToken = generateAccessToken(user);
-    const refreshToken = await generateRefreshToken(user);
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
-      maxAge: ms(REFRESH_TOKEN_EXPIRES_IN) || 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
-
-    return res.json({
-      _id: user._id,
-      name: user.name,
-      username: user.username,
-      role: user.role,
-      tenantId: user.tenantId,
-      accessToken,
-    });
-  } catch (err) {
-    console.error("[login] error:", err);
-    return res.status(500).json({ message: "Login failed" });
-  }
-});
+  },
+);
 
 // ✅ refresh token endpoint (cookie-based, rotates refresh tokens)
 router.post("/refresh-token", async (req, res) => {
@@ -183,6 +204,7 @@ router.post("/refresh-token", async (req, res) => {
         username: user.username,
         role: user.role,
         tenantId: user.tenantId,
+        permissions: user.permissions,
       },
     });
   } catch (err) {

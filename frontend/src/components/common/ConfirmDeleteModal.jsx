@@ -13,9 +13,8 @@ export default function ConfirmDeleteModal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      <div className="absolute inset-0 bg-white/75 backdrop-blur-sm" />
-      <div className="relative z-10 flex flex-col items-center w-full max-w-md p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/75 backdrop-blur-sm">
+      <div className="relative flex flex-col items-center w-full max-w-md p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
         <h3 className="mb-2 text-lg font-bold text-red-600">{title}</h3>
         <p className="mb-4 text-sm text-center text-gray-700">{message}</p>
 

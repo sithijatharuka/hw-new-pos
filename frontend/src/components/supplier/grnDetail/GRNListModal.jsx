@@ -1,5 +1,7 @@
 import React from "react";
 import AppLoader from "../../common/AppLoader";
+import CloseButton from "../../common/CloseButton";
+import { formatCurrency } from "../../../utils/currency";
 
 const GRNListModal = ({
   open,
@@ -8,6 +10,8 @@ const GRNListModal = ({
   loading,
   onClose,
   onSelectGRN,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   if (!open || !supplier) return null;
 
@@ -34,12 +38,11 @@ const GRNListModal = ({
                 {grnsList.length} Goods Received Notes
               </p>
             </div>
-            <button
+            <CloseButton
               onClick={onClose}
-              className="flex items-center justify-center w-10 h-10 text-gray-500 rounded-xl hover:bg-gray-100"
-            >
-              ✕
-            </button>
+              size="md"
+              ariaLabel="Close GRN list"
+            />
           </div>
         </div>
 
@@ -92,7 +95,11 @@ const GRNListModal = ({
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-primary">
-                              Rs. {Number(grn.grandTotal || 0).toFixed(2)}
+                              {formatCurrency(
+                                Number(grn.grandTotal || 0),
+                                currencySymbol,
+                                currencyPosition,
+                              )}
                             </div>
                             <div className="mt-1 text-sm text-gray-500">
                               {grn.lines?.length || 0} items
@@ -118,7 +125,3 @@ const GRNListModal = ({
 };
 
 export default GRNListModal;
-
-
-
-

@@ -7,6 +7,8 @@ const POSCustomerSection = ({
   filteredCustomers,
   customers,
   setShowCustomerModal,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="space-y-6">
@@ -26,6 +28,8 @@ const POSCustomerSection = ({
           onChange={setCustomer}
           onAddNew={() => setShowCustomerModal(true)}
           showBalances={true}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
       </div>
     </div>

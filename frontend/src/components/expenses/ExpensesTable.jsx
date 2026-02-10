@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoader from "../common/AppLoader";
+import { formatCurrency } from "../../utils/currency";
 
 const ExpensesTable = ({
   expenses,
@@ -8,6 +9,8 @@ const ExpensesTable = ({
   handleEdit,
   handleDelete,
   loadExpenses,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <section className="bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
@@ -88,11 +91,11 @@ const ExpensesTable = ({
                       </td>
                       <td className="py-3 sm:py-4 px-4 sm:px-6 align-top whitespace-nowrap">
                         <div className="text-xs sm:text-sm font-semibold text-gray-900">
-                          Rs.{" "}
-                          {Number(e.amount || 0).toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                          {formatCurrency(
+                            Number(e.amount || 0),
+                            currencySymbol,
+                            currencyPosition,
+                          )}
                         </div>
                       </td>
                       <td className="py-3 sm:py-4 px-4 sm:px-6 align-top">
@@ -127,11 +130,12 @@ const ExpensesTable = ({
                   expense{expenses.length !== 1 ? "s" : ""}.
                 </p>
                 <p className="text-xs sm:text-sm font-medium text-gray-900">
-                  Total: Rs.{" "}
-                  {totalExpenses.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  Total:{" "}
+                  {formatCurrency(
+                    totalExpenses,
+                    currencySymbol,
+                    currencyPosition,
+                  )}
                 </p>
               </div>
             </div>
@@ -156,7 +160,3 @@ const ExpensesTable = ({
 };
 
 export default ExpensesTable;
-
-
-
-

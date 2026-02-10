@@ -1,9 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import {
+  showSuccess,
+  showError,
+  errorMessages,
+  successMessages,
+} from "../../../../utils/toastHelper";
 import { createItem, updateItem } from "../../../../api/inventory/items";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import ItemForm from "./ItemForm";
+import { colors } from "../../../../themes/colors";
 
 /**
  * AddNewItem (MASTER ONLY)
@@ -17,6 +23,7 @@ import ItemForm from "./ItemForm";
  * - mode (optional): "default" | "grn" (you can use to hide fields if you want)
  */
 const AddNewItem = ({
+  api,
   open,
   onClose,
   onSuccess,
@@ -63,7 +70,7 @@ const AddNewItem = ({
 
       isActive: true,
     }),
-    [baseUnits, defaultSupplierId]
+    [baseUnits, defaultSupplierId],
   );
 
   const [form, setForm] = useState(emptyForm);
@@ -140,10 +147,10 @@ const AddNewItem = ({
   useEffect(() => {
     try {
       const storedCats = JSON.parse(
-        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]"
+        localStorage.getItem(CUSTOM_CATEGORIES_KEY) || "[]",
       );
       const storedUnits = JSON.parse(
-        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]"
+        localStorage.getItem(CUSTOM_UNITS_KEY) || "[]",
       );
       if (Array.isArray(storedCats)) setCustomCategories(storedCats);
       if (Array.isArray(storedUnits)) setCustomBaseUnits(storedUnits);
@@ -156,7 +163,7 @@ const AddNewItem = ({
 
   const validateNumber = (
     value,
-    { required = false, min = 0, max = null } = {}
+    { required = false, min = 0, max = null } = {},
   ) => {
     const v = (value ?? "").toString().trim();
     if (!v) return required ? "Required" : "";
@@ -287,10 +294,10 @@ const AddNewItem = ({
     if (!trimmed) return;
 
     const categoryOptions = Array.from(
-      new Set([...(categories || []), ...customCategories])
+      new Set([...(categories || []), ...customCategories]),
     );
     const exists = categoryOptions.some(
-      (c) => (c || "").toLowerCase() === trimmed.toLowerCase()
+      (c) => (c || "").toLowerCase() === trimmed.toLowerCase(),
     );
     if (exists) {
       setError("category", "Category already exists.");
@@ -304,7 +311,7 @@ const AddNewItem = ({
     });
     updateField("category", trimmed);
     setError("category", "");
-    toast.success("Category added");
+    showSuccess("Category added");
   };
 
   const handleAddBaseUnitClick = async () => {
@@ -315,10 +322,10 @@ const AddNewItem = ({
     if (!trimmed) return;
 
     const baseUnitOptions = Array.from(
-      new Set([...(baseUnits || []), ...customBaseUnits])
+      new Set([...(baseUnits || []), ...customBaseUnits]),
     );
     const exists = baseUnitOptions.some(
-      (u) => (u || "").toLowerCase() === trimmed.toLowerCase()
+      (u) => (u || "").toLowerCase() === trimmed.toLowerCase(),
     );
     if (exists) {
       setError("baseUnit", "Base unit already exists.");
@@ -332,7 +339,7 @@ const AddNewItem = ({
     });
     updateField("baseUnit", trimmed);
     setError("baseUnit", "");
-    toast.success("Base unit added");
+    showSuccess("Base unit added");
   };
 
   const handleDeleteBaseUnit = (unit) => {
@@ -390,10 +397,10 @@ const AddNewItem = ({
       };
 
       if (editingId) {
-        await updateItem(editingId, payload);
+        await updateItem(api, editingId, payload);
         toast.success("Item updated successfully");
       } else {
-        await createItem(payload);
+        await createItem(api, payload);
         toast.success("Item created successfully");
       }
 
@@ -401,7 +408,7 @@ const AddNewItem = ({
       onClose?.();
     } catch (err) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Failed to save item"
+        err?.response?.data?.message || err?.message || "Failed to save item",
       );
     } finally {
       setSaving(false);
@@ -411,8 +418,14 @@ const AddNewItem = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/60">
-      <div className="w-full max-w-5xl my-auto bg-white border border-gray-200 shadow-2xl rounded-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 overflow-y-auto bg-white/75 backdrop-blur-sm sm:p-4">
+      <div
+        className="w-full max-w-4xl my-auto border border-gray-200 shadow-2xl rounded-2xl"
+        style={{
+          background: colors.background.secondary,
+          border: `1px solid ${colors.border.light}`,
+        }}
+      >
         {/* Header */}
         <FormHeader editingId={editingId} onClose={onClose} />
 

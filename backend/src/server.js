@@ -4,9 +4,12 @@ import morgan from "morgan";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 
 import { connectDB } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import setCacheControl from "./middleware/cacheMiddleware.js";
+import logger from "./utils/logger.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
@@ -26,7 +29,7 @@ dotenv.config();
 
 // Hard fail early if required secrets are missing
 if (!process.env.JWT_SECRET) {
-  console.error("JWT_SECRET is required. Set it in your environment.");
+  logger.error("JWT_SECRET is required. Set it in your environment.");
   process.exit(1);
 }
 
@@ -39,9 +42,11 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(morgan("dev"));
 
+// Cache control middleware - set appropriate caching headers
+app.use(setCacheControl);
+
 // Body parsing (add a sensible limit for POS payloads)
 app.use(express.json({ limit: "1mb" }));
-
 app.use(cookieParser());
 
 // CORS (keep open for dev; lock down in prod with env var)
@@ -52,7 +57,7 @@ app.use(
         ? process.env.CORS_ORIGIN
         : [
             "http://localhost:5173",
-            "http://127.0.0.1:5173", // ✅ add
+            "http://127.0.0.1:5173",
             "http://localhost:5174",
             "http://127.0.0.1:5174",
           ],
@@ -65,6 +70,28 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "SL Hardware POS API running" });
 });
 
+// Database health check endpoint
+app.get("/health", async (req, res) => {
+  try {
+    // Ensure connection exists and ping admin DB
+    if (!mongoose.connection?.db) throw new Error("No DB connection");
+    await mongoose.connection.db.admin().ping();
+
+    res.status(200).json({
+      status: "ok",
+      database: "connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error("Health check failed:", error.message);
+    res.status(503).json({
+      status: "error",
+      database: "disconnected",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
@@ -73,8 +100,8 @@ app.use("/api/suppliers", supplierRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/purchases", purchaseRoutes);
 app.use("/api/reports", reportRoutes);
-app.use("/api/expenses", expenseRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/expenses", expenseRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/grns", grnRoutes);
 app.use("/api/users", userRoutes);
@@ -90,10 +117,10 @@ const start = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error("Failed to start server", err);
+    logger.error("Failed to start server", { error: err?.message || err });
     process.exit(1);
   }
 };

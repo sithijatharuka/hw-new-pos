@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoader from "../common/AppLoader";
+import { formatCurrency } from "../../utils/currency";
 
 /**
  * Profit Cards Component
@@ -11,6 +12,8 @@ const ProfitCardsSection = ({
   todayMetrics,
   monthMetrics,
   loading = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const cards = [
     {
@@ -23,18 +26,22 @@ const ProfitCardsSection = ({
     {
       label: "Net Profit (After Expenses)",
       value: todayMetrics?.netProfit,
-      subtext: `Expenses: LKR ${(
-        todayMetrics?.totalExpenses || 0
-      ).toLocaleString("en-US")}`,
+      subtext: `Expenses: ${formatCurrency(
+        todayMetrics?.totalExpenses || 0,
+        currencySymbol,
+        currencyPosition,
+      )}`,
       icon: "💰",
       color: "green",
     },
     {
       label: "Monthly Net Profit",
       value: monthMetrics?.netProfit,
-      subtext: `Expenses: LKR ${(
-        monthMetrics?.totalExpenses || 0
-      ).toLocaleString("en-US")}`,
+      subtext: `Expenses: ${formatCurrency(
+        monthMetrics?.totalExpenses || 0,
+        currencySymbol,
+        currencyPosition,
+      )}`,
       icon: "📊",
       color: "purple",
     },
@@ -84,11 +91,8 @@ const ProfitCardsSection = ({
 
             <p className="relative z-10 mb-1 text-2xl font-bold sm:text-3xl">
               {typeof card.value === "number"
-                ? `LKR ${card.value.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                : "LKR 0.00"}
+                ? formatCurrency(card.value, currencySymbol, currencyPosition)
+                : formatCurrency(0, currencySymbol, currencyPosition)}
             </p>
 
             <p className="relative z-10 text-xs font-semibold text-white sm:text-sm">
@@ -123,11 +127,8 @@ const ProfitCardsSection = ({
             <div className="relative z-10 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
               <p className="text-2xl font-bold">
                 {typeof card.value === "number"
-                  ? `LKR ${card.value.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
-                  : "LKR 0.00"}
+                  ? formatCurrency(card.value, currencySymbol, currencyPosition)
+                  : formatCurrency(0, currencySymbol, currencyPosition)}
               </p>
               <p className="text-xs sm:text-sm text-white/80">{card.subtext}</p>
             </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoader from "../common/AppLoader";
+import { formatCurrency } from "../../utils/currency";
 
 /**
  * Supplier Payables Component
@@ -11,6 +12,8 @@ const SupplierPayablesCard = ({
   totalOutstanding,
   supplierPayables,
   loading = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   return (
     <div className="w-full p-5 bg-white border border-gray-200 shadow-md rounded-2xl sm:p-6 lg:p-7">
@@ -35,11 +38,12 @@ const SupplierPayablesCard = ({
           </p>
           <p className="text-2xl font-bold leading-tight text-red-600 sm:text-3xl">
             {typeof totalOutstanding === "number"
-              ? `LKR ${totalOutstanding.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "LKR 0.00"}
+              ? formatCurrency(
+                  totalOutstanding,
+                  currencySymbol,
+                  currencyPosition,
+                )
+              : formatCurrency(0, currencySymbol, currencyPosition)}
           </p>
           <p className="mt-1 text-[11px] sm:text-xs text-gray-600">
             Includes all unpaid supplier bills.
@@ -83,11 +87,12 @@ const SupplierPayablesCard = ({
                   </div>
                   <span className="text-sm font-bold text-red-600 sm:text-base">
                     {typeof supplier.totalPayable === "number"
-                      ? `LKR ${supplier.totalPayable.toLocaleString("en-US", {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}`
-                      : "LKR 0"}
+                      ? formatCurrency(
+                          supplier.totalPayable,
+                          currencySymbol,
+                          currencyPosition,
+                        )
+                      : formatCurrency(0, currencySymbol, currencyPosition)}
                   </span>
                 </div>
 
@@ -124,14 +129,16 @@ const SupplierPayablesCard = ({
                                 </span>
                                 <span className="font-semibold text-right text-gray-900">
                                   {typeof purchase.amount === "number"
-                                    ? `LKR ${purchase.amount.toLocaleString(
-                                        "en-US",
-                                        {
-                                          minimumFractionDigits: 0,
-                                          maximumFractionDigits: 0,
-                                        },
-                                      )}`
-                                    : "LKR 0"}
+                                    ? formatCurrency(
+                                        purchase.amount,
+                                        currencySymbol,
+                                        currencyPosition,
+                                      )
+                                    : formatCurrency(
+                                        0,
+                                        currencySymbol,
+                                        currencyPosition,
+                                      )}
                                 </span>
                               </div>
                             ))}
@@ -167,14 +174,16 @@ const SupplierPayablesCard = ({
                                 </span>
                                 <span className="font-semibold text-gray-900">
                                   {typeof purchase.amount === "number"
-                                    ? `LKR ${purchase.amount.toLocaleString(
-                                        "en-US",
-                                        {
-                                          minimumFractionDigits: 0,
-                                          maximumFractionDigits: 0,
-                                        },
-                                      )}`
-                                    : "LKR 0"}
+                                    ? formatCurrency(
+                                        purchase.amount,
+                                        currencySymbol,
+                                        currencyPosition,
+                                      )
+                                    : formatCurrency(
+                                        0,
+                                        currencySymbol,
+                                        currencyPosition,
+                                      )}
                                 </span>
                               </div>
                             </div>

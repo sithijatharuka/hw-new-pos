@@ -61,8 +61,8 @@ export const validateCustomerForm = (rawForm) => {
     errors.push("Customer type is invalid.");
 
   // Credit limit
-  if (Number.isNaN(creditLimit) || creditLimit <= 0)
-    errors.push("Credit limit must be greater than 0.");
+  if (Number.isNaN(creditLimit) || creditLimit < 0)
+    errors.push("Credit limit must be 0 or greater.");
 
   if (errors.length) return { isValid: false, errors, data: null };
 
@@ -106,13 +106,13 @@ export const validateSupplierForm = (rawForm) => {
   const openingBalance = Number(
     rawForm.openingBalance === "" || rawForm.openingBalance == null
       ? 0
-      : rawForm.openingBalance
+      : rawForm.openingBalance,
   );
 
   const creditLimit = Number(
     rawForm.creditLimit === "" || rawForm.creditLimit == null
       ? 0
-      : rawForm.creditLimit
+      : rawForm.creditLimit,
   );
 
   // Required: Name

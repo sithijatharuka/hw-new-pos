@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import {
   getDailySalesOverview,
   getLowStockItems,
@@ -14,15 +14,60 @@ import {
 
 const router = express.Router();
 
-// Protected routes - all dashboard endpoints require authentication
-router.get("/summary", protect, getDashboardSummary);
-router.get("/daily-sales", protect, getDailySalesOverview);
-router.get("/low-stock", protect, getLowStockItems);
-router.get("/outstanding-credits", protect, getOutstandingCredits);
-router.get("/supplier-payables", protect, getSupplierPayables);
-router.get("/monthly-trend", protect, getMonthlySalesTrend);
-router.get("/top-categories", protect, getTopCategories);
-router.get("/profit-metrics", protect, getProfitMetrics);
-router.get("/expenses-summary", protect, getExpensesSummary);
+// Protected routes - all dashboard endpoints require "dashboard" feature permission
+router.get(
+  "/summary",
+  protect,
+  requireFeature("dashboard"),
+  getDashboardSummary,
+);
+router.get(
+  "/daily-sales",
+  protect,
+  requireFeature("dashboard"),
+  getDailySalesOverview,
+);
+router.get(
+  "/low-stock",
+  protect,
+  requireFeature("dashboard"),
+  getLowStockItems,
+);
+router.get(
+  "/outstanding-credits",
+  protect,
+  requireFeature("dashboard"),
+  getOutstandingCredits,
+);
+router.get(
+  "/supplier-payables",
+  protect,
+  requireFeature("dashboard"),
+  getSupplierPayables,
+);
+router.get(
+  "/monthly-trend",
+  protect,
+  requireFeature("dashboard"),
+  getMonthlySalesTrend,
+);
+router.get(
+  "/top-categories",
+  protect,
+  requireFeature("dashboard"),
+  getTopCategories,
+);
+router.get(
+  "/profit-metrics",
+  protect,
+  requireFeature("dashboard"),
+  getProfitMetrics,
+);
+router.get(
+  "/expenses-summary",
+  protect,
+  requireFeature("dashboard"),
+  getExpensesSummary,
+);
 
 export default router;

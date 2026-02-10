@@ -7,19 +7,12 @@ export default function ForgotPassword({ api }) {
 
   const handleVerified = useCallback(
     (data) => {
-      console.log("[ForgotPassword] handleVerified called with:", data);
-
       const phone = data?.phoneE164;
       if (!phone) {
-        console.error("[ForgotPassword] Missing phoneE164 in response:", data);
         return;
       }
 
       navigate("/reset-password", { state: { phone } });
-      console.log(
-        "[ForgotPassword] Navigated to /reset-password with phone:",
-        phone,
-      );
     },
     [navigate],
   );

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import { useOffline } from "../hooks/useOffline";
 import CustomerFormModal from "../components/customer/CustomerFormModal";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
@@ -26,6 +25,7 @@ import {
 } from "../api/inventory/items";
 import { loadCustomers, createCustomer } from "../api/customer/customers";
 import { saveSale, saveSaleOffline } from "../api/sales/sales";
+import { showSuccess, showError, errorMessages } from "../utils/toastHelper";
 
 const POSPage = ({ api }) => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const POSPage = ({ api }) => {
         setCurrencySymbol(currencySettings.currencySymbol);
         setCurrencyPosition(currencySettings.currencyPosition);
       } catch (error) {
-        toast.error("Failed to load settings. Using defaults.");
+        showError(errorMessages.load("settings") + ". Using defaults.");
       }
     };
     initSettings();
@@ -96,7 +96,7 @@ const POSPage = ({ api }) => {
         const items = await loadItems(api);
         setAllItems(items);
       } catch (error) {
-        toast.error("Failed to load items.");
+        showError(errorMessages.load("items"));
       }
     };
     initItems();
@@ -233,7 +233,7 @@ const POSPage = ({ api }) => {
 
     // block inactive (extra safety)
     if (item.isActive === false) {
-      toast.error("This item is inactive.");
+      showError(errorMessages.inactive("item"));
       return;
     }
 
@@ -285,19 +285,19 @@ const POSPage = ({ api }) => {
     e.preventDefault();
     const code = barcode.trim();
     if (!code) {
-      toast.error("Please scan or enter a barcode.");
+      showError("Please scan or enter a barcode");
       return;
     }
 
     try {
       const item = await searchItemByBarcode(code);
       handleSelectItem(null, item);
-      toast.success(`Item added: ${item.name}`);
+      showSuccess(`Item added: ${item.name}`);
       setBarcode("");
       barcodeInputRef.current?.focus();
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "No item found for this barcode.",
+      showError(
+        err?.response?.data?.message || "No item found for this barcode",
       );
     }
   };
@@ -364,13 +364,13 @@ const POSPage = ({ api }) => {
   const handleCreateOrUpdateCustomer = async (formData) => {
     try {
       setCustomerFormSaving(true);
-      const data = await createCustomer(formData);
+      const data = await createCustomer(api, formData);
       setCustomers((prev) => [...prev, data]);
       setCustomer(data);
       setShowCustomerModal(false);
-      toast.success("Customer created successfully.");
+      showSuccess("Customer created successfully.");
     } catch (err) {
-      toast.error(
+      showError(
         err?.response?.data?.message ||
           err?.message ||
           "Failed to create customer.",
@@ -386,7 +386,7 @@ const POSPage = ({ api }) => {
 
     const validLines = lines.filter((l) => l.item);
     if (!validLines.length) {
-      toast.error("Please add at least one item to the bill.");
+      showError("Please add at least one item to the bill.");
       return false;
     }
 
@@ -394,7 +394,7 @@ const POSPage = ({ api }) => {
       if (lines[i].item) {
         const err = newLineErrors[i];
         if (err && Object.keys(err).length > 0) {
-          toast.error(
+          showError(
             `Please check in line ${i + 1} (check red-highlighted fields).`,
           );
           return false;
@@ -403,11 +403,11 @@ const POSPage = ({ api }) => {
     }
 
     if (discountAmount < 0) {
-      toast.error("Bill discount must be a non-negative number.");
+      showError(errorMessages.validation);
       return false;
     }
     if (discountAmount > baseTotal + taxTotal) {
-      toast.error("Bill discount cannot be greater than the total amount.");
+      showError("Bill discount cannot be greater than the total amount");
       return false;
     }
 
@@ -415,7 +415,7 @@ const POSPage = ({ api }) => {
     setPaymentErrors(newPaymentErrors);
 
     if (newPaymentErrors.some((e) => e && Object.keys(e).length > 0)) {
-      toast.error("Please check the payment details");
+      showError("Please check the payment details");
       return false;
     }
 
@@ -423,12 +423,12 @@ const POSPage = ({ api }) => {
 
     if (status === "paid") {
       if (sumPayments <= 0) {
-        toast.error("Payment amount must be greater than 0 for a paid bill.");
+        showError("Payment amount must be greater than 0 for a paid bill");
         return false;
       }
       if (sumPayments < grandTotal) {
-        toast.error(
-          "Total payments cannot be less than the grand total for a paid invoice.",
+        showError(
+          "Total payments cannot be less than the grand total for a paid invoice",
         );
         return false;
       }
@@ -436,19 +436,19 @@ const POSPage = ({ api }) => {
 
     if (status === "credit") {
       if (!customer) {
-        toast.error("Customer is required for credit sales.");
+        showError("Customer is required for credit sales");
         return false;
       }
       if (customer.type === "cash") {
-        toast.error(
-          "This customer is marked as cash-only. Select a credit-enabled customer.",
+        showError(
+          "This customer is marked as cash-only. Select a credit-enabled customer",
         );
         return false;
       }
       const creditPortion = grandTotal - sumPayments;
       if (creditPortion <= 0) {
-        toast.error(
-          "Credit amount must be greater than 0 for a credit sale. Use Paid instead.",
+        showError(
+          "Credit amount must be greater than 0 for a credit sale. Use Paid instead",
         );
         return false;
       }
@@ -459,8 +459,8 @@ const POSPage = ({ api }) => {
       ) {
         const newBalance = customer.currentBalance + creditPortion;
         if (newBalance > customer.creditLimit) {
-          toast.error(
-            "This sale would exceed the customer's credit limit. Reduce credit or update limit.",
+          showError(
+            "This sale would exceed the customer's credit limit. Reduce credit or update limit",
           );
           return false;
         }
@@ -526,10 +526,10 @@ const POSPage = ({ api }) => {
     try {
       if (isOffline) {
         saveSaleOffline(payload);
-        toast.success("Saved offline. Will sync when online.");
+        showSuccess("Saved offline. Will sync when online");
       } else {
         const savedSale = await saveSale(payload);
-        toast.success("Sale saved successfully.");
+        showSuccess("Sale saved successfully");
 
         if (
           finalStatus === "paid" ||
@@ -552,7 +552,7 @@ const POSPage = ({ api }) => {
       setBarcode("");
       barcodeInputRef.current?.focus();
     } catch (err) {
-      toast.error(
+      showError(
         err?.response?.data?.message || err?.message || "Failed to save sale.",
       );
     }
@@ -583,10 +583,7 @@ const POSPage = ({ api }) => {
 
   return (
     <div className="min-h-screen px-4 py-6 sm:px-4 md:px-6 lg:px-8">
-      <Toaster
-        position="top-right"
-        toastOptions={{ className: "text-sm font-medium", duration: 3000 }}
-      />
+      {/* No Toaster component needed - centralized in App.jsx */}
 
       <POSHeader isOffline={isOffline} vatRate={vatRate} />
 
@@ -633,6 +630,8 @@ const POSPage = ({ api }) => {
                 filteredCustomers={filteredCustomers}
                 customers={customers}
                 setShowCustomerModal={setShowCustomerModal}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
               />
 
               {/* Totals + Payments */}

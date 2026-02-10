@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import AppLoader from "../common/AppLoader";
+import CloseButton from "../common/CloseButton";
 import { colors } from "../../themes/colors";
 import regexValidations from "../../utils/regexValidations";
+import {
+  AVAILABLE_FEATURES,
+  DEFAULT_FEATURES_BY_ROLE,
+} from "../../utils/featurePermissions";
 
 const roleOptions = [
   { value: "cashier", label: "Cashier" },
@@ -27,14 +32,18 @@ const EditStaffModal = ({
     newPassword: "",
     confirmPassword: "",
     isActive: true,
+    permissions: DEFAULT_FEATURES_BY_ROLE.cashier,
   });
 
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (open) {
       if (isCreateMode) {
         // Reset form for create mode
+        const defaultPermissions = DEFAULT_FEATURES_BY_ROLE.cashier;
         setForm({
           name: "",
           username: "",
@@ -43,6 +52,7 @@ const EditStaffModal = ({
           newPassword: "",
           confirmPassword: "",
           isActive: true,
+          permissions: defaultPermissions,
         });
       } else if (user) {
         // Load user data for edit mode
@@ -54,6 +64,10 @@ const EditStaffModal = ({
           newPassword: "",
           confirmPassword: "",
           isActive: user.isActive !== false,
+          permissions: Array.isArray(user.permissions)
+            ? user.permissions
+            : DEFAULT_FEATURES_BY_ROLE[user.role] ||
+              DEFAULT_FEATURES_BY_ROLE.cashier,
         });
       }
       setErrors({});
@@ -70,6 +84,26 @@ const EditStaffModal = ({
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+  };
+
+  const handlePermissionChange = (featureId) => {
+    setForm((prev) => ({
+      ...prev,
+      permissions: prev.permissions.includes(featureId)
+        ? prev.permissions.filter((p) => p !== featureId)
+        : [...prev.permissions, featureId],
+    }));
+  };
+
+  const handleRoleChange = (e) => {
+    const newRole = e.target.value;
+    setForm((prev) => ({
+      ...prev,
+      role: newRole,
+      // Auto-set default permissions for the selected role
+      permissions:
+        DEFAULT_FEATURES_BY_ROLE[newRole] || DEFAULT_FEATURES_BY_ROLE.cashier,
+    }));
   };
 
   const validateField = (fieldName, value) => {
@@ -167,6 +201,7 @@ const EditStaffModal = ({
       name: form.name,
       phone: form.phone || undefined,
       role: form.role,
+      permissions: form.permissions,
     };
 
     // Add username for create mode
@@ -205,7 +240,7 @@ const EditStaffModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
       <div
-        className="w-full max-w-lg duration-200 shadow-2xl rounded-3xl animate-in fade-in"
+        className="w-full max-w-lg h-auto max-h-[calc(85vh-2rem)] duration-200 shadow-2xl rounded-3xl animate-in fade-in flex flex-col"
         style={{
           background: colors.background.secondary,
           border: `1px solid ${colors.border.light}`,
@@ -213,14 +248,11 @@ const EditStaffModal = ({
       >
         {/* Header */}
         <div
-          className="flex items-start justify-between px-5 py-4 border-b sm:px-6 sm:py-5"
+          className="flex items-start justify-between flex-shrink-0 px-5 py-4 border-b sm:px-6 sm:py-5"
           style={{ borderBottomColor: colors.border.light }}
         >
           <div>
-            <h2
-              className="text-lg font-extrabold tracking-tight sm:text-xl"
-              style={{ color: colors.text.primary }}
-            >
+            <h2 className="text-lg font-bold tracking-tight text-accent sm:text-xl">
               {isCreateMode ? "Create Staff User" : "Edit Staff User"}
             </h2>
             <p
@@ -232,58 +264,82 @@ const EditStaffModal = ({
                 : `Update ${user?.name || "user"}'s details`}
             </p>
           </div>
-          <button
-            type="button"
+          <CloseButton
             onClick={onClose}
+            size="sm"
+            variant="subtle"
             disabled={saving}
-            className="w-9 h-9 rounded-xl text-text-tertiary hover:bg-background-subtle"
-            aria-label="Close modal"
-          >
-            ?
-          </button>
+            ariaLabel="Close modal"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 sm:p-6">
-          <div>
-            <label
-              className={labelBase}
-              style={{ color: colors.text.secondary }}
-            >
-              Full name
-            </label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="e.g., Nimal Perera"
-              className={inputBase}
-              style={{
-                background: colors.background.primary,
-                border: `1px solid ${colors.border.light}`,
-                color: colors.text.primary,
-              }}
-              disabled={saving}
-            />
-            {errors.name && (
-              <p className="mt-1 text-xs text-status-error-text">
-                {errors.name}
-              </p>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 p-5 space-y-4 overflow-y-auto sm:p-6">
+            <div>
+              <label
+                className={labelBase}
+                style={{ color: colors.text.secondary }}
+              >
+                Full name
+              </label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="e.g., Nimal Perera"
+                className={inputBase}
+                style={{
+                  background: colors.background.primary,
+                  border: `1px solid ${colors.border.light}`,
+                  color: colors.text.primary,
+                }}
+                disabled={saving}
+              />
+              {errors.name && (
+                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+              )}
+            </div>
+
+            {isCreateMode && (
+              <div>
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  Username
+                </label>
+                <input
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="e.g., nimal.staff"
+                  className={inputBase}
+                  style={{
+                    background: colors.background.primary,
+                    border: `1px solid ${colors.border.light}`,
+                    color: colors.text.primary,
+                  }}
+                  disabled={saving}
+                />
+                {errors.username && (
+                  <p className="mt-1 text-xs text-red-600">{errors.username}</p>
+                )}
+              </div>
             )}
-          </div>
 
-          {isCreateMode && (
             <div>
               <label
                 className={labelBase}
                 style={{ color: colors.text.secondary }}
               >
-                Username
+                Phone (optional)
               </label>
               <input
-                name="username"
-                value={form.username}
+                name="phone"
+                value={form.phone}
                 onChange={handleChange}
-                placeholder="e.g., nimal.staff"
+                placeholder="7XXXXXXXX"
                 className={inputBase}
                 style={{
                   background: colors.background.primary,
@@ -292,181 +348,264 @@ const EditStaffModal = ({
                 }}
                 disabled={saving}
               />
-              {errors.username && (
-                <p className="mt-1 text-xs text-status-error-text">
-                  {errors.username}
-                </p>
+              {errors.phone && (
+                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
               )}
             </div>
-          )}
 
-          <div>
-            <label
-              className={labelBase}
-              style={{ color: colors.text.secondary }}
+            <div>
+              <label
+                className={labelBase}
+                style={{ color: colors.text.secondary }}
+              >
+                Role
+              </label>
+              <select
+                name="role"
+                value={form.role}
+                onChange={handleRoleChange}
+                className={inputBase}
+                style={{
+                  background: colors.background.primary,
+                  border: `1px solid ${colors.border.light}`,
+                  color: colors.text.primary,
+                }}
+                disabled={saving}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Feature Permissions Section */}
+            <div
+              className="pt-2 border-t"
+              style={{ borderColor: colors.border.light }}
             >
-              Phone (optional)
-            </label>
-            <input
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="7XXXXXXXX"
-              className={inputBase}
-              style={{
-                background: colors.background.primary,
-                border: `1px solid ${colors.border.light}`,
-                color: colors.text.primary,
-              }}
-              disabled={saving}
-            />
-            {errors.phone && (
-              <p className="mt-1 text-xs text-status-error-text">
-                {errors.phone}
-              </p>
+              <div className="mb-3">
+                <h3
+                  className="text-sm font-semibold"
+                  style={{ color: colors.text.primary }}
+                >
+                  Feature Permissions
+                </h3>
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  Select which features this user can access
+                </p>
+              </div>
+
+              {/* Group features by category */}
+              {["Core", "Stock", "People", "Analytics", "Finance", "Admin"].map(
+                (category) => {
+                  const categoryFeatures = AVAILABLE_FEATURES.filter(
+                    (f) => f.category === category,
+                  );
+                  if (categoryFeatures.length === 0) return null;
+
+                  return (
+                    <div key={category} className="mb-4 last:mb-0">
+                      <h4
+                        className="mb-2 text-xs font-semibold tracking-wide uppercase"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {category}
+                      </h4>
+                      <div className="space-y-2">
+                        {categoryFeatures.map((feature) => (
+                          <label
+                            key={feature.id}
+                            className="flex items-start gap-3 p-2 transition-colors duration-150 rounded-lg cursor-pointer hover:bg-opacity-75"
+                            style={{
+                              background: colors.background.primary,
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.permissions.includes(feature.id)}
+                              onChange={() =>
+                                handlePermissionChange(feature.id)
+                              }
+                              disabled={saving}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className="text-sm font-medium"
+                                style={{ color: colors.text.primary }}
+                              >
+                                {feature.icon} {feature.label}
+                              </p>
+                              <p
+                                className="text-xs"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {feature.description}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                },
+              )}
+            </div>
+
+            {!isCreateMode && (
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  checked={form.isActive}
+                  onChange={handleChange}
+                  disabled={saving}
+                />
+                <span style={{ color: colors.text.secondary }}>
+                  Active account
+                </span>
+              </label>
             )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  {isCreateMode ? "Password" : "New password"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="newPassword"
+                    value={form.newPassword}
+                    onChange={handleChange}
+                    placeholder={
+                      isCreateMode ? "Set a password" : "Leave blank to keep"
+                    }
+                    className={inputBase}
+                    style={{
+                      background: colors.background.primary,
+                      border: `1px solid ${colors.border.light}`,
+                      color: colors.text.primary,
+                      paddingRight: "2.75rem",
+                    }}
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={saving}
+                    className="absolute text-lg transition-opacity -translate-y-1/2 right-3 top-1/2 hover:opacity-70 disabled:opacity-50"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? "👁️" : "👁️‍🗨️"}
+                  </button>
+                </div>
+                {errors.newPassword && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.newPassword}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  className={labelBase}
+                  style={{ color: colors.text.secondary }}
+                >
+                  Confirm password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter password"
+                    className={inputBase}
+                    style={{
+                      background: colors.background.primary,
+                      border: `1px solid ${colors.border.light}`,
+                      color: colors.text.primary,
+                      paddingRight: "2.75rem",
+                    }}
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={saving}
+                    className="absolute text-lg transition-opacity -translate-y-1/2 right-3 top-1/2 hover:opacity-70 disabled:opacity-50"
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label
-              className={labelBase}
-              style={{ color: colors.text.secondary }}
-            >
-              Role
-            </label>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className={inputBase}
-              style={{
-                background: colors.background.primary,
-                border: `1px solid ${colors.border.light}`,
-                color: colors.text.primary,
-              }}
-              disabled={saving}
-            >
-              {roleOptions.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {!isCreateMode && (
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={form.isActive}
-                onChange={handleChange}
+          {/* Footer - sticky at bottom */}
+          <div
+            className="flex-shrink-0 p-5 space-y-3 border-t sm:p-6"
+            style={{ borderColor: colors.border.light }}
+          >
+            {saving && (
+              <div>
+                <AppLoader
+                  open
+                  variant="inline"
+                  title={
+                    isCreateMode
+                      ? "Creating staff user"
+                      : "Saving staff changes"
+                  }
+                  subtitle="Applying updates to the staff record"
+                />
+              </div>
+            )}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
                 disabled={saving}
-              />
-              <span style={{ color: colors.text.secondary }}>
-                Active account
-              </span>
-            </label>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                className={labelBase}
-                style={{ color: colors.text.secondary }}
-              >
-                {isCreateMode ? "Password" : "New password"}
-              </label>
-              <input
-                type="password"
-                name="newPassword"
-                value={form.newPassword}
-                onChange={handleChange}
-                placeholder={
-                  isCreateMode ? "Set a password" : "Leave blank to keep"
-                }
-                className={inputBase}
+                className={buttonBase}
                 style={{
-                  background: colors.background.primary,
-                  border: `1px solid ${colors.border.light}`,
+                  background: colors.background.subtle,
                   color: colors.text.primary,
+                  border: `1px solid ${colors.border.light}`,
                 }}
-                disabled={saving}
-              />
-              {errors.newPassword && (
-                <p className="mt-1 text-xs text-status-error-text">
-                  {errors.newPassword}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                className={labelBase}
-                style={{ color: colors.text.secondary }}
               >
-                Confirm password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-enter password"
-                className={inputBase}
-                style={{
-                  background: colors.background.primary,
-                  border: `1px solid ${colors.border.light}`,
-                  color: colors.text.primary,
-                }}
+                Cancel
+              </button>
+              <button
+                type="submit"
                 disabled={saving}
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-status-error-text">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className={buttonBase}
-              style={{
-                background: colors.background.subtle,
-                color: colors.text.primary,
-                border: `1px solid ${colors.border.light}`,
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className={
-                buttonBase +
-                " cursor-pointer hover:-translate-y-[1px] active:translate-y-0 bg-primary text-white hover:bg-primary/90"
-              }
-            >
-              {isCreateMode ? "Create staff" : "Save changes"}
-            </button>
-          </div>
-
-          {saving && (
-            <div className="pt-2">
-              <AppLoader
-                open
-                variant="inline"
-                title={
-                  isCreateMode ? "Creating staff user" : "Saving staff changes"
+                className={
+                  buttonBase +
+                  " cursor-pointer hover:-translate-y-[1px] active:translate-y-0 bg-primary text-white hover:bg-primary/90"
                 }
-                subtitle="Applying updates to the staff record"
-              />
+              >
+                {isCreateMode ? "Create staff" : "Save changes"}
+              </button>
             </div>
-          )}
+          </div>
         </form>
       </div>
     </div>

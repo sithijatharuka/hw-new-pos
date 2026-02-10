@@ -5,8 +5,18 @@ import GRNDetailsSummary from "./GRNDetailsSummary";
 import GRNDetailsLineItemsTable from "./GRNDetailsLineItemsTable";
 import GRNDetailsFooter from "./GRNDetailsFooter";
 import GRNDetailsActions from "./GRNDetailsActions";
+import colors from "../../../themes/colors";
 
-function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete, onPost }) {
+function GrnDetailsModal({
+  open,
+  grn,
+  onClose,
+  onEdit,
+  onDelete,
+  onPost,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) {
   if (!open || !grn) return null;
 
   const {
@@ -28,24 +38,17 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete, onPost }) {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white/75 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         style={{
-          background: "#fff",
+          background: colors.background.secondary,
+          border: `1px solid ${colors.border.light}`,
           borderRadius: "12px",
           maxWidth: "900px",
           width: "95%",
-          maxHeight: "90vh",
+          maxHeight: "80vh",
           overflow: "auto",
           boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
           padding: "1.5rem",
@@ -62,9 +65,15 @@ function GrnDetailsModal({ open, grn, onClose, onEdit, onDelete, onPost }) {
           poNumber={poNumber}
           supplierInvoiceNo={supplierInvoiceNo}
           remarks={remarks}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
         />
 
-        <GRNDetailsLineItemsTable lines={lines} />
+        <GRNDetailsLineItemsTable
+          lines={lines}
+          currencySymbol={currencySymbol}
+          currencyPosition={currencyPosition}
+        />
 
         <GRNDetailsFooter
           createdAt={createdAt}

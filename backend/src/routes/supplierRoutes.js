@@ -1,11 +1,12 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import { Supplier } from "../models/Supplier.js";
 import { Purchase } from "../models/Purchase.js";
+import logger from "../utils/logger.js";
 
 const router = express.Router();
 
-router.post("/", protect, async (req, res) => {
+router.post("/", protect, requireFeature("suppliers"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -16,7 +17,7 @@ router.post("/", protect, async (req, res) => {
 });
 
 // Update supplier
-router.put("/:id", protect, async (req, res) => {
+router.put("/:id", protect, requireFeature("suppliers"), async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
     if (!tenantId) {
@@ -57,9 +58,8 @@ router.put("/:id", protect, async (req, res) => {
   }
 });
 
-router.get("/", protect, async (req, res) => {
+router.get("/", protect, requireFeature("suppliers"), async (req, res) => {
   const tenantId = req.user?.tenantId;
-  console.log("Tenant ID:", tenantId);
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }

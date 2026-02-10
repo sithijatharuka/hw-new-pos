@@ -1,4 +1,5 @@
 import React from "react";
+import CloseButton from "../../../common/CloseButton";
 
 const FormHeader = ({ editingId, onClose }) => {
   return (
@@ -19,12 +20,12 @@ const FormHeader = ({ editingId, onClose }) => {
           </div>
         </div>
 
-        <button
-          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+        <CloseButton
           onClick={onClose}
-        >
-          ✕
-        </button>
+          size="sm"
+          variant="subtle"
+          ariaLabel="Close form"
+        />
       </div>
     </div>
   );

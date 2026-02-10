@@ -8,7 +8,6 @@ import {
 } from "../components/dashboard/index";
 
 import {
-  getDashboardSummary,
   getDailySalesOverview,
   getLowStockItems,
   getOutstandingCredits,
@@ -18,6 +17,7 @@ import {
   getProfitMetrics,
   getExpensesSummary,
 } from "../api/dashboard/dashboard";
+import { loadCurrencySettings } from "../api/settings/settings";
 import { createApiClient } from "../api/client";
 
 const DashboardPage = () => {
@@ -54,6 +54,8 @@ const DashboardPage = () => {
   });
   const [profitMetrics, setProfitMetrics] = useState(null);
   const [expensesSummary, setExpensesSummary] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   // Calculate date range based on selection
   const getDateRangeParams = useCallback(() => {
@@ -154,6 +156,19 @@ const DashboardPage = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadCurrencySettings(api);
+        setCurrencySymbol(settings.currencySymbol || "Rs.");
+        setCurrencyPosition(settings.currencyPosition || "before");
+      } catch (error) {
+        // Use defaults if error
+      }
+    };
+    loadSettings();
+  }, [api]);
+
   if (error) {
     return <ErrorDisplay error={error} onRetry={loadDashboardData} />;
   }
@@ -192,6 +207,8 @@ const DashboardPage = () => {
                 monthlySalesTrend={monthlySalesTrend}
                 topCategoriesData={topCategoriesData}
                 loading={loading}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
               />
 
               <QuickSummarySection

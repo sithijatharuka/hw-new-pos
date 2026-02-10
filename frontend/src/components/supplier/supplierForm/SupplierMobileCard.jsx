@@ -1,19 +1,32 @@
 // SupplierMobileCard.jsx
 import React from "react";
 import { formatPaymentTerms } from "../../../utils/paymentTerms";
+import { formatCurrency } from "../../../utils/currency";
 
-const SupplierMobileCard = ({ supplier, onOpenActions }) => {
+const SupplierMobileCard = ({
+  supplier,
+  onViewDetails,
+  onReceiveGoods,
+  onViewGRNs,
+  onPay,
+  onEdit,
+  onDelete,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   const outstanding = Number(supplier.currentBalance || 0);
 
   return (
     <div
       className={[
         "group relative",
-        "rounded-2xl border border-border-light bg-background-secondary",
+        "rounded-2xl border border-gray-200 bg-background-secondary",
         "p-4 sm:p-5",
         "shadow-sm transition-all duration-200 ease-out",
         "hover:shadow-md hover:-translate-y-0.5",
+        "cursor-pointer",
       ].join(" ")}
+      onClick={() => onViewDetails && onViewDetails(supplier)}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -44,29 +57,9 @@ const SupplierMobileCard = ({ supplier, onOpenActions }) => {
               outstanding > 0 ? "text-red-600" : "text-success",
             ].join(" ")}
           >
-            Rs. {outstanding.toFixed(2)}
+            {formatCurrency(outstanding, currencySymbol, currencyPosition)}
           </div>
         </div>
-      </div>
-
-      <div className="absolute right-4 top-4">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenActions && onOpenActions(supplier);
-          }}
-          aria-label={`Open actions for ${supplier.name}`}
-          className={[
-            "inline-flex items-center justify-center h-9 w-9",
-            "rounded-full bg-primary text-text-inverse",
-            "hover:shadow-md hover:-translate-y-[1px]",
-            "transition-all duration-200 ease-out",
-            "focus:outline-none focus:ring-2 focus:ring-focus/20",
-            "cursor-pointer",
-          ].join(" ")}
-        >
-          +
-        </button>
       </div>
     </div>
   );

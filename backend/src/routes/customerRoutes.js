@@ -1,13 +1,13 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import { Customer } from "../models/Customer.js";
 import { Sale } from "../models/Sale.js";
 import { CreditPayment } from "../models/CreditPayment.js";
 
 const router = express.Router();
 
-// Create customer
-router.post("/", protect, async (req, res) => {
+// Create customer - requires "customers" feature
+router.post("/", protect, requireFeature("customers"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
@@ -17,8 +17,8 @@ router.post("/", protect, async (req, res) => {
   res.status(201).json(customer);
 });
 
-// List/search customers
-router.get("/", protect, async (req, res) => {
+// List/search customers - requires "customers" feature
+router.get("/", protect, requireFeature("customers"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });

@@ -1,5 +1,6 @@
 // src/components/supplier/SupplierFormHeader.jsx
 import React from "react";
+import CloseButton from "../../../common/CloseButton";
 
 const SupplierFormHeader = ({ isEdit, onClose }) => {
   return (
@@ -16,22 +17,11 @@ const SupplierFormHeader = ({ isEdit, onClose }) => {
           </p>
         </div>
 
-        <button
-          type="button"
+        <CloseButton
           onClick={onClose}
-          aria-label="Close"
-          className="
-            inline-flex h-11 w-11 items-center justify-center rounded-2xl
-            border border-gray-200 bg-background-secondary text-text-tertiary
-            shadow-sm transition duration-200 ease-out
-            hover:-translate-y-0.5 hover:bg-background-subtle hover:text-text-primary hover:shadow-md
-            active:translate-y-0
-            focus:outline-none focus:ring-4 focus:ring-focus/20
-            cursor-pointer
-          "
-        >
-          ✕
-        </button>
+          size="lg"
+          ariaLabel="Close supplier form"
+        />
       </div>
     </div>
   );

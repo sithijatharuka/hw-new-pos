@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { RefreshToken } from "./RefreshToken.js";
+import { DEFAULT_FEATURES_BY_ROLE } from "../utils/featurePermissions.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,6 +14,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "owner", "cashier", "manager"],
       default: "cashier",
+    },
+    // Feature-based permissions - array of feature IDs user has access to
+    permissions: {
+      type: [String],
+      default: function () {
+        return (
+          DEFAULT_FEATURES_BY_ROLE[this.role] ||
+          DEFAULT_FEATURES_BY_ROLE.cashier
+        );
+      },
     },
     isActive: { type: Boolean, default: true },
   },

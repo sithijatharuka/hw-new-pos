@@ -1,8 +1,9 @@
 import express from "express";
 import mongoose from "mongoose";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import { Item } from "../models/Item.js";
 import { StockMovement } from "../models/StockMovement.js";
+import logger from "../utils/logger.js";
 
 const router = express.Router();
 
@@ -109,8 +110,8 @@ router.get("/units/list", protect, async (req, res) => {
   }
 });
 
-// List items (search + lowStock + category + isActive)
-router.get("/", protect, async (req, res) => {
+// List items (search + lowStock + category + isActive) - requires "inventory" feature
+router.get("/", protect, requireFeature("inventory"), async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
     if (!tenantId) {
@@ -143,7 +144,7 @@ router.get("/", protect, async (req, res) => {
     // Keep list light; batches are fetched via /:id/batches
     const items = await Item.find(filter)
       .select(
-        "sku name barcode category brand baseUnit sellingPrice costPrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate lastPurchasePrice"
+        "sku name barcode category brand baseUnit sellingPrice costPrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate lastPurchasePrice",
       )
       .limit(300)
       .sort({ name: 1 });
@@ -169,7 +170,7 @@ router.get("/barcode/:code", protect, async (req, res) => {
     }
     const code = String(req.params.code || "").trim();
     const item = await Item.findOne({ tenantId, barcode: code }).select(
-      "sku name barcode category brand baseUnit sellingPrice costPrice lastPurchasePrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate batches"
+      "sku name barcode category brand baseUnit sellingPrice costPrice lastPurchasePrice inventory isActive isBatchTracked lowStockLevel taxApplicable taxRate batches",
     );
 
     if (!item)
@@ -203,7 +204,7 @@ router.get("/:id/batches", protect, async (req, res) => {
 
     // Only fetch what's needed for "show item + batches"
     const item = await Item.findOne({ _id: id, tenantId }).select(
-      "sku name barcode baseUnit isActive isBatchTracked inventory.onHand inventory.reserved batches"
+      "sku name barcode baseUnit isActive isBatchTracked inventory.onHand inventory.reserved batches",
     );
 
     if (!item) return res.status(404).json({ message: "Item not found" });
@@ -218,7 +219,7 @@ router.get("/:id/batches", protect, async (req, res) => {
         reserved: Number(b.reserved || 0),
         available: Math.max(
           0,
-          Number(b.qtyOnHand || 0) - Number(b.reserved || 0)
+          Number(b.qtyOnHand || 0) - Number(b.reserved || 0),
         ),
       }))
       // FEFO-ish sort (earliest expiry first), then batchNumber
@@ -306,8 +307,7 @@ router.post("/", protect, async (req, res) => {
       const key = Object.keys(err.keyPattern || {})[0] || "field";
       return res.status(400).json({ message: `Duplicate value for ${key}` });
     }
-    console.log(err);
-    console.log(err.message);
+    logger.error("Error creating item:", { error: err.message });
     res.status(500).json({ message: err.message });
   }
 });

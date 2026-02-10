@@ -1,12 +1,13 @@
 import React from "react";
+import CloseButton from "../../common/CloseButton";
 
 const GRNDetailsHeader = ({ grnNo, status, onClose }) => {
   const isDraft = status === "draft";
   const statusStyles = isDraft
     ? { background: "#fef3c7", color: "#b45309" }
     : status === "posted"
-    ? { background: "#dcfce7", color: "#15803d" }
-    : { background: "#e5e7eb", color: "#374151" };
+      ? { background: "#dcfce7", color: "#15803d" }
+      : { background: "#e5e7eb", color: "#374151" };
 
   return (
     <div
@@ -55,26 +56,7 @@ const GRNDetailsHeader = ({ grnNo, status, onClose }) => {
           {status ? status.toUpperCase() : "DRAFT"}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        style={{
-          border: "none",
-          background: "transparent",
-          fontSize: "1.5rem",
-          cursor: "pointer",
-          color: "#999",
-          padding: 0,
-          width: "32px",
-          height: "32px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "6px",
-        }}
-      >
-        X
-      </button>
+      <CloseButton onClick={onClose} size="sm" ariaLabel="Close GRN details" />
     </div>
   );
 };

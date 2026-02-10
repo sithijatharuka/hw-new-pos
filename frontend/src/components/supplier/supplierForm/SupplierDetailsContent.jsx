@@ -1,12 +1,17 @@
 // src/components/supplier/details/SupplierDetailsContent.jsx
 import React from "react";
 import { formatPaymentTerms } from "../../../utils/paymentTerms";
+import { formatCurrency } from "../../../utils/currency";
 
-const SupplierDetailsContent = ({ supplier }) => {
+const SupplierDetailsContent = ({
+  supplier,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   if (!supplier) {
     return (
-      <div className="text-center text-text-tertiary py-8">
-        <div className="text-lg font-semibold mb-2">No supplier selected</div>
+      <div className="py-8 text-center text-text-tertiary">
+        <div className="mb-2 text-lg font-semibold">No supplier selected</div>
         <div className="text-sm">
           Select a supplier to view details and actions.
         </div>
@@ -79,7 +84,11 @@ const SupplierDetailsContent = ({ supplier }) => {
             OPENING BALANCE
           </span>
           <p className="mt-1 text-sm font-semibold text-text-primary">
-            Rs. {Number(supplier.openingBalance || 0).toFixed(2)}
+            {formatCurrency(
+              supplier.openingBalance || 0,
+              currencySymbol,
+              currencyPosition,
+            )}
           </p>
         </div>
 
@@ -93,7 +102,7 @@ const SupplierDetailsContent = ({ supplier }) => {
               outstanding > 0 ? "text-red-600" : "text-success",
             ].join(" ")}
           >
-            Rs. {outstanding.toFixed(2)}
+            {formatCurrency(outstanding, currencySymbol, currencyPosition)}
           </p>
         </div>
       </div>
@@ -103,7 +112,11 @@ const SupplierDetailsContent = ({ supplier }) => {
           CREDIT LIMIT
         </span>
         <p className="text-text-primary">
-          Rs. {Number(supplier.creditLimit || 0).toFixed(2)}
+          {formatCurrency(
+            supplier.creditLimit || 0,
+            currencySymbol,
+            currencyPosition,
+          )}
         </p>
       </div>
 

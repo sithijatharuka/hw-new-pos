@@ -2,6 +2,17 @@ import express from "express";
 import crypto from "crypto";
 import { User } from "../models/User.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
+import {
+  validateFeatures,
+  getFeaturesByRole,
+} from "../utils/featurePermissions.js";
+import { signupLimiter } from "../middleware/rateLimitMiddleware.js";
+import {
+  validateOwnerSignup,
+  validateStaffUser,
+  handleValidationErrors,
+} from "../middleware/validationMiddleware.js";
+import logger from "../utils/logger.js";
 
 const router = express.Router();
 
@@ -14,79 +25,106 @@ const sanitizeRole = (role) => {
 };
 
 // Owner signup (creates a new tenant)
-router.post("/owner-signup", async (req, res) => {
-  try {
-    const { name, username, password, phone } = req.body || {};
+router.post(
+  "/owner-signup",
+  signupLimiter,
+  validateOwnerSignup,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { name, username, password, phone } = req.body || {};
 
-    // Removed debug console.log("hi")
+      if (!name || !username || !password) {
+        return res
+          .status(400)
+          .json({ message: "name, username, and password are required" });
+      }
 
-    if (!name || !username || !password) {
-      return res
-        .status(400)
-        .json({ message: "name, username, and password are required" });
+      const existing = await User.findOne({
+        username: String(username).trim(),
+      });
+      if (existing) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const tenantId =
+        typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString("hex"); // fallback
+
+      const user = await User.create({
+        name: String(name).trim(),
+        username: String(username).trim(),
+        password: String(password),
+        phone: phone ? String(phone).trim() : undefined,
+        role: "owner",
+        tenantId,
+      });
+
+      const safeUser = await User.findById(user._id).select("-password");
+      return res.status(201).json({ message: "Owner created", user: safeUser });
+    } catch (err) {
+      logger.error("[owner-signup] error:", { error: err.message });
+      if (err?.code === 11000) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      return res.status(500).json({ message: "Failed to create owner" });
     }
-
-    const existing = await User.findOne({ username: String(username).trim() });
-    if (existing) {
-      return res.status(400).json({ message: "Username already exists" });
-    }
-
-    const tenantId =
-      typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : crypto.randomBytes(16).toString("hex"); // fallback
-
-    const user = await User.create({
-      name: String(name).trim(),
-      username: String(username).trim(),
-      password: String(password),
-      phone: phone ? String(phone).trim() : undefined,
-      role: "owner",
-      tenantId,
-    });
-
-    const safeUser = await User.findById(user._id).select("-password");
-    return res.status(201).json({ message: "Owner created", user: safeUser });
-  } catch (err) {
-    console.error("[owner-signup] error:", err);
-    return res.status(500).json({ message: "Failed to create owner" });
-  }
-});
+  },
+);
 
 // Create staff user (same tenant as owner/admin)
-router.post("/staff", protect, adminOnly, async (req, res) => {
-  try {
-    const { name, username, password, role, phone } = req.body || {};
+router.post(
+  "/staff",
+  protect,
+  adminOnly,
+  validateStaffUser,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { name, username, password, role, phone, permissions } =
+        req.body || {};
 
-    if (!name || !username || !password) {
+      const existing = await User.findOne({
+        username: String(username).trim(),
+      });
+      if (existing) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const sanitizedRole = sanitizeRole(role);
+
+      // Use provided permissions if valid, otherwise use default for role
+      let userPermissions = permissions;
+      if (Array.isArray(permissions) && validateFeatures(permissions)) {
+        userPermissions = permissions;
+      } else {
+        userPermissions = getFeaturesByRole(sanitizedRole);
+      }
+
+      const user = await User.create({
+        name: String(name).trim(),
+        username: String(username).trim(),
+        password: String(password),
+        phone: phone ? String(phone).trim() : undefined,
+        role: sanitizedRole,
+        permissions: userPermissions,
+        tenantId: req.user.tenantId,
+      });
+
+      const safeUser = await User.findById(user._id).select("-password");
       return res
-        .status(400)
-        .json({ message: "name, username, and password are required" });
+        .status(201)
+        .json({ message: "Staff user created", user: safeUser });
+    } catch (err) {
+      logger.error("[staff-create] error:", { error: err.message });
+      if (err?.code === 11000) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      return res.status(500).json({ message: "Failed to create staff user" });
     }
-
-    const existing = await User.findOne({ username: String(username).trim() });
-    if (existing) {
-      return res.status(400).json({ message: "Username already exists" });
-    }
-
-    const user = await User.create({
-      name: String(name).trim(),
-      username: String(username).trim(),
-      password: String(password),
-      phone: phone ? String(phone).trim() : undefined,
-      role: sanitizeRole(role),
-      tenantId: req.user.tenantId,
-    });
-
-    const safeUser = await User.findById(user._id).select("-password");
-    return res
-      .status(201)
-      .json({ message: "Staff user created", user: safeUser });
-  } catch (err) {
-    console.error("[create-staff] error:", err);
-    return res.status(500).json({ message: "Failed to create staff user" });
-  }
-});
+  },
+);
 
 // List users for the tenant
 router.get("/", protect, adminOnly, async (req, res) => {
@@ -102,11 +140,12 @@ router.get("/", protect, adminOnly, async (req, res) => {
   }
 });
 
-// Update staff user (name, phone, role, password, status)
+// Update staff user (name, phone, role, password, status, permissions)
 router.put("/:userId", protect, adminOnly, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, role, password, isActive } = req.body || {};
+    const { name, phone, role, password, isActive, permissions } =
+      req.body || {};
 
     // Find user and verify ownership (same tenant)
     const user = await User.findById(userId);
@@ -140,6 +179,15 @@ router.put("/:userId", protect, adminOnly, async (req, res) => {
 
     if (typeof isActive === "boolean") {
       user.isActive = isActive;
+    }
+
+    // Update permissions if provided and valid
+    if (Array.isArray(permissions) && validateFeatures(permissions)) {
+      user.permissions = permissions;
+    } else if (role) {
+      // If role changed but permissions not provided, use default for new role
+      const sanitizedRole = sanitizeRole(role);
+      user.permissions = getFeaturesByRole(sanitizedRole);
     }
 
     // Only update password if provided

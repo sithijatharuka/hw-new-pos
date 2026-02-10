@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoader from "../common/AppLoader";
+import { formatCurrency } from "../../utils/currency";
 
 /**
  * Outstanding Customer Credit Summary Component
@@ -12,6 +13,8 @@ const CreditSummaryCard = ({
   topCustomers,
   warningCount,
   loading = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const hasCustomers = topCustomers && topCustomers.length > 0;
 
@@ -37,11 +40,12 @@ const CreditSummaryCard = ({
           <p className="mb-1 text-xs text-gray-600">Total Credit Given</p>
           <p className="text-2xl font-bold text-blue-600">
             {typeof totalCreditGiven === "number"
-              ? `LKR ${totalCreditGiven.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "LKR 0.00"}
+              ? formatCurrency(
+                  totalCreditGiven,
+                  currencySymbol,
+                  currencyPosition,
+                )
+              : formatCurrency(0, currencySymbol, currencyPosition)}
           </p>
           {warningCount > 0 && (
             <p className="text-[11px] text-orange-600 mt-2 font-medium">
@@ -59,11 +63,12 @@ const CreditSummaryCard = ({
           </p>
           <p className="text-2xl font-bold text-amber-500 md:text-3xl">
             {typeof totalCreditGiven === "number"
-              ? `LKR ${totalCreditGiven.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "LKR 0.00"}
+              ? formatCurrency(
+                  totalCreditGiven,
+                  currencySymbol,
+                  currencyPosition,
+                )
+              : formatCurrency(0, currencySymbol, currencyPosition)}
           </p>
         </div>
         <div className="flex flex-col items-start justify-center px-4 py-4 bg-white border border-gray-200 md:items-center rounded-xl">
@@ -154,28 +159,32 @@ const CreditSummaryCard = ({
                         <p className="text-gray-600 mb-0.5">Balance</p>
                         <p className="font-semibold text-gray-900">
                           {typeof customer.currentBalance === "number"
-                            ? `LKR ${customer.currentBalance.toLocaleString(
-                                "en-US",
-                                {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 0,
-                                },
-                              )}`
-                            : "LKR 0"}
+                            ? formatCurrency(
+                                customer.currentBalance,
+                                currencySymbol,
+                                currencyPosition,
+                              )
+                            : formatCurrency(
+                                0,
+                                currencySymbol,
+                                currencyPosition,
+                              )}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-gray-600 mb-0.5">Limit</p>
                         <p className="font-semibold text-gray-900">
                           {typeof customer.creditLimit === "number"
-                            ? `LKR ${customer.creditLimit.toLocaleString(
-                                "en-US",
-                                {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 0,
-                                },
-                              )}`
-                            : "LKR 0"}
+                            ? formatCurrency(
+                                customer.creditLimit,
+                                currencySymbol,
+                                currencyPosition,
+                              )
+                            : formatCurrency(
+                                0,
+                                currencySymbol,
+                                currencyPosition,
+                              )}
                         </p>
                       </div>
                     </div>
@@ -250,14 +259,16 @@ const CreditSummaryCard = ({
                           </p>
                           <p className="font-semibold text-gray-900">
                             {typeof customer.currentBalance === "number"
-                              ? `LKR ${customer.currentBalance.toLocaleString(
-                                  "en-US",
-                                  {
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0,
-                                  },
-                                )}`
-                              : "LKR 0"}
+                              ? formatCurrency(
+                                  customer.currentBalance,
+                                  currencySymbol,
+                                  currencyPosition,
+                                )
+                              : formatCurrency(
+                                  0,
+                                  currencySymbol,
+                                  currencyPosition,
+                                )}
                           </p>
                         </div>
                         <div className="pl-2">
@@ -266,14 +277,16 @@ const CreditSummaryCard = ({
                           </p>
                           <p className="font-semibold text-gray-900">
                             {typeof customer.creditLimit === "number"
-                              ? `LKR ${customer.creditLimit.toLocaleString(
-                                  "en-US",
-                                  {
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0,
-                                  },
-                                )}`
-                              : "LKR 0"}
+                              ? formatCurrency(
+                                  customer.creditLimit,
+                                  currencySymbol,
+                                  currencyPosition,
+                                )
+                              : formatCurrency(
+                                  0,
+                                  currencySymbol,
+                                  currencyPosition,
+                                )}
                           </p>
                         </div>
                       </div>

@@ -1,6 +1,7 @@
 // SupplierTableRow.jsx
 import React from "react";
 import { formatPaymentTerms } from "../../../utils/paymentTerms";
+import { formatCurrency } from "../../../utils/currency";
 
 const SupplierTableRow = ({
   supplier,
@@ -10,6 +11,8 @@ const SupplierTableRow = ({
   onPay,
   onEdit,
   onDelete,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const outstanding = Number(supplier.currentBalance || 0);
 
@@ -42,7 +45,7 @@ const SupplierTableRow = ({
             outstanding > 0 ? "text-red-600" : "text-success",
           ].join(" ")}
         >
-          Rs. {outstanding.toFixed(2)}
+          {formatCurrency(outstanding, currencySymbol, currencyPosition)}
         </span>
       </td>
 

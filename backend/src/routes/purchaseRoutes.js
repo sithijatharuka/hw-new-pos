@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireFeature } from "../middleware/authMiddleware.js";
 import mongoose from "mongoose";
 import { Purchase } from "../models/Purchase.js";
 import { Supplier } from "../models/Supplier.js";
@@ -8,7 +8,7 @@ import { addStock } from "../services/stockService.js";
 
 const router = express.Router();
 
-router.post("/", protect, async (req, res) => {
+router.post("/", protect, requireFeature("purchases"), async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -79,7 +79,7 @@ router.post("/", protect, async (req, res) => {
 
     const subTotal = items.reduce(
       (sum, l) => sum + Number(l.lineTotal || 0),
-      0
+      0,
     );
     const grandTotal = subTotal; // extend with tax later
     const paid = Number(amountPaid) || 0;
@@ -104,7 +104,7 @@ router.post("/", protect, async (req, res) => {
           createdBy: req.user?._id,
         },
       ],
-      { session }
+      { session },
     );
 
     for (const line of items) {
@@ -122,7 +122,7 @@ router.post("/", protect, async (req, res) => {
           type: "purchase",
           createdBy: req.user?._id,
         },
-        session
+        session,
       );
       await itemDoc.save({ session });
     }
@@ -144,11 +144,13 @@ router.post("/", protect, async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    res.status(400).json({ message: err.message || "Failed to create purchase" });
+    res
+      .status(400)
+      .json({ message: err.message || "Failed to create purchase" });
   }
 });
 
-router.get("/", protect, async (req, res) => {
+router.get("/", protect, requireFeature("purchases"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });

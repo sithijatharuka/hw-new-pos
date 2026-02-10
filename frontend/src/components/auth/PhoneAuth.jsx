@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
 import { sendOtp, verifyOtp } from "../../api/otp";
 import AppLoader from "../common/AppLoader";
+import { showSuccess, showError } from "../../utils/toastHelper";
 
 const LK_COUNTRY = { code: "LK", name: "Sri Lanka", dial: "+94", flag: "🇱🇰" };
 
@@ -174,17 +174,17 @@ export default function PhoneAuth({
         setOtpSent(true);
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
         clearFieldError("otp");
-        toast.success("OTP sent!", { duration: 3000 });
+        showSuccess("OTP sent!");
       } else {
-        const errorMsg = data?.message || "Failed to send OTP.";
+        const errorMsg = data?.message || "Failed to send OTP";
         setFieldError("phone", errorMsg);
-        toast.error(errorMsg, { duration: 3000 });
+        showError(errorMsg);
       }
     } catch (err) {
       if (!mountedRef.current) return;
-      const errorMsg = err?.message || "Failed to send OTP. Please try again.";
+      const errorMsg = err?.message || "Failed to send OTP. Please try again";
       setFieldError("phone", errorMsg);
-      toast.error(errorMsg, { duration: 3000 });
+      showError(errorMsg);
     } finally {
       if (mountedRef.current) setSending(false);
     }
@@ -211,25 +211,22 @@ export default function PhoneAuth({
       if (!mountedRef.current) return;
 
       if (!data?.success) {
-        const errorMsg = data?.message || "Invalid OTP.";
+        const errorMsg = data?.message || "Invalid OTP";
         setFieldError("otp", errorMsg);
         setOtp("");
-        toast.error(errorMsg, { duration: 3000 });
+        showError(errorMsg);
         return;
       }
 
-      toast.success("Phone verified!", { duration: 3000 });
+      showSuccess("Phone verified!");
 
       // reset local state
       setOtp("");
       setOtpSent(false);
       setResendCooldown(0);
 
-      console.log("[PhoneAuth] OTP verified, data:", data);
-
       if (typeof onVerified === "function") {
         onVerified(data);
-        console.log("[PhoneAuth] onVerified called with:", data);
       }
     } catch (err) {
       if (!mountedRef.current) return;

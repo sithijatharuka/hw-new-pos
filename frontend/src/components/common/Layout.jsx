@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import HorizontalNav from "./HorizontalNav";
+import { userHasFeatureAccess } from "../../utils/permissionHelper.js";
 
 const navItems = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/pos", label: "POS Billing" },
-  { to: "/inventory", label: "Inventory" },
-  { to: "/customers", label: "Customers" },
-  { to: "/suppliers", label: "Suppliers" },
-  { to: "/reports", label: "Reports" },
-  { to: "/expenses", label: "Expenses" },
-  { to: "/users", label: "Users" },
-  { to: "/settings", label: "Settings" },
+  { to: "/dashboard", label: "Dashboard", featureId: "dashboard" },
+  { to: "/pos", label: "POS Billing", featureId: "pos" },
+  { to: "/inventory", label: "Inventory", featureId: "inventory" },
+  { to: "/customers", label: "Customers", featureId: "customers" },
+  { to: "/suppliers", label: "Suppliers", featureId: "suppliers" },
+  { to: "/reports", label: "Reports", featureId: "reports" },
+  { to: "/expenses", label: "Expenses", featureId: "expenses" },
+  { to: "/users", label: "Users", featureId: "users" },
+  { to: "/settings", label: "Settings", featureId: "settings" },
 ];
 
 export const AppShell = ({ children, user, onLogout, api }) => {
@@ -74,6 +75,10 @@ export const AppShell = ({ children, user, onLogout, api }) => {
           <nav className="flex-1 px-3 py-4 space-y-1">
             {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.to);
+              const hasAccess = userHasFeatureAccess(user, item.featureId);
+
+              // Hide items user doesn't have access to
+              if (!hasAccess) return null;
 
               return (
                 <Link
@@ -178,6 +183,11 @@ export const AppShell = ({ children, user, onLogout, api }) => {
           <div className="flex items-center justify-around gap-1 px-2 py-2">
             {navItems.slice(0, 4).map((item) => {
               const isActive = location.pathname.startsWith(item.to);
+              const hasAccess = userHasFeatureAccess(user, item.featureId);
+
+              // Hide items user doesn't have access to
+              if (!hasAccess) return null;
+
               return (
                 <Link
                   key={item.to}
@@ -250,6 +260,14 @@ export const AppShell = ({ children, user, onLogout, api }) => {
                     <div className="py-2">
                       {navItems.slice(4).map((item) => {
                         const isActive = location.pathname.startsWith(item.to);
+                        const hasAccess = userHasFeatureAccess(
+                          user,
+                          item.featureId,
+                        );
+
+                        // Hide items user doesn't have access to
+                        if (!hasAccess) return null;
+
                         return (
                           <Link
                             key={item.to}

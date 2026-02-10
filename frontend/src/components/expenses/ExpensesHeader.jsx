@@ -1,7 +1,14 @@
 import React from "react";
 import { PageHeader } from "../common";
+import { formatCurrency } from "../../utils/currency";
 
-const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
+const ExpensesHeader = ({
+  totalExpenses,
+  categories,
+  expenses,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
+}) => {
   const currentMonthTotal = expenses
     .filter((e) => {
       const expenseDate = new Date(e.date);
@@ -24,7 +31,7 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
           <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-200 min-w-[200px]">
             <p className="text-xs text-gray-500 font-medium">Total Expenses</p>
             <p className="text-xl font-bold text-gray-800 truncate">
-              Rs. {totalExpenses.toFixed(2)}
+              {formatCurrency(totalExpenses, currencySymbol, currencyPosition)}
             </p>
           </div>
         }
@@ -56,7 +63,11 @@ const ExpensesHeader = ({ totalExpenses, categories, expenses }) => {
           <div className="min-w-0">
             <p className="text-xs text-gray-500 font-medium">Current Month</p>
             <p className="text-lg font-bold text-gray-800 truncate">
-              Rs. {currentMonthTotal.toFixed(2)}
+              {formatCurrency(
+                currentMonthTotal,
+                currencySymbol,
+                currencyPosition,
+              )}
             </p>
           </div>
           <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">

@@ -3,15 +3,24 @@ import AppLoader from "../components/common/AppLoader";
 import { useParams } from "react-router-dom";
 import Barcode from "react-barcode";
 import { getItem } from "../api/inventory/items";
+import { loadCurrencySettings } from "../api/settings/settings";
+import { formatCurrency } from "../utils/currency";
 
 const BarcodePrintPage = ({ api }) => {
   const { id } = useParams();
   const [item, setItem] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState("Rs.");
+  const [currencyPosition, setCurrencyPosition] = useState("before");
 
   useEffect(() => {
     const load = async () => {
-      const data = await getItem(api, id);
+      const [data, currencySettings] = await Promise.all([
+        getItem(api, id),
+        loadCurrencySettings(api),
+      ]);
       setItem(data);
+      setCurrencySymbol(currencySettings.currencySymbol);
+      setCurrencyPosition(currencySettings.currencyPosition);
       setTimeout(() => window.print(), 300);
     };
     load();
@@ -38,7 +47,12 @@ const BarcodePrintPage = ({ api }) => {
         <div className="text-center mb-2">
           <p className="text-[11px] font-semibold truncate">{item.name}</p>
           <p className="text-[10px] text-gray-500">
-            Rs. {item.sellingPrice.toFixed(2)} / {item.baseUnit}
+            {formatCurrency(
+              item.sellingPrice,
+              currencySymbol,
+              currencyPosition,
+            )}{" "}
+            / {item.baseUnit}
           </p>
         </div>
         <div className="flex justify-center">
@@ -50,7 +64,3 @@ const BarcodePrintPage = ({ api }) => {
 };
 
 export default BarcodePrintPage;
-
-
-
-
