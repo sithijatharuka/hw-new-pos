@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import AppLoader from "../common/AppLoader";
 import CloseButton from "../common/CloseButton";
 import { validateCustomerForm } from "../common/formValidation";
 import colors from "../../themes/colors";
@@ -178,17 +177,6 @@ const CustomerFormModal = ({
               value={form.notes}
               onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
             />
-
-            {saving && (
-              <div className="pt-4">
-                <AppLoader
-                  open
-                  variant="inline"
-                  title="Saving customer"
-                  subtitle="Updating customer details"
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-2 p-5 pt-3 border-t border-gray-200">

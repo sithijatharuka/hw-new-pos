@@ -103,8 +103,7 @@ const SettingsPage = ({ user, api }) => {
     }
   };
 
-  const labelBase =
-    "block mb-1.5 text-xs font-bold tracking-wide select-none";
+  const labelBase = "block mb-1.5 text-xs font-bold tracking-wide select-none";
   const helperBase = "mt-1 text-[10px] leading-4";
   const inputBase =
     "w-full rounded-2xl px-3.5 py-2.5 text-sm outline-none transition-all duration-200 " +
@@ -471,8 +470,8 @@ const SettingsPage = ({ user, api }) => {
                     className={helperBase}
                     style={{ color: colors.text.tertiary }}
                   >
-                    Example: enter <span className="font-bold">15</span>{" "}
-                    for 15% VAT.
+                    Example: enter <span className="font-bold">15</span> for 15%
+                    VAT.
                   </p>
                 </div>
 
@@ -712,17 +711,6 @@ const SettingsPage = ({ user, api }) => {
               >
                 Save settings
               </button>
-
-              {saving && (
-                <div className="mt-4">
-                  <AppLoader
-                    open
-                    variant="inline"
-                    title="Saving settings"
-                    subtitle="Applying your configuration updates"
-                  />
-                </div>
-              )}
             </div>
           </form>
         </div>

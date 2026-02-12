@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AppLoader from "../common/AppLoader";
+
 import CloseButton from "../common/CloseButton";
 import { colors } from "../../themes/colors";
 import regexValidations from "../../utils/regexValidations";
@@ -566,20 +566,6 @@ const EditStaffModal = ({
             className="flex-shrink-0 p-5 space-y-3 border-t sm:p-6"
             style={{ borderColor: colors.border.light }}
           >
-            {saving && (
-              <div>
-                <AppLoader
-                  open
-                  variant="inline"
-                  title={
-                    isCreateMode
-                      ? "Creating staff user"
-                      : "Saving staff changes"
-                  }
-                  subtitle="Applying updates to the staff record"
-                />
-              </div>
-            )}
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"

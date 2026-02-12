@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useCallback } from "react";
-import AppLoader from "../components/common/AppLoader";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { createOwner } from "../api/users/users";
@@ -626,17 +625,6 @@ const OwnerSignupPage = ({ api }) => {
                     <span>Create owner</span>
                   </span>
                 </motion.button>
-
-                {saving && (
-                  <div className="mt-4">
-                    <AppLoader
-                      open
-                      variant="inline"
-                      title="Creating owner account"
-                      subtitle="Setting up your shop profile"
-                    />
-                  </div>
-                )}
               </form>
 
               {/* Footer */}

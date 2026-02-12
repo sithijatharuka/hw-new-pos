@@ -71,7 +71,7 @@ const ExpensesPage = ({ api }) => {
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+                className="px-4 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 active:scale-95"
                 onClick={() => {
                   toast.dismiss(t.id);
                   resolve(false);
@@ -81,7 +81,7 @@ const ExpensesPage = ({ api }) => {
               </button>
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 active:scale-95 transition-all cursor-pointer"
+                className="px-4 py-2 font-medium text-white transition-all bg-red-600 rounded-lg cursor-pointer hover:bg-red-700 active:scale-95"
                 onClick={() => {
                   toast.dismiss(t.id);
                   resolve(true);
@@ -102,9 +102,10 @@ const ExpensesPage = ({ api }) => {
     setLoading(true);
     try {
       const expenses = await loadExpenses(api);
-      setExpenses(expenses);
+      setExpenses(Array.isArray(expenses) ? expenses : []);
     } catch (err) {
       showError(err?.response?.data?.message || errorMessages.load("expenses"));
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -246,12 +247,12 @@ const ExpensesPage = ({ api }) => {
   };
 
   // Totals (used in multiple places)
-  const totalExpenses = expenses.reduce(
+  const totalExpenses = (Array.isArray(expenses) ? expenses : []).reduce(
     (sum, e) => sum + (Number(e.amount) || 0),
     0,
   );
 
-  const currentMonthTotal = expenses
+  const currentMonthTotal = (Array.isArray(expenses) ? expenses : [])
     .filter((e) => {
       const expenseDate = new Date(e.date);
       const now = new Date();
@@ -266,7 +267,7 @@ const ExpensesPage = ({ api }) => {
     <div className="min-h-screen px-3 py-4 sm:px-4 md:px-6 lg:px-8">
       {/* No Toaster component needed - centralized in App.jsx */}
 
-      <div className="max-w-7xl mx-auto space-y-6 pb-10">
+      <div className="pb-10 mx-auto space-y-6 max-w-7xl">
         <ExpensesHeader
           totalExpenses={totalExpenses}
           categories={categories}

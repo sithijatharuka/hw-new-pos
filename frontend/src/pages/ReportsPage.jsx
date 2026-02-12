@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import AppLoader from "../components/common/AppLoader";
 import PageHeader from "../components/common/PageHeader";
 import {
   getDailySalesOverview,

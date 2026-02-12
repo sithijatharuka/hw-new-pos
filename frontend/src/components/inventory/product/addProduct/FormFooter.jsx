@@ -1,5 +1,4 @@
 import React from "react";
-import AppLoader from "../../../common/AppLoader";
 
 const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
   return (
@@ -22,17 +21,6 @@ const FormFooter = ({ saving, editingId, onCancel, onSave }) => {
           {editingId ? "Update Item" : "Create Item"}
         </button>
       </div>
-
-      {saving && (
-        <div className="pt-4">
-          <AppLoader
-            open
-            variant="inline"
-            title={editingId ? "Updating item" : "Creating item"}
-            subtitle="Saving inventory changes"
-          />
-        </div>
-      )}
     </div>
   );
 };

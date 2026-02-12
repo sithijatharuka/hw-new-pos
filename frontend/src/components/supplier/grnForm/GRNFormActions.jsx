@@ -1,5 +1,4 @@
 import React from "react";
-import AppLoader from "../../common/AppLoader";
 import colors from "../../../themes/colors";
 const GRNFormActions = ({
   saving,
@@ -26,17 +25,6 @@ const GRNFormActions = ({
       >
         {existingGRN ? "Update GRN" : "Save GRN"}
       </button>
-
-      {saving && (
-        <div className="w-full pt-4">
-          <AppLoader
-            open
-            variant="inline"
-            title={existingGRN ? "Updating GRN" : "Saving GRN"}
-            subtitle="Recording goods received details"
-          />
-        </div>
-      )}
     </div>
   );
 };

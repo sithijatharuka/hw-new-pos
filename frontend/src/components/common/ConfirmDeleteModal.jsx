@@ -1,5 +1,4 @@
 import React from "react";
-import AppLoader from "./AppLoader";
 
 export default function ConfirmDeleteModal({
   open,
@@ -17,17 +16,6 @@ export default function ConfirmDeleteModal({
       <div className="relative flex flex-col items-center w-full max-w-md p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
         <h3 className="mb-2 text-lg font-bold text-red-600">{title}</h3>
         <p className="mb-4 text-sm text-center text-gray-700">{message}</p>
-
-        {loading && (
-          <div className="w-full mb-4">
-            <AppLoader
-              open
-              variant="inline"
-              title="Deleting item"
-              subtitle="Applying your changes"
-            />
-          </div>
-        )}
 
         <div className="flex gap-3 mt-2">
           <button

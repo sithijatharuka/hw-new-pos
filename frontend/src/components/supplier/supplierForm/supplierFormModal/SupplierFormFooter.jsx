@@ -1,6 +1,5 @@
 // src/components/supplier/SupplierFormFooter.jsx
 import React from "react";
-import AppLoader from "../../../common/AppLoader";
 import colors from "../../../../themes/colors";
 const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
   return (
@@ -42,17 +41,6 @@ const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
           {isEdit ? "Update Supplier" : "Save Supplier"}
         </button>
       </div>
-
-      {saving && (
-        <div className="px-6 pb-4">
-          <AppLoader
-            open
-            variant="inline"
-            title={isEdit ? "Updating supplier" : "Saving supplier"}
-            subtitle="Applying supplier profile changes"
-          />
-        </div>
-      )}
     </div>
   );
 };

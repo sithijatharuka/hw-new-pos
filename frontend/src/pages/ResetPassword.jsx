@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from "react";
-import AppLoader from "../components/common/AppLoader";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import regexValidations from "../utils/regexValidations";
@@ -264,8 +263,16 @@ export default function ResetPassword({ api }) {
                 <motion.button
                   type="submit"
                   disabled={saving || !form.password || !form.confirmPassword}
-                  whileHover={!saving && form.password && form.confirmPassword ? { y: -2 } : {}}
-                  whileTap={!saving && form.password && form.confirmPassword ? { scale: 0.99 } : {}}
+                  whileHover={
+                    !saving && form.password && form.confirmPassword
+                      ? { y: -2 }
+                      : {}
+                  }
+                  whileTap={
+                    !saving && form.password && form.confirmPassword
+                      ? { scale: 0.99 }
+                      : {}
+                  }
                   transition={{ type: "spring", stiffness: 420, damping: 28 }}
                   className={`
                     relative mt-2 w-full overflow-hidden rounded-2xl px-4 py-3
@@ -306,17 +313,6 @@ export default function ResetPassword({ api }) {
                     <span>{saving ? "Resetting..." : "Reset Password"}</span>
                   </span>
                 </motion.button>
-
-                {saving && (
-                  <div className="mt-4">
-                    <AppLoader
-                      open
-                      variant="inline"
-                      title="Resetting password"
-                      subtitle="Updating your account credentials"
-                    />
-                  </div>
-                )}
 
                 {/* Small helper */}
                 <p className="pt-2 text-center text-[11px] leading-relaxed text-text-tertiary">

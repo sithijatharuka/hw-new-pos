@@ -1,5 +1,4 @@
 import React from "react";
-import AppLoader from "./AppLoader";
 
 /**
  * Reusable search bar component with loading indicator
@@ -40,16 +39,6 @@ const SearchBar = ({
           />
         </svg>
       </div>
-      {isSearching && (
-        <div className="mt-3">
-          <AppLoader
-            open
-            variant="inline"
-            title="Searching"
-            subtitle="Matching your query"
-          />
-        </div>
-      )}
     </div>
   );
 };

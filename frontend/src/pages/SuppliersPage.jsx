@@ -378,17 +378,13 @@ const SuppliersPage = ({ api }) => {
 
         {/* Mobile cards */}
         <div className="block lg:hidden">
-          {loading || isSearching ? (
+          {loading ? (
             <div className="px-4 py-6">
               <AppLoader
                 open
                 variant="inline"
-                title={loading ? "Loading suppliers" : "Searching suppliers"}
-                subtitle={
-                  loading
-                    ? "Syncing supplier list"
-                    : "Matching suppliers to your query"
-                }
+                title="Loading suppliers"
+                subtitle="Syncing supplier list"
               />
             </div>
           ) : (
@@ -431,20 +427,14 @@ const SuppliersPage = ({ api }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {loading || isSearching ? (
+              {loading ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-6">
                     <AppLoader
                       open
                       variant="inline"
-                      title={
-                        loading ? "Loading suppliers" : "Searching suppliers"
-                      }
-                      subtitle={
-                        loading
-                          ? "Syncing supplier list"
-                          : "Matching suppliers to your query"
-                      }
+                      title="Loading suppliers"
+                      subtitle="Syncing supplier list"
                     />
                   </td>
                 </tr>
