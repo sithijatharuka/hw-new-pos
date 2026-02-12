@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PageHeader from "../components/common/PageHeader";
+import AppLoader from "../components/common/AppLoader";
 import {
   getDailySalesOverview,
   getProfitMetrics,
@@ -421,6 +422,17 @@ const ReportsPage = ({ api }) => {
             <ExportButtons
               onExportCSV={handleExportCSV}
               onExportPDF={handleExportPDF}
+            />
+          )}
+          
+          {/* AppLoader - Shows beneath PageHeader during initial load */}
+          {loading && (
+            <AppLoader
+              open
+              variant="inline"
+              title="Loading report"
+              subtitle="Fetching your financial data"
+              tone="primary"
             />
           )}
 
