@@ -12,24 +12,24 @@ const InventoryFilters = ({
   onClear,
 }) => {
   return (
-    <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-        <div className="flex-1 flex flex-col sm:flex-row gap-3">
+    <div className="p-4 border-b border-gray-200 sm:p-6 bg-gradient-to-r from-gray-50 to-white">
+      <div className="flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-center">
+        <div className="flex flex-col flex-1 gap-3 sm:flex-row">
           <SearchBar
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, barcode, brand, category..."
             isSearching={isSearching}
           />
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex w-full gap-2 sm:w-auto">
             <button
-              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+              className="h-10 px-4 text-white transition-all bg-blue-500 border-2 border-blue-600 cursor-pointer rounded-xl hover:bg-blue-600 active:scale-95"
               onClick={onSearch}
             >
               Search
             </button>
             <button
-              className="h-10 px-4 bg-white border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+              className="h-10 px-4 text-gray-800 transition-all bg-gray-200 border-2 border-gray-300 cursor-pointer rounded-xl hover:bg-gray-300 active:scale-95"
               onClick={onClear}
             >
               Clear
@@ -39,7 +39,7 @@ const InventoryFilters = ({
 
         <div className="w-full md:w-64">
           <select
-            className="w-full h-10 pl-4 pr-10 bg-white border-2 border-gray-300 rounded-xl text-sm"
+            className="w-full h-10 pl-4 pr-10 text-sm bg-white border-2 border-gray-300 rounded-xl"
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
           >

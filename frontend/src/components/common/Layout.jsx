@@ -182,129 +182,189 @@ export const AppShell = ({ children, user, onLogout, api }) => {
         </main>
 
         {/* ================= MOBILE BOTTOM NAV ================= */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-background-secondary/95 shadow-float backdrop-blur-md md:hidden">
-          <div className="flex items-center justify-around gap-1 px-2 py-2">
-            {navItems.slice(0, 4).map((item) => {
-              const isActive = location.pathname.startsWith(item.to);
-              const hasAccess = userHasFeatureAccess(user, item.featureId);
+        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+          {/* iOS safe-area + glass bar */}
+          <div className="absolute inset-0 border-t border-gray-200 pointer-events-none bg-white/95 shadow-float backdrop-blur-md" />
+          <div className="absolute inset-x-0 top-0 h-px pointer-events-none bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
-              // Hide items user doesn't have access to
-              if (!hasAccess) return null;
+          <div className="relative px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2">
+            <div className="flex items-stretch justify-around gap-2">
+              {navItems.slice(0, 4).map((item) => {
+                const isActive = location.pathname.startsWith(item.to);
+                const hasAccess = userHasFeatureAccess(user, item.featureId);
 
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
+                // Hide items user doesn't have access to
+                if (!hasAccess) return null;
+
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={[
+                      // layout
+                      "group relative flex min-w-0 flex-1 flex-col items-center justify-center cursor-pointer",
+                      "rounded-2xl px-2 py-2.5",
+                      // typography
+                      "text-[11px] font-semibold",
+                      // interactions
+                      "select-none hover:text-accent transition-all duration-200",
+                      "active:scale-[0.98]",
+                      "focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25",
+                      // state
+                      isActive
+                        ? "bg-accent-subtle text-primary shadow-soft"
+                        : "text-text-tertiary hover:bg-background-subtle hover:text-text-primary",
+                    ].join(" ")}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {/* label */}
+                    <span className="w-full leading-tight text-center truncate">
+                      {item.label}
+                    </span>
+
+                    {/* indicator */}
+                    <span
+                      className={[
+                        "mt-1.5 h-1 w-7 rounded-full transition-all duration-200",
+                        isActive ? "bg-accent" : "bg-border-light",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+
+                    {/* subtle active glow */}
+                    <span
+                      className={[
+                        "pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition",
+                        isActive ? "opacity-100" : "opacity-0",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                );
+              })}
+
+              <div className="relative flex min-w-[72px] flex-1 items-stretch justify-center">
+                <motion.button
+                  type="button"
+                  onClick={() => setShowMoreMenu((v) => !v)}
+                  whileTap={{ scale: 0.98 }}
                   className={[
-                    "flex flex-1 cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold",
-                    "transition-all duration-200",
+                    "group cursor-pointer hover:text-accent relative flex w-full min-w-0 flex-col items-center justify-center",
+                    "rounded-2xl px-2 py-2.5",
+                    "text-[11px] font-semibold",
+                    "select-none transition-all duration-200",
+                    "active:scale-[0.98]",
                     "focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25",
-                    isActive
-                      ? "bg-accent-subtle text-primary"
+                    showMoreMenu
+                      ? "bg-background-subtle text-text-primary shadow-soft"
                       : "text-text-tertiary hover:bg-background-subtle hover:text-text-primary",
                   ].join(" ")}
+                  aria-haspopup="menu"
+                  aria-expanded={showMoreMenu}
                 >
-                  <span className="truncate">{item.label}</span>
+                  <span className="leading-tight ">More</span>
                   <span
                     className={[
-                      "mt-1 h-1 w-6 rounded-full transition",
-                      isActive ? "bg-accent" : "bg-border-light",
+                      "mt-1.5 h-1 w-7 rounded-full transition-all duration-200",
+                      showMoreMenu ? "bg-accent" : "bg-border-light",
                     ].join(" ")}
                     aria-hidden="true"
                   />
-                </Link>
-              );
-            })}
+                </motion.button>
 
-            <div className="relative">
-              <motion.button
-                type="button"
-                onClick={() => setShowMoreMenu((v) => !v)}
-                whileTap={{ scale: 0.98 }}
-                className="
-                flex cursor-pointer flex-col items-center justify-center
-                rounded-2xl px-3 py-2 text-[11px] font-semibold
-                text-text-tertiary transition
-                hover:bg-background-subtle hover:text-text-primary
-                focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25
-              "
-              >
-                More
-                <span
-                  className={[
-                    "mt-1 h-1 w-6 rounded-full transition",
-                    showMoreMenu ? "bg-accent" : "bg-border-light",
-                  ].join(" ")}
-                  aria-hidden="true"
-                />
-              </motion.button>
-
-              <AnimatePresence>
-                {showMoreMenu && (
-                  <motion.div
-                    key="more-menu"
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 420, damping: 30 }}
-                    className="
-                    absolute bottom-14 right-0
-                    min-w-[180px] overflow-hidden
-                    rounded-2xl border border-gray-200
-                    bg-background-secondary shadow-float
-                  "
-                  >
-                    <div className="px-3 py-2 border-b border-gray-200 bg-background-subtle">
-                      <p className="text-[11px] font-semibold tracking-wider text-text-secondary">
-                        MORE
-                      </p>
-                    </div>
-
-                    <div className="py-2">
-                      {navItems.slice(4).map((item) => {
-                        const isActive = location.pathname.startsWith(item.to);
-                        const hasAccess = userHasFeatureAccess(
-                          user,
-                          item.featureId,
-                        );
-
-                        // Hide items user doesn't have access to
-                        if (!hasAccess) return null;
-
-                        return (
-                          <Link
-                            key={item.to}
-                            to={item.to}
-                            onClick={() => setShowMoreMenu(false)}
-                            className={[
-                              "block cursor-pointer px-4 py-2.5 text-sm font-semibold transition",
-                              isActive
-                                ? "bg-accent-subtle text-primary"
-                                : "text-text-secondary hover:bg-background-subtle hover:text-text-primary",
-                            ].join(" ")}
-                          >
-                            {item.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    <div className="px-3 py-2 border-t border-gray-200 bg-background-subtle">
+                <AnimatePresence>
+                  {showMoreMenu && (
+                    <>
+                      {/* click-away backdrop */}
                       <motion.button
+                        key="more-backdrop"
                         type="button"
-                        onClick={() => {
-                          setShowMoreMenu(false);
-                          onLogout();
+                        aria-label="Close menu"
+                        onClick={() => setShowMoreMenu(false)}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-40 cursor-default bg-black/10"
+                      />
+
+                      <motion.div
+                        key="more-menu"
+                        initial={{ opacity: 0, y: 14, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 420,
+                          damping: 30,
                         }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full px-3 py-2 text-xs font-semibold transition border border-gray-200 cursor-pointer rounded-xl bg-background-secondary text-status-error shadow-soft hover:bg-status-error-bg hover:text-status-error-text hover:shadow-card focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25"
+                        className={[
+                          "absolute bottom-[3.75rem] right-0 z-50",
+                          "min-w-[200px] overflow-hidden",
+                          "rounded-2xl border border-gray-200",
+                          "bg-white shadow-float",
+                        ].join(" ")}
+                        role="menu"
                       >
-                        Logout
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <div className="px-4 py-3 border-b border-gray-200 bg-background-subtle">
+                          <p className="text-[11px] font-semibold tracking-wider text-text-secondary">
+                            MORE
+                          </p>
+                        </div>
+
+                        <div className="py-2">
+                          {navItems.slice(4).map((item) => {
+                            const isActive = location.pathname.startsWith(
+                              item.to,
+                            );
+                            const hasAccess = userHasFeatureAccess(
+                              user,
+                              item.featureId,
+                            );
+
+                            // Hide items user doesn't have access to
+                            if (!hasAccess) return null;
+
+                            return (
+                              <Link
+                                key={item.to}
+                                to={item.to}
+                                onClick={() => setShowMoreMenu(false)}
+                                className={[
+                                  "block cursor-pointer",
+                                  "px-4 py-3",
+                                  "text-sm font-semibold hover:text-accent",
+                                  "transition",
+                                  "active:scale-[0.99]",
+                                  isActive
+                                    ? "bg-accent-subtle text-primary"
+                                    : "text-text-secondary hover:bg-background-subtle hover:text-text-primary",
+                                ].join(" ")}
+                                role="menuitem"
+                              >
+                                {item.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+
+                        <div className="px-3 py-3 border-t border-gray-200 bg-background-subtle">
+                          <motion.button
+                            type="button"
+                            onClick={() => {
+                              setShowMoreMenu(false);
+                              onLogout();
+                            }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full cursor-pointer rounded-xl border border-gray-200 bg-red-500 px-3 py-2.5 text-xs font-semibold text-white shadow-soft transition hover:bg-red-400 hover:text-white hover:shadow-card focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25"
+                          >
+                            Logout
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </nav>
