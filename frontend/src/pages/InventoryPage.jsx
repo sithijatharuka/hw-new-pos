@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { loadCurrencySettings } from "../api/settings/settings";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import AddItemModal from "../components/inventory/product/addProduct/AddNewItem";
@@ -189,7 +189,7 @@ const InventoryPage = ({ api }) => {
         toastOptions={{ className: "text-sm font-medium", duration: 3000 }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-8">
         {/* Header */}
         <InventoryHeader
           onAddNew={openNew}
@@ -198,7 +198,7 @@ const InventoryPage = ({ api }) => {
         />
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl">
           {/* Search/Filter */}
           <InventoryFilters
             q={q}

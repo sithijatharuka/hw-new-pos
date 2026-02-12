@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import AppLoader from "./AppLoader";
+import TypewriterText from "../TypewriterText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { loadItems } from "../../api/inventory/items";
@@ -63,13 +64,17 @@ const HorizontalNav = ({ api }) => {
   const count = lowStockItems.length;
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-gray-200 bg-background-secondary/90 shadow-soft backdrop-blur-md">
+    <nav className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 shadow-soft backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-end px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 relative">
         {/* Center Heading - NEXA POS */}
         <div className="absolute -translate-x-1/2 left-1/2">
           <h1 className="text-xl font-bold sm:text-2xl">
-            <span className="text-primary">Welcome to NEXA</span>{" "}
-            <span className="text-accent">POS</span>
+            <span className="text-primary">
+              <TypewriterText text="Welcome to NEXA" speed={50} />
+            </span>{" "}
+            <span className="text-accent">
+              <TypewriterText text="POS" speed={50} />
+            </span>
           </h1>
         </div>
 
@@ -82,7 +87,7 @@ const HorizontalNav = ({ api }) => {
             className="
               group relative inline-flex cursor-pointer items-center justify-center
               rounded-2xl border border-accent
-              bg-background-secondary px-3 py-2
+              bg-white px-3 py-2
               shadow-soft transition-all duration-200
               hover:-translate-y-0.5 hover:bg-background-subtle hover:shadow-card
               focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25
@@ -92,7 +97,13 @@ const HorizontalNav = ({ api }) => {
             aria-expanded={showDropdown}
           >
             {/* Bell Icon */}
-            <svg
+            <motion.svg
+              animate={count > 0 ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+              transition={
+                count > 0
+                  ? { duration: 0.6, repeat: Infinity, repeatDelay: 0.4 }
+                  : { duration: 0 }
+              }
               className="w-5 h-5 transition-colors duration-200 text-accent group-hover:text-accent sm:h-6 sm:w-6"
               fill="none"
               stroke="currentColor"
@@ -105,7 +116,7 @@ const HorizontalNav = ({ api }) => {
                 strokeWidth={2}
                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
               />
-            </svg>
+            </motion.svg>
 
             {/* Badge */}
             <AnimatePresence>
@@ -118,7 +129,7 @@ const HorizontalNav = ({ api }) => {
                   transition={{ type: "spring", stiffness: 520, damping: 28 }}
                   className="
                     absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center
-                    rounded-full bg-status-error px-1.5 text-[11px] font-extrabold text-text-inverse
+                    rounded-full bg-red-500 px-1.5 text-[11px] font-extrabold text-text-inverse
                     shadow-soft
                   "
                 >
@@ -130,7 +141,7 @@ const HorizontalNav = ({ api }) => {
             {/* Subtle ping when there are alerts */}
             {count > 0 && (
               <span className="absolute inline-flex w-5 h-5 pointer-events-none -right-1 -top-1">
-                <span className="absolute inline-flex w-full h-full rounded-full opacity-25 bg-status-error motion-safe:animate-ping" />
+                <span className="absolute inline-flex w-full h-full bg-red-500 rounded-full opacity-25 motion-safe:animate-ping" />
               </span>
             )}
           </motion.button>
@@ -147,7 +158,7 @@ const HorizontalNav = ({ api }) => {
                 className="
                   absolute right-0 top-12 z-50 w-[92vw] max-w-sm overflow-hidden
                   rounded-3xl border border-gray-200
-                  bg-background-secondary shadow-float
+                  bg-white shadow-float
                 "
                 role="menu"
               >
@@ -166,17 +177,17 @@ const HorizontalNav = ({ api }) => {
                     <span
                       className={[
                         "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-soft",
-                        "border-gray-200 bg-background-secondary text-text-secondary",
+                        "border-gray-200 bg-white text-text-secondary",
                       ].join(" ")}
                     >
                       <span
                         className={[
                           "h-2.5 w-2.5 rounded-full",
                           loading
-                            ? "bg-status-pending"
+                            ? "bg-yellow-300"
                             : count > 0
-                              ? "bg-status-warning"
-                              : "bg-status-success",
+                              ? "bg-orange-400"
+                              : "bg-green-400",
                         ].join(" ")}
                         aria-hidden="true"
                       />
@@ -217,10 +228,10 @@ const HorizontalNav = ({ api }) => {
                             ✅
                           </span>
                         </div>
-                        <p className="text-sm font-semibold text-text-primary">
+                        <p className="text-sm font-semibold text-primary">
                           All items stocked!
                         </p>
-                        <p className="mt-1 text-xs text-text-tertiary">
+                        <p className="mt-1 text-xs text-accent">
                           No low stock alerts at this time.
                         </p>
                       </motion.div>
@@ -252,10 +263,10 @@ const HorizontalNav = ({ api }) => {
                               </div>
 
                               <div className="flex flex-col items-end gap-1">
-                                <span className="inline-flex items-center gap-2 rounded-full bg-status-error-bg px-2.5 py-1 text-[11px] font-extrabold text-status-error-text">
+                                <span className="inline-flex items-center gap-2 rounded-full bg-red-500-bg px-2.5 py-1 text-[11px] font-extrabold text-red-500-text">
                                   {onHand} {item.baseUnit}
                                 </span>
-                                <span className="text-[11px] font-semibold text-text-tertiary">
+                                <span className="text-[11px] font-semibold text-accent">
                                   Min: {lowLevel}
                                 </span>
                               </div>
