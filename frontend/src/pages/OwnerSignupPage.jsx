@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createOwner } from "../api/users/users";
 import regexValidations from "../utils/regexValidations";
 import { showSuccess, showError } from "../utils/toastHelper";
+import TypewriterText from "../components/TypewriterText";
 
 const OwnerSignupPage = ({ api }) => {
   const [form, setForm] = useState({
@@ -20,6 +21,7 @@ const OwnerSignupPage = ({ api }) => {
 
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [headerComplete, setHeaderComplete] = useState(false);
 
   const navigate = useNavigate();
 
@@ -38,7 +40,7 @@ const OwnerSignupPage = ({ api }) => {
     (name, value, nextForm = form) => {
       if (name === "name") {
         if (!regex.name.test(value)) {
-          return "Enter a real full name (e.g. Vinayak Mahadevan)";
+          return "Enter a real full name (e.g. Ajith Kumar)";
         }
       }
 
@@ -173,11 +175,11 @@ const OwnerSignupPage = ({ api }) => {
   }, [form, errors, saving]);
 
   const inputBase =
-    "w-full px-4 py-3 text-sm sm:text-[15px] transition outline-none rounded-2xl border bg-background-secondary text-text-primary placeholder:text-text-tertiary shadow-soft";
-  const inputFocus =
-    "focus:border-border-focus focus:ring-4 focus:ring-ring-focus/25 hover:border-border";
-  const inputError = "border-status-error focus:border-status-error";
-  const inputOk = "border-border-light";
+    "w-full rounded-2xl border bg-background-secondary px-9 py-3 text-sm text-text-primary shadow-soft outline-none transition placeholder:text-text-tertiary";
+  const inputRing =
+    "hover:border-border focus:border-border-focus focus:ring-4 focus:ring-ring-focus/25";
+  const inputError = "border-red-500 focus:border-red-500";
+  const inputOk = "border-gray-200";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background-primary">
@@ -200,7 +202,7 @@ const OwnerSignupPage = ({ api }) => {
           <div
             className="
               group relative overflow-hidden
-              rounded-3xl border border-border-light
+              rounded-3xl border border-gray-200
               bg-background-secondary
               shadow-card
               transition-all duration-300 ease-out
@@ -220,7 +222,7 @@ const OwnerSignupPage = ({ api }) => {
             <div className="relative px-5 py-7 sm:px-8 sm:py-9">
               {/* Header */}
               <div className="text-center">
-                <div className="mx-auto inline-flex items-center gap-2 rounded-2xl border border-border-light bg-background-subtle px-3 py-1.5 shadow-soft">
+                <div className="mx-auto inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-background-subtle px-3 py-1.5 shadow-soft">
                   <span className="relative inline-flex w-2 h-2">
                     <span className="absolute inline-flex w-full h-full rounded-full opacity-25 bg-accent motion-safe:animate-ping" />
                     <span className="relative inline-flex w-2 h-2 rounded-full bg-accent" />
@@ -230,13 +232,22 @@ const OwnerSignupPage = ({ api }) => {
                   </span>
                 </div>
 
-                <h1 className="mt-4 text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
-                  Create Owner Account
+                <h1 className="mt-4 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
+                  <TypewriterText
+                    text="Create Owner Account"
+                    speed={50}
+                    onComplete={() => setHeaderComplete(true)}
+                  />
                 </h1>
 
-                <p className="max-w-sm mx-auto mt-2 text-xs leading-relaxed text-text-tertiary sm:text-sm">
-                  This creates a new tenant and your first owner user.
-                </p>
+                {headerComplete && (
+                  <p className="max-w-sm mx-auto mt-2 text-xs leading-relaxed text-accent sm:text-sm">
+                    <TypewriterText
+                      text="This creates a new tenant and your first owner user"
+                      speed={40}
+                    />
+                  </p>
+                )}
               </div>
 
               {/* Form */}
@@ -266,11 +277,11 @@ const OwnerSignupPage = ({ api }) => {
                         return { ...prev, name: msg };
                       });
                     }}
-                    placeholder="Vinayak Mahadevan"
+                    placeholder="Ex: Ajith Kumar"
                     autoComplete="name"
                     className={[
                       inputBase,
-                      inputFocus,
+                      inputRing,
                       errors.name ? inputError : inputOk,
                     ].join(" ")}
                     aria-invalid={Boolean(errors.name)}
@@ -282,7 +293,7 @@ const OwnerSignupPage = ({ api }) => {
                       <motion.p
                         key="name-error"
                         id="name-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -315,11 +326,11 @@ const OwnerSignupPage = ({ api }) => {
                         return { ...prev, username: msg };
                       });
                     }}
-                    placeholder="user123"
+                    placeholder="Ex: AK64"
                     autoComplete="username"
                     className={[
                       inputBase,
-                      inputFocus,
+                      inputRing,
                       errors.username ? inputError : inputOk,
                     ].join(" ")}
                     aria-invalid={Boolean(errors.username)}
@@ -333,7 +344,7 @@ const OwnerSignupPage = ({ api }) => {
                       <motion.p
                         key="username-error"
                         id="username-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -352,7 +363,7 @@ const OwnerSignupPage = ({ api }) => {
                   </label>
 
                   <div className="flex items-stretch">
-                    <span className="px-3 py-3 text-sm border border-r-0 select-none rounded-l-2xl border-border-light bg-background-subtle text-text-tertiary">
+                    <span className="px-3 py-3 text-sm transition border border-r-0 border-gray-200 select-none rounded-l-2xl bg-background-subtle text-text-tertiary hover:border-border">
                       +94
                     </span>
 
@@ -371,16 +382,14 @@ const OwnerSignupPage = ({ api }) => {
                           return { ...prev, phone: msg };
                         });
                       }}
-                      placeholder="712345678"
+                      placeholder="761234567"
                       autoComplete="tel"
                       inputMode="numeric"
                       maxLength={9}
                       className={[
-                        "w-full rounded-r-2xl border border-l-0 bg-background-secondary px-4 py-3 text-sm sm:text-[15px] text-text-primary placeholder:text-text-tertiary shadow-soft outline-none transition",
-                        inputFocus,
-                        errors.phone
-                          ? "border-status-error focus:border-status-error"
-                          : "border-border-light focus:border-border-focus",
+                        "w-full rounded-r-2xl border border-l-0 bg-background-secondary px-9 py-3 text-sm text-text-primary placeholder:text-text-tertiary shadow-soft outline-none transition",
+                        inputRing,
+                        errors.phone ? inputError : inputOk,
                       ].join(" ")}
                       aria-invalid={Boolean(errors.phone)}
                       aria-describedby={
@@ -394,7 +403,7 @@ const OwnerSignupPage = ({ api }) => {
                       <motion.p
                         key="phone-error"
                         id="phone-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -438,12 +447,12 @@ const OwnerSignupPage = ({ api }) => {
                           return next;
                         });
                       }}
-                      placeholder="Enter password"
+                      placeholder="Ex: AKRacing26@"
                       autoComplete="new-password"
                       className={[
                         inputBase,
                         "pr-12",
-                        inputFocus,
+                        inputRing,
                         errors.password ? inputError : inputOk,
                       ].join(" ")}
                       aria-invalid={Boolean(errors.password)}
@@ -478,7 +487,7 @@ const OwnerSignupPage = ({ api }) => {
                       <motion.p
                         key="password-error"
                         id="password-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -517,12 +526,12 @@ const OwnerSignupPage = ({ api }) => {
                           return { ...prev, confirmPassword: msg };
                         });
                       }}
-                      placeholder="Confirm password"
+                      placeholder="Ex: AKRacing26@"
                       autoComplete="new-password"
                       className={[
                         inputBase,
                         "pr-12",
-                        inputFocus,
+                        inputRing,
                         errors.confirmPassword ? inputError : inputOk,
                       ].join(" ")}
                       aria-invalid={Boolean(errors.confirmPassword)}
@@ -561,7 +570,7 @@ const OwnerSignupPage = ({ api }) => {
                       <motion.p
                         key="confirm-password-error"
                         id="confirm-password-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -586,8 +595,8 @@ const OwnerSignupPage = ({ api }) => {
                     "focus:outline-none focus:ring-4 focus:ring-ring-focus/25",
                     "disabled:cursor-not-allowed disabled:opacity-60 bg-accent ",
                     canSubmit
-                      ? "cursor-pointer bg-accent text-text-inverse hover:shadow-lg active:bg-accent-active"
-                      : "cursor-not-allowed bg-accent-light text-text-inverse",
+                      ? "cursor-pointer text-white bg-accent hover:bg-accent/90 text-text-inverse hover:shadow-lg active:bg-accent-active"
+                      : "cursor-not-allowed bg-accent/90 text-white",
                   ].join(" ")}
                 >
                   {/* Framer shimmer */}

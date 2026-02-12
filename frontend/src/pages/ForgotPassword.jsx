@@ -1,9 +1,11 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import PhoneAuth from "../components/auth/PhoneAuth";
 import { useNavigate } from "react-router-dom";
+import TypewriterText from "../components/TypewriterText";
 
 export default function ForgotPassword({ api }) {
   const navigate = useNavigate();
+  const [headerComplete, setHeaderComplete] = useState(false);
 
   const handleVerified = useCallback(
     (data) => {
@@ -33,7 +35,7 @@ export default function ForgotPassword({ api }) {
           <div
             className="
               group relative overflow-hidden
-              rounded-3xl border border-border-light
+              rounded-3xl border border-gray-200
               bg-background-secondary
               shadow-card
               transition-all duration-300 ease-out
@@ -53,7 +55,7 @@ export default function ForgotPassword({ api }) {
                 <div
                   className="
                     inline-flex items-center gap-3
-                    rounded-2xl border border-border-light
+                    rounded-2xl border border-gray-200
                     bg-background-subtle
                     px-4 py-2.5
                     shadow-soft
@@ -73,13 +75,22 @@ export default function ForgotPassword({ api }) {
               </div>
 
               {/* Title + subtitle */}
-              <h1 className="text-center text-2xl font-semibold tracking-tight text-text-primary sm:text-[1.75rem]">
-                Forgot Password
+              <h1 className="text-center text-2xl font-semibold tracking-tight text-primary sm:text-[1.75rem]">
+                <TypewriterText
+                  text="Forgot Password"
+                  speed={50}
+                  onComplete={() => setHeaderComplete(true)}
+                />
               </h1>
 
-              <p className="mx-auto mt-2 max-w-sm text-center text-sm leading-6 text-text-tertiary sm:text-[0.95rem]">
-                Enter your phone number to receive an OTP for password reset.
-              </p>
+              {headerComplete && (
+                <p className="mx-auto mt-2 max-w-sm text-center text-sm leading-6 text-accent sm:text-[0.95rem]">
+                  <TypewriterText
+                    text="Enter your phone number to receive an OTP for password reset."
+                    speed={40}
+                  />
+                </p>
+              )}
 
               {/* Form container */}
               <div className="rounded-2xl bg-background-secondary shadow-soft">
@@ -92,7 +103,7 @@ export default function ForgotPassword({ api }) {
 
               {/* Helper row */}
               <div className="flex items-center justify-center gap-2 mt-0 text-xs text-text-tertiary sm:text-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary opacity-70" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-70" />
                 <span className="text-center">
                   Use the phone number linked to your account.
                 </span>

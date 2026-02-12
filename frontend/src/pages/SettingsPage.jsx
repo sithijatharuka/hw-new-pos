@@ -104,7 +104,7 @@ const SettingsPage = ({ user, api }) => {
   };
 
   const labelBase =
-    "block mb-1.5 text-xs font-semibold tracking-wide select-none";
+    "block mb-1.5 text-xs font-bold tracking-wide select-none";
   const helperBase = "mt-1 text-[10px] leading-4";
   const inputBase =
     "w-full rounded-2xl px-3.5 py-2.5 text-sm outline-none transition-all duration-200 " +
@@ -113,14 +113,14 @@ const SettingsPage = ({ user, api }) => {
     "w-full rounded-2xl px-3.5 py-2.5 text-sm outline-none transition-all duration-200 " +
     "shadow-sm focus:shadow-md disabled:opacity-70 disabled:cursor-not-allowed resize-y min-h-[84px]";
   const buttonBase =
-    "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold " +
+    "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold " +
     "transition-all duration-200 ease-out shadow-sm hover:shadow-md active:scale-[0.99] " +
     "disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer";
   const cardShell = "rounded-3xl p-4 sm:p-5 transition-all duration-300";
 
   if (loading && !settings) {
     return (
-      <div className="flex justify-center items-center py-6">
+      <div className="flex items-center justify-center py-6">
         <AppLoader
           open
           variant="inline"
@@ -173,7 +173,7 @@ const SettingsPage = ({ user, api }) => {
                   >
                     Logged in as{" "}
                     <span
-                      className="font-extrabold"
+                      className="font-bold"
                       style={{ color: colors.text.primary }}
                     >
                       {user?.name}
@@ -185,7 +185,7 @@ const SettingsPage = ({ user, api }) => {
                   >
                     Role:{" "}
                     <span
-                      className="font-semibold"
+                      className="font-bold"
                       style={{ color: colors.text.primary }}
                     >
                       {user?.role}
@@ -194,7 +194,7 @@ const SettingsPage = ({ user, api }) => {
 
                   {!isAdmin && (
                     <p
-                      className="mt-1 text-[11px] sm:text-xs font-semibold"
+                      className="mt-1 text-[11px] sm:text-xs font-bold"
                       style={{ color: colors.error.DEFAULT }}
                     >
                       Only admin or owner can update settings (view only).
@@ -350,7 +350,7 @@ const SettingsPage = ({ user, api }) => {
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
                   <h3
-                    className="text-sm font-extrabold tracking-tight"
+                    className="text-sm font-bold tracking-tight"
                     style={{ color: colors.text.primary }}
                   >
                     Contact Details
@@ -433,7 +433,7 @@ const SettingsPage = ({ user, api }) => {
                 }}
               >
                 <h3
-                  className="text-sm font-extrabold tracking-tight"
+                  className="text-sm font-bold tracking-tight"
                   style={{ color: colors.text.primary }}
                 >
                   VAT
@@ -471,7 +471,7 @@ const SettingsPage = ({ user, api }) => {
                     className={helperBase}
                     style={{ color: colors.text.tertiary }}
                   >
-                    Example: enter <span className="font-extrabold">15</span>{" "}
+                    Example: enter <span className="font-bold">15</span>{" "}
                     for 15% VAT.
                   </p>
                 </div>
@@ -489,14 +489,14 @@ const SettingsPage = ({ user, api }) => {
                   >
                     VAT is applied only when issuing a{" "}
                     <span
-                      className="font-extrabold"
+                      className="font-bold"
                       style={{ color: colors.text.primary }}
                     >
                       Tax Invoice
                     </span>{" "}
                     and only on items marked as{" "}
                     <span
-                      className="font-extrabold"
+                      className="font-bold"
                       style={{ color: colors.text.primary }}
                     >
                       Tax applicable
@@ -518,7 +518,7 @@ const SettingsPage = ({ user, api }) => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3
-                      className="text-sm font-extrabold tracking-tight"
+                      className="text-sm font-bold tracking-tight"
                       style={{ color: colors.text.primary }}
                     >
                       Currency Preferences
@@ -659,13 +659,13 @@ const SettingsPage = ({ user, api }) => {
                     style={{ color: colors.text.secondary }}
                   >
                     <span
-                      className="font-extrabold"
+                      className="font-bold"
                       style={{ color: colors.text.primary }}
                     >
                       Preview:
                     </span>{" "}
                     <span
-                      className="font-semibold"
+                      className="font-bold"
                       style={{ color: colors.primary.DEFAULT }}
                     >
                       {settings.currencyPosition === "before"
@@ -735,8 +735,3 @@ const SettingsPage = ({ user, api }) => {
 };
 
 export default SettingsPage;
-
-
-
-
-

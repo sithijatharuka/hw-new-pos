@@ -30,8 +30,8 @@ export const toE164FromAny = (input) => {
 export const validatePhoneNumber = (phone, countryDial = LK_DIAL) => {
   const digits = (phone || "").replace(/[^\d]/g, "");
 
-  if (digits.length < 7) return "Phone number is too short.";
-  if (digits.length > 12) return "Phone number is too long.";
+  if (digits.length < 7) return "Phone number is too short";
+  if (digits.length > 12) return "Phone number is too long";
 
   if (countryDial === LK_DIAL) {
     if (digits.length !== 9)
@@ -252,7 +252,7 @@ export default function PhoneAuth({
   const PhoneError = () =>
     errors.phone ? (
       <motion.p
-        className="mt-1 text-xs text-status-error"
+        className="mt-1 text-xs text-red-500"
         role="alert"
         initial={{ opacity: 0, y: -3 }}
         animate={{ opacity: 1, y: 0 }}
@@ -266,7 +266,7 @@ export default function PhoneAuth({
   const OtpError = () =>
     errors.otp ? (
       <motion.p
-        className="mt-1 text-xs text-status-error"
+        className="mt-1 text-xs text-red-500"
         role="alert"
         initial={{ opacity: 0, y: -3 }}
         animate={{ opacity: 1, y: 0 }}
@@ -309,18 +309,14 @@ export default function PhoneAuth({
   const phoneInputClass = [
     inputBase,
     "pl-12",
-    errors.phone && touched.phone
-      ? "border-status-error bg-status-error-bg"
-      : "border-border-light",
+    errors.phone && touched.phone ? "border-red-500 " : "border-gray-200",
     sending || verifying ? "cursor-not-allowed opacity-80" : "cursor-pointer",
   ].join(" ");
 
   const otpInputClass = [
     inputBase,
     "text-center font-semibold tracking-[0.28em]",
-    errors.otp && touched.otp
-      ? "border-status-error bg-status-error-bg"
-      : "border-border-light",
+    errors.otp && touched.otp ? "border-red-500 " : "border-gray-200",
     verifying || sending ? "cursor-not-allowed opacity-80" : "cursor-pointer",
   ].join(" ");
 
@@ -330,7 +326,7 @@ export default function PhoneAuth({
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-border-light bg-background-subtle px-3 py-1.5 shadow-soft">
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-background-subtle px-3 py-1.5 shadow-soft">
               <span className="relative inline-flex w-2 h-2">
                 <span className="absolute inline-flex w-full h-full rounded-full opacity-25 bg-accent motion-safe:animate-ping" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-accent" />
@@ -352,8 +348,8 @@ export default function PhoneAuth({
         {/* Phone input row */}
         <div className="flex flex-col gap-3">
           <div className="flex gap-2">
-            <div className="w-24 sm:w-28">
-              <div className="flex items-center justify-center w-full px-3 py-3 text-sm font-semibold border rounded-2xl border-border-light bg-background-subtle text-text-secondary shadow-soft">
+            <div className="w-16 sm:w-24">
+              <div className="flex items-center justify-center w-full px-3 py-3 text-sm font-semibold border border-gray-200 rounded-2xl bg-background-subtle text-text-secondary shadow-soft">
                 {LK_COUNTRY.flag} {LK_COUNTRY.dial}
               </div>
             </div>
@@ -402,8 +398,8 @@ export default function PhoneAuth({
               "shadow-md transition",
               "focus:outline-none focus-visible:ring-4 focus-visible:ring-ring-focus/25",
               resendDisabled
-                ? "cursor-not-allowed opacity-60 bg-primary text-text-inverse"
-                : "cursor-pointer bg-primary text-text-inverse hover:shadow-lg active:bg-primary-active",
+                ? "cursor-not-allowed bg-accent/90 text-white"
+                : "cursor-pointer text-white bg-accent hover:bg-accent/90 text-text-inverse hover:shadow-lg active:bg-accent-active",
             ].join(" ")}
           >
             {/* Subtle shimmer */}
@@ -459,7 +455,7 @@ export default function PhoneAuth({
               exit={{ opacity: 0, y: 8, scale: 0.99 }}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
             >
-              <div className="p-4 border rounded-2xl border-border-light bg-background-subtle shadow-soft sm:p-5">
+              <div className="p-4 border border-gray-200 rounded-2xl bg-background-subtle shadow-soft sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-extrabold tracking-tight text-text-primary">
@@ -474,7 +470,7 @@ export default function PhoneAuth({
                     {verifying && (
                       <motion.div
                         key="verifying-pill"
-                        className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold border rounded-full border-border-light bg-background-secondary text-text-secondary shadow-soft"
+                        className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold border border-gray-200 rounded-full bg-background-secondary text-text-secondary shadow-soft"
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
@@ -525,7 +521,7 @@ export default function PhoneAuth({
                               "inline-block h-3.5 w-3.5 rounded-full border",
                               filled
                                 ? "border-primary bg-primary shadow-soft"
-                                : "border-border-light bg-background-secondary opacity-70",
+                                : "border-gray-200 bg-background-secondary opacity-70",
                             ].join(" ")}
                             animate={filled ? { scale: 1.12 } : { scale: 1 }}
                             transition={{
@@ -565,8 +561,8 @@ export default function PhoneAuth({
                       "shadow-md transition",
                       "focus:outline-none focus:ring-4 focus:ring-ring-focus/25",
                       verifying || sending || otp.length !== OTP_LENGTH
-                        ? "cursor-not-allowed opacity-60 bg-accent-light text-text-inverse"
-                        : "cursor-pointer bg-accent text-text-inverse hover:shadow-lg active:bg-accent-active",
+                        ? "cursor-not-allowed bg-accent/90 text-white"
+                        : "cursor-pointer text-white bg-accent hover:bg-accent/90 text-text-inverse hover:shadow-lg active:bg-accent-active",
                     ].join(" ")}
                   >
                     <span className="inline-flex items-center justify-center gap-2">

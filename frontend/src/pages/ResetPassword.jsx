@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import regexValidations from "../utils/regexValidations";
 import { showSuccess, showError } from "../utils/toastHelper";
+import TypewriterText from "../components/TypewriterText";
 
 export default function ResetPassword({ api }) {
   const location = useLocation();
@@ -16,6 +17,7 @@ export default function ResetPassword({ api }) {
 
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [headerComplete, setHeaderComplete] = useState(false);
 
   const navigate = useNavigate();
 
@@ -29,7 +31,7 @@ export default function ResetPassword({ api }) {
     const newErrors = {};
     if (!regexValidations.password.test(form.password)) {
       newErrors.password =
-        "Password must be 8+ chars, include upper, lower, number, special.";
+        "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.";
     }
     if (form.password !== form.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
@@ -68,7 +70,7 @@ export default function ResetPassword({ api }) {
     "w-full rounded-2xl border bg-background-secondary px-4 py-3 text-sm sm:text-[15px] text-text-primary placeholder:text-text-tertiary shadow-soft outline-none transition";
   const inputFocus =
     "hover:border-border focus:border-border-focus focus:ring-4 focus:ring-ring-focus/25";
-  const inputError = "border-status-error focus:border-status-error";
+  const inputError = "border-red-500 focus:border-red-500";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background-primary">
@@ -120,13 +122,22 @@ export default function ResetPassword({ api }) {
                   </span>
                 </div>
 
-                <h1 className="mt-4 text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
-                  Set a new password
+                <h1 className="mt-4 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
+                  <TypewriterText
+                    text="Set a new password"
+                    speed={50}
+                    onComplete={() => setHeaderComplete(true)}
+                  />
                 </h1>
 
-                <p className="max-w-sm mx-auto mt-2 text-xs leading-relaxed text-text-tertiary sm:text-sm">
-                  Choose a strong password to secure your account.
-                </p>
+                {headerComplete && (
+                  <p className="max-w-sm mx-auto mt-2 text-xs leading-relaxed text-accent sm:text-sm">
+                    <TypewriterText
+                      text="Choose a strong password to secure your account."
+                      speed={40}
+                    />
+                  </p>
+                )}
               </div>
 
               {/* Form */}
@@ -163,65 +174,30 @@ export default function ResetPassword({ api }) {
                     <button
                       type="button"
                       tabIndex={-1}
-                      className={[
-                        "absolute right-3 top-1/2 -translate-y-1/2",
-                        "cursor-pointer rounded-xl p-2 transition",
-                        "hover:bg-background-subtle active:scale-[0.98]",
-                        "focus:outline-none focus:ring-4 focus:ring-ring-focus/25",
-                        showPassword
-                          ? "text-accent"
-                          : "text-text-tertiary hover:text-text-primary",
-                      ].join(" ")}
+                      className="absolute -translate-y-1/2 cursor-pointer right-3 top-1/2"
                       onClick={() => setShowPassword((v) => !v)}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
                     >
-                      {showPassword ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.402-3.22 1.125-4.575"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                      )}
+                      {showPassword ? "👁️" : "👁️‍🗨️"}
                     </button>
                   </div>
+                  <AnimatePresence>
+                    {errors.password && (
+                      <motion.p
+                        key="password-error"
+                        id="password-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
+                        initial={{ opacity: 0, y: -3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        {errors.password}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* CONFIRM PASSWORD */}
@@ -255,15 +231,7 @@ export default function ResetPassword({ api }) {
                     <button
                       type="button"
                       tabIndex={-1}
-                      className={[
-                        "absolute right-3 top-1/2 -translate-y-1/2",
-                        "cursor-pointer rounded-xl p-2 transition",
-                        "hover:bg-background-subtle active:scale-[0.98]",
-                        "focus:outline-none focus:ring-4 focus:ring-ring-focus/25",
-                        showConfirmPassword
-                          ? "text-accent"
-                          : "text-text-tertiary hover:text-text-primary",
-                      ].join(" ")}
+                      className="absolute -translate-y-1/2 cursor-pointer right-3 top-1/2"
                       onClick={() => setShowConfirmPassword((v) => !v)}
                       aria-label={
                         showConfirmPassword
@@ -271,49 +239,7 @@ export default function ResetPassword({ api }) {
                           : "Show confirm password"
                       }
                     >
-                      {showConfirmPassword ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.402-3.22 1.125-4.575"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                      )}
+                      {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
                     </button>
                   </div>
 
@@ -322,7 +248,7 @@ export default function ResetPassword({ api }) {
                       <motion.p
                         key="confirmPassword-error"
                         id="confirmPassword-error"
-                        className="mt-1 text-xs leading-relaxed text-status-error"
+                        className="mt-1 text-xs leading-relaxed text-red-500"
                         initial={{ opacity: 0, y: -3 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
@@ -337,9 +263,9 @@ export default function ResetPassword({ api }) {
                 {/* Submit */}
                 <motion.button
                   type="submit"
-                  disabled={saving}
-                  whileHover={!saving ? { y: -2 } : {}}
-                  whileTap={!saving ? { scale: 0.99 } : {}}
+                  disabled={saving || !form.password || !form.confirmPassword}
+                  whileHover={!saving && form.password && form.confirmPassword ? { y: -2 } : {}}
+                  whileTap={!saving && form.password && form.confirmPassword ? { scale: 0.99 } : {}}
                   transition={{ type: "spring", stiffness: 420, damping: 28 }}
                   className={`
                     relative mt-2 w-full overflow-hidden rounded-2xl px-4 py-3
@@ -347,9 +273,9 @@ export default function ResetPassword({ api }) {
                     focus:outline-none focus:ring-4 focus:ring-ring-focus/25
                     disabled:cursor-not-allowed disabled:opacity-60
                     ${
-                      !saving
-                        ? "cursor-pointer bg-accent text-text-inverse hover:shadow-lg active:bg-accent-active"
-                        : "cursor-not-allowed bg-accent-light text-text-inverse"
+                      !saving && form.password && form.confirmPassword
+                        ? "cursor-pointer text-white bg-accent hover:bg-accent/90 text-text-inverse hover:shadow-lg active:bg-accent-active"
+                        : "cursor-not-allowed bg-accent/90 text-white"
                     }
                   `}
                 >
@@ -377,7 +303,7 @@ export default function ResetPassword({ api }) {
                   </span>
 
                   <span className="relative inline-flex items-center justify-center gap-2">
-                    <span>Reset Password</span>
+                    <span>{saving ? "Resetting..." : "Reset Password"}</span>
                   </span>
                 </motion.button>
 

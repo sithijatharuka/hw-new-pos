@@ -64,7 +64,15 @@ const HorizontalNav = ({ api }) => {
 
   return (
     <nav className="sticky top-0 z-30 border-b border-gray-200 bg-background-secondary/90 shadow-soft backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-end px-3 py-2.5 sm:px-4 sm:py-3 md:px-6">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-end px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 relative">
+        {/* Center Heading - NEXA POS */}
+        <div className="absolute -translate-x-1/2 left-1/2">
+          <h1 className="text-xl font-bold sm:text-2xl">
+            <span className="text-primary">Welcome to NEXA</span>{" "}
+            <span className="text-accent">POS</span>
+          </h1>
+        </div>
+
         {/* Low Stock Notification */}
         <div className="relative" ref={panelRef}>
           <motion.button
@@ -309,5 +317,3 @@ const HorizontalNav = ({ api }) => {
 };
 
 export default HorizontalNav;
-
-

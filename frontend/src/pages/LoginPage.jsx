@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import regexValidations from "../utils/regexValidations";
+import TypewriterText from "../components/TypewriterText";
 
 const LoginPage = ({ onLogin, api }) => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const LoginPage = ({ onLogin, api }) => {
 
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [headerComplete, setHeaderComplete] = useState(false);
 
   // Inline field errors (client-side validation)
   const [fieldErrors, setFieldErrors] = useState({
@@ -166,8 +168,9 @@ const LoginPage = ({ onLogin, api }) => {
                     </div>
 
                     <div className="space-y-3">
-                      <h1 className="text-3xl font-semibold tracking-tight text-text-primary lg:text-4xl">
-                        SL Hardware POS
+                      <h1 className="text-xl font-bold sm:text-2xl">
+                        <span className="text-primary">NEXA</span>{" "}
+                        <span className="text-accent">POS</span>
                       </h1>
                       <p className="max-w-md text-sm leading-relaxed text-text-tertiary">
                         Manage inventory, billing, and daily operations from one
@@ -264,23 +267,32 @@ const LoginPage = ({ onLogin, api }) => {
                         ADMIN LOGIN
                       </span>
                     </div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-text-primary">
-                      SL Hardware POS
-                    </h2>
+                    <h1 className="text-xl font-bold sm:text-2xl">
+                      <span className="text-primary">Welcome to NEXA</span>{" "}
+                      <span className="text-accent">POS</span>
+                    </h1>
                     <p className="text-xs leading-relaxed text-text-tertiary">
-                      Login to continue (seed an admin via backend if first
-                      time)
+                      Enter your admin credentials to access the POS system
                     </p>
                   </div>
 
                   {/* Desktop header */}
-                  <div className="hidden space-y-1 md:block">
+                  <div className="hidden space-y-1 text-center md:block">
                     <h2 className="text-xl font-semibold tracking-tight text-text-primary">
-                      Welcome back
+                      <TypewriterText
+                        text="Welcome back, Admin"
+                        speed={50}
+                        onComplete={() => setHeaderComplete(true)}
+                      />
                     </h2>
-                    <p className="text-sm text-text-tertiary">
-                      Enter your admin credentials to access the POS dashboard.
-                    </p>
+                    {headerComplete && (
+                      <p className="text-sm text-text-tertiary">
+                        <TypewriterText
+                          text="Enter your admin credentials to access the POS system"
+                          speed={40}
+                        />
+                      </p>
+                    )}
                   </div>
 
                   {/* Server error */}
@@ -301,7 +313,7 @@ const LoginPage = ({ onLogin, api }) => {
                       >
                         <div className="flex items-start gap-3">
                           <span className="mt-0.5 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-status-error" />
-                          <p className="leading-relaxed text-red-600">
+                          <p className="leading-relaxed text-red-500">
                             {serverError}
                           </p>
                         </div>
@@ -346,7 +358,7 @@ const LoginPage = ({ onLogin, api }) => {
                             inputBase,
                             inputRing,
                             fieldErrors.username
-                              ? "border-red-600 focus:border-red-600"
+                              ? "border-red-500 focus:border-red-500"
                               : "border-gray-200",
                           ].join(" ")}
                           value={username}
@@ -371,7 +383,7 @@ const LoginPage = ({ onLogin, api }) => {
                           <motion.p
                             key="username-error"
                             id="username-error"
-                            className="text-[11px] leading-relaxed text-red-600"
+                            className="text-[11px] leading-relaxed text-red-500"
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
@@ -423,7 +435,7 @@ const LoginPage = ({ onLogin, api }) => {
                             inputRing,
                             "pr-12",
                             fieldErrors.password
-                              ? "border-red-600 focus:border-red-600"
+                              ? "border-red-500 focus:border-red-500"
                               : "border-gray-200",
                           ].join(" ")}
                           value={password}
@@ -476,7 +488,7 @@ const LoginPage = ({ onLogin, api }) => {
                           <motion.p
                             key="password-error"
                             id="password-error"
-                            className="text-[11px] leading-relaxed text-red-600"
+                            className="text-[11px] leading-relaxed text-red-500"
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}

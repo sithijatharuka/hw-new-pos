@@ -36,9 +36,11 @@ export const AppShell = ({ children, user, onLogout, api }) => {
         {/* ================= MOBILE HEADER ================= */}
         <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-background-secondary/90 backdrop-blur-md md:hidden">
           <div className="min-w-0">
-            <h1 className="text-base font-bold leading-tight truncate text-primary">
-              SL Hardware POS
+            <h1 className="text-xl font-bold sm:text-2xl">
+              <span className="text-primary">NEXA</span>{" "}
+              <span className="text-accent">POS</span>
             </h1>
+
             <p className="text-xs font-medium truncate text-text-tertiary">
               {user?.name} • {user?.role}
             </p>
@@ -64,8 +66,9 @@ export const AppShell = ({ children, user, onLogout, api }) => {
         {/* ================= DESKTOP SIDEBAR ================= */}
         <aside className="fixed top-0 bottom-0 left-0 flex-col hidden w-64 overflow-y-auto border-r border-gray-200 bg-background-secondary/90 shadow-card backdrop-blur-md md:flex">
           <div className="px-6 py-6 border-b border-gray-200">
-            <h1 className="text-xl font-bold tracking-tight text-primary">
-              SL Hardware POS
+            <h1 className="text-xl font-bold sm:text-2xl">
+              <span className="text-primary">NEXA</span>{" "}
+              <span className="text-accent">POS</span>
             </h1>
             <p className="mt-1 text-xs font-medium text-text-tertiary">
               Designed for Lanka hardware shops
