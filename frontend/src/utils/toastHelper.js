@@ -36,14 +36,14 @@ const BASE_CLASS = "shadow-lg rounded-lg px-4 py-3 text-sm font-medium";
 /* -------------------------------------------------------------------------- */
 
 export const showSuccess = (message, options = {}) =>
-  toast.success(`✓ ${message}`, {
+  toast.success(`${message}`, {
     ...TOAST_CONFIG.default,
     ...options,
     className: `${TOAST_STYLES.success} ${BASE_CLASS}`,
   });
 
 export const showError = (message, options = {}) =>
-  toast.error(`✕ ${message}`, {
+  toast.error(`${message}`, {
     ...TOAST_CONFIG.default,
     ...options,
     className: `${TOAST_STYLES.error} ${BASE_CLASS}`,

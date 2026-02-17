@@ -398,10 +398,10 @@ const AddNewItem = ({
 
       if (editingId) {
         await updateItem(api, editingId, payload);
-        toast.success("Item updated successfully");
+        toast.success("Item updated successfully", { duration: 4000 });
       } else {
         await createItem(api, payload);
-        toast.success("Item created successfully");
+        toast.success("Item created successfully", { duration: 4000 });
       }
 
       if (onSuccess) await onSuccess();
@@ -409,6 +409,7 @@ const AddNewItem = ({
     } catch (err) {
       toast.error(
         err?.response?.data?.message || err?.message || "Failed to save item",
+        { duration: 4000 },
       );
     } finally {
       setSaving(false);

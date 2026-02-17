@@ -122,7 +122,7 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api.request(originalRequest);
       } catch (refreshErr) {
-        toast.error("Session expired. Please login again.");
+        toast.error("Session expired. Please login again.", { duration: 4000 });
         logout?.();
 
         setTimeout(() => {

@@ -93,10 +93,12 @@ const InventoryPage = ({ api }) => {
 
     try {
       await itemApi.deleteItem(api, id);
-      toast.success("Item deleted");
+      toast.success("Item deleted", { duration: 4000 });
       await fetchItems();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete item");
+      toast.error(err?.response?.data?.message || "Failed to delete item", {
+        duration: 4000,
+      });
     }
   };
 
@@ -151,20 +153,24 @@ const InventoryPage = ({ api }) => {
   const handleActivate = async (id) => {
     try {
       await itemApi.activateItem(api, id);
-      toast.success("Item activated");
+      toast.success("Item activated", { duration: 4000 });
       fetchItems();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to activate item");
+      toast.error(err?.response?.data?.message || "Failed to activate item", {
+        duration: 4000,
+      });
     }
   };
 
   const handleDeactivate = async (id) => {
     try {
       await itemApi.deactivateItem(api, id);
-      toast.success("Item deactivated");
+      toast.success("Item deactivated", { duration: 4000 });
       fetchItems();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to deactivate item");
+      toast.error(err?.response?.data?.message || "Failed to deactivate item", {
+        duration: 4000,
+      });
     }
   };
 
@@ -250,9 +256,15 @@ const InventoryPage = ({ api }) => {
           setEditingItem(null);
           await fetchItems();
         }}
-        onCategoryAdd={() => toast.info("Category management coming soon")}
-        onBaseUnitAdd={() => toast.info("Unit management coming soon")}
-        onCategoryDelete={(cat) => toast.info(`Category delete: ${cat}`)}
+        onCategoryAdd={() =>
+          toast.info("Category management coming soon", { duration: 4000 })
+        }
+        onBaseUnitAdd={() =>
+          toast.info("Unit management coming soon", { duration: 4000 })
+        }
+        onCategoryDelete={(cat) =>
+          toast.info(`Category delete: ${cat}`, { duration: 4000 })
+        }
       />
 
       {/* Detail Modal (with batches) */}
