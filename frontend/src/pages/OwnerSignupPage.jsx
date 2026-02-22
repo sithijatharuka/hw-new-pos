@@ -622,7 +622,7 @@ const OwnerSignupPage = ({ api }) => {
                   </span>
 
                   <span className="relative inline-flex items-center justify-center gap-2 ">
-                    <span>👑 Create owner</span>
+                    <span>Create owner</span>
                   </span>
                 </motion.button>
               </form>

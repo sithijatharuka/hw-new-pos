@@ -554,7 +554,7 @@ const LoginPage = ({ onLogin, api }) => {
                         </span>
 
                         <span className="relative inline-flex items-center justify-center gap-2">
-                          <span>{loading ? "Logging in ..." : "👤 Login"}</span>
+                          <span>{loading ? "Logging in ..." : "Login"}</span>
                         </span>
                       </motion.button>
 
