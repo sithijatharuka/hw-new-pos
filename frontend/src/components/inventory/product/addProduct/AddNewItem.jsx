@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AppLoader from "../../common/AppLoader";
 import {
   showSuccess,
   showError,
@@ -421,6 +422,14 @@ const AddNewItem = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 overflow-y-auto bg-white/75 backdrop-blur-sm sm:p-4">
+      {/* Saving Loader */}
+      <AppLoader
+        open={saving}
+        variant="overlay"
+        title="Saving Item"
+        subtitle={editingId ? "Updating your item" : "Creating new item"}
+      />
+
       <div
         className="w-full max-w-4xl my-auto border border-gray-200 shadow-2xl rounded-2xl"
         style={{

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import AppLoader from "../components/common/AppLoader";
 import { loadCurrencySettings } from "../api/settings/settings";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import AddItemModal from "../components/inventory/product/addProduct/AddNewItem";
@@ -27,6 +28,10 @@ const InventoryPage = ({ api }) => {
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [currencySymbol, setCurrencySymbol] = useState("Rs.");
   const [currencyPosition, setCurrencyPosition] = useState("before");
+
+  // Loading states
+  const [itemsLoading, setItemsLoading] = useState(false);
+  const [lookupsLoading, setLookupsLoading] = useState(false);
 
   // Modal state
   const [showForm, setShowForm] = useState(false);
@@ -69,21 +74,27 @@ const InventoryPage = ({ api }) => {
 
   const fetchItems = async () => {
     try {
+      setItemsLoading(true);
       const items = await itemApi.loadItems(api, q, lowStockOnly);
       setItems(items);
     } catch (err) {
       showError(errorMessages.load("items"));
+    } finally {
+      setItemsLoading(false);
     }
   };
 
   const fetchLookups = async () => {
     try {
+      setLookupsLoading(true);
       const result = await loadInventoryLookups(api, baseUnits);
       setSuppliers(result.suppliers);
       setCategories(result.categories);
       setBaseUnits(result.baseUnits);
     } catch (error) {
       showError(errorMessages.load("inventory lookups"));
+    } finally {
+      setLookupsLoading(false);
     }
   };
 
@@ -190,6 +201,14 @@ const InventoryPage = ({ api }) => {
 
   return (
     <div className="min-h-screen">
+      {/* Loading Overlay */}
+      <AppLoader
+        open={itemsLoading || lookupsLoading}
+        variant="overlay"
+        title="Loading Inventory"
+        subtitle="Fetching items and inventory data"
+      />
+
       <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-8">
         {/* Header */}
         <InventoryHeader
