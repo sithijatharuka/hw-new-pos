@@ -134,7 +134,7 @@ const CustomerTableRow = ({
             }}
             className="px-4 py-2 font-medium text-blue-700 transition-all duration-200 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 hover:shadow-md active:scale-95"
           >
-            ✏️
+            ✏️ Edit
           </button>
           <button
             onClick={(e) => {
@@ -144,7 +144,7 @@ const CustomerTableRow = ({
             className="px-4 py-2 font-medium text-red-600 transition-all duration-200 bg-red-100 rounded-lg cursor-pointer hover:bg-red-200 hover:shadow-md active:scale-95"
             title="Delete customer"
           >
-            🗑️
+            🗑️ Delete
           </button>
         </div>
       </td>

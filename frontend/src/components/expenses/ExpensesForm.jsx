@@ -222,9 +222,9 @@ const ExpensesForm = ({
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full py-3 text-sm font-semibold text-white transition-all shadow-md cursor-pointer bg-primary hover:bg-primary/90 sm:w-auto px-7 sm:px-8 rounded-xl sm:text-base hover:from-blue-700 hover:to-blue-800 active:scale-95 hover:shadow-lg"
+            className="w-full py-3 text-sm font-semibold text-white transition-all shadow-md cursor-pointer bg-primary hover:bg-primary/90 sm:w-auto px-7 sm:px-8 rounded-xl sm:text-base hover:from-blue-700 hover:to-blue-800 active:scale-95 hover:shadow-lg inline-flex items-center justify-center gap-2"
           >
-            {editingId ? "Update Expense" : "Save Expense"}
+            {editingId ? "✏️ Update Expense" : "💾 Save Expense"}
           </button>
         </div>
       </form>

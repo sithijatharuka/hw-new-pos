@@ -195,19 +195,19 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
         <div className="sticky bottom-0 p-5 bg-white border-t border-gray-200">
           <div className="flex justify-end gap-3">
             <button
-              className="px-6 py-3 transition-all border-2 border-gray-300 cursor-pointer rounded-xl hover:bg-gray-50 active:scale-95"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 transition-all border-2 border-gray-300 cursor-pointer rounded-xl hover:bg-gray-50 active:scale-95"
               onClick={onClose}
             >
-              Close
+              ✕ Close
             </button>
             <button
-              className="px-6 py-3 text-white transition-all cursor-pointer bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 text-white transition-all cursor-pointer bg-gradient-to-r from-primary to-primary/90 rounded-xl hover:shadow-lg active:scale-95"
               onClick={() => {
                 onEdit(item);
                 onClose();
               }}
             >
-              Edit Item
+              ✏️ Edit Item
             </button>
           </div>
         </div>

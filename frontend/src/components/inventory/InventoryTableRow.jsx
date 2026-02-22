@@ -19,12 +19,19 @@ const InventoryTableRow = ({
 
   return (
     <tr
-      className="hover:bg-gray-50/50 cursor-pointer"
+      className="cursor-pointer hover:bg-gray-50/50"
       onClick={() => onDetails(item)}
     >
       <td className="px-6 py-4">
-        <div className="font-medium text-gray-900 flex items-center gap-2">
-          <span className="truncate max-w-[260px]">{item.name}</span>
+        <div className="flex items-center gap-2 font-medium text-gray-900">
+          <span className="max-w-[180px]">{item.name}</span>
+        </div>
+        <div className="flex items-center gap-2 font-medium text-gray-900">
+          {item.barcode && (
+            <div className="mt-1 text-xs text-gray-500 break-all">
+              📟 {item.barcode}
+            </div>
+          )}
           {!item.isActive && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">
               Inactive
@@ -41,15 +48,10 @@ const InventoryTableRow = ({
             </span>
           )}
         </div>
-        {item.barcode && (
-          <div className="text-xs text-gray-500 mt-1 break-all">
-            📟 {item.barcode}
-          </div>
-        )}
       </td>
 
       <td className="px-6 py-4">
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
           {item.category || "Uncategorized"}
         </span>
       </td>
@@ -74,43 +76,43 @@ const InventoryTableRow = ({
         </span>
       </td>
 
-      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-wrap gap-2">
           <button
-            className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
             onClick={() => onEdit(item)}
           >
-            Edit
+            ✏️ Edit
           </button>
 
           {item.isActive ? (
             <button
-              className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
+              className="inline-flex items-center justify-center px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
               onClick={() => onDeactivate(item._id)}
             >
-              Deactivate
+              🔒 Deactivate
             </button>
           ) : (
             <button
-              className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+              className="inline-flex items-center justify-center  px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
               onClick={() => onActivate(item._id)}
             >
-              Activate
+              ✅ Activate
             </button>
           )}
 
           <button
-            className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+            className="inline-flex items-center justify-center px-3 py-1.5 bg-red-50 text-red-700 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
             onClick={() => onDelete(item._id)}
           >
-            Delete
+            🗑️ Delete
           </button>
 
           <button
-            className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+            className="inline-flex items-center justify-center  px-3 py-1.5 bg-green-50 text-green-700 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
             onClick={() => onPrintBarcode(item._id)}
           >
-            Print Barcode
+            🖨️ Barcode
           </button>
         </div>
       </td>

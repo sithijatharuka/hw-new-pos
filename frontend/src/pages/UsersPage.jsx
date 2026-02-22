@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Toaster } from "react-hot-toast";
 import AppLoader from "../components/common/AppLoader";
 import {
   createStaff,
@@ -295,8 +294,6 @@ const UsersPage = ({ user, api }) => {
       className="min-h-[calc(100vh-2rem)] w-full"
       style={{ background: colors.background.primary }}
     >
-      <Toaster position="top-right" />
-
       <div className="w-full max-w-6xl px-3 py-4 mx-auto sm:px-4 sm:py-6 lg:px-6">
         {/* Header Row */}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -441,13 +438,7 @@ const UsersPage = ({ user, api }) => {
                   border: `1px solid ${colors.primary.subtle}`,
                 }}
               >
-                <span
-                  className="inline-block w-2 h-2 rounded-full"
-                  style={{
-                    background: colors.primary.DEFAULT,
-                  }}
-                />
-                Refresh
+                ↻ Refresh
               </button>
             </div>
           </div>
@@ -629,10 +620,10 @@ const UsersPage = ({ user, api }) => {
                               type="button"
                               onClick={() => openEditModal(u)}
                               disabled={!isAdmin || saving}
-                              className="cursor-pointer rounded-xl text-white bg-amber-400 hover:bg-amber-500 px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white cursor-pointer rounded-xl bg-amber-400 hover:bg-amber-500 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                               title="Edit user"
                             >
-                              Edit
+                              ✏️ Edit
                             </button>
 
                             {isActive ? (
@@ -640,17 +631,17 @@ const UsersPage = ({ user, api }) => {
                                 type="button"
                                 onClick={() => handleDeleteClick(u)}
                                 disabled={!isAdmin || saving}
-                                className="cursor-pointer text-white bg-red-400 hover:bg-red-500 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white cursor-pointer bg-red-400 hover:bg-red-500 rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                                 title="Deactivate user"
                               >
-                                Deactivate
+                                ⏸️ Deactivate
                               </button>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => handleReactivateClick(u)}
                                 disabled={!isAdmin || saving}
-                                className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                                 style={{
                                   background: colors.status.success.bg,
                                   color: colors.status.success.text,
@@ -658,7 +649,7 @@ const UsersPage = ({ user, api }) => {
                                 }}
                                 title="Reactivate user"
                               >
-                                Reactivate
+                                ✅ Reactivate
                               </button>
                             )}
                           </div>

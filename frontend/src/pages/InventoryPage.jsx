@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { loadCurrencySettings } from "../api/settings/settings";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
 import AddItemModal from "../components/inventory/product/addProduct/AddNewItem";
@@ -190,11 +190,6 @@ const InventoryPage = ({ api }) => {
 
   return (
     <div className="min-h-screen">
-      <Toaster
-        position="top-right"
-        toastOptions={{ className: "text-sm font-medium", duration: 3000 }}
-      />
-
       <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-8">
         {/* Header */}
         <InventoryHeader

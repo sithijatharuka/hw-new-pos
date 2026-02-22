@@ -5,7 +5,7 @@ const GRNDetailsActions = ({ isDraft, onPost, onEdit, onDelete, onClose }) => {
     if (!onDelete || !isDraft) return;
     if (
       window.confirm(
-        "Are you sure you want to delete this GRN? This should reverse stock on server."
+        "Are you sure you want to delete this GRN? This should reverse stock on server.",
       )
     ) {
       onDelete();
@@ -37,9 +37,12 @@ const GRNDetailsActions = ({ isDraft, onPost, onEdit, onDelete, onClose }) => {
             fontSize: "0.875rem",
             fontWeight: "600",
             cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
           }}
         >
-          Post GRN
+          ✅ Post GRN
         </button>
       )}
 
@@ -58,9 +61,12 @@ const GRNDetailsActions = ({ isDraft, onPost, onEdit, onDelete, onClose }) => {
             fontSize: "0.875rem",
             fontWeight: "500",
             cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
           }}
         >
-          Edit GRN
+          ✏️ Edit GRN
         </button>
       )}
 
@@ -76,9 +82,12 @@ const GRNDetailsActions = ({ isDraft, onPost, onEdit, onDelete, onClose }) => {
             fontSize: "0.875rem",
             fontWeight: "500",
             cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
           }}
         >
-          Delete GRN
+          🗑️ Delete GRN
         </button>
       )}
 
@@ -107,9 +116,12 @@ const GRNDetailsActions = ({ isDraft, onPost, onEdit, onDelete, onClose }) => {
           fontSize: "0.875rem",
           fontWeight: "500",
           cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.5rem",
         }}
       >
-        Close
+        ✕ Close
       </button>
     </div>
   );

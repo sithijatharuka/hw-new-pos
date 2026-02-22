@@ -398,18 +398,19 @@ const AddNewItem = ({
 
       if (editingId) {
         await updateItem(api, editingId, payload);
-        toast.success("Item updated successfully", { duration: 4000 });
+        showSuccess(successMessages.update("Item"));
       } else {
         await createItem(api, payload);
-        toast.success("Item created successfully", { duration: 4000 });
+        showSuccess(successMessages.create("Item"));
       }
 
       if (onSuccess) await onSuccess();
       onClose?.();
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || err?.message || "Failed to save item",
-        { duration: 4000 },
+      showError(
+        err?.response?.data?.message ||
+          err?.message ||
+          errorMessages.save("item"),
       );
     } finally {
       setSaving(false);
@@ -431,7 +432,7 @@ const AddNewItem = ({
         <FormHeader editingId={editingId} onClose={onClose} />
 
         {/* Body */}
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[55vh] overflow-y-auto">
           <ItemForm
             form={form}
             errs={errs}

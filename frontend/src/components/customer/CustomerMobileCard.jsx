@@ -27,7 +27,7 @@ const CustomerMobileCard = ({
 
     return (
       <div
-        className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white p-3 sm:p-4"
+        className="p-3 transition-shadow bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md sm:p-4"
         onClick={() => onDetails(c)}
       >
         {/* Top Row: Icon + Name + Type + Outstanding */}
@@ -46,7 +46,7 @@ const CustomerMobileCard = ({
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-gray-900 text-sm truncate max-w-[160px] xs:max-w-[200px] sm:max-w-[240px]">
                     {c.name}
                   </p>
@@ -131,7 +131,7 @@ const CustomerMobileCard = ({
 
         {/* Actions – tap-friendly buttons */}
         <div
-          className="mt-3 flex flex-wrap gap-2"
+          className="flex flex-wrap gap-2 mt-3"
           onClick={(e) => e.stopPropagation()}
         >
           {currentBalance > 0 && (

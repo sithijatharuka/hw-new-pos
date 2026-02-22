@@ -710,7 +710,7 @@ const SettingsPage = ({ user, api }) => {
                   }
                   disabled={!isAdmin || saving}
                 >
-                  Save settings
+                  💾 Save settings
                 </button>
               </div>
             </form>

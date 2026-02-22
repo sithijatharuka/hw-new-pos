@@ -25,15 +25,13 @@ const SupplierSearchBar = ({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
-
-        
       </div>
 
       <button
         onClick={onRefresh}
         disabled={loading}
         className={[
-          "inline-flex items-center justify-center",
+          "inline-flex items-center justify-center gap-2",
           "rounded-2xl px-4 py-3 text-sm font-semibold",
           "border border-gray-200 bg-background-secondary text-text-secondary",
           "shadow-sm transition-all duration-200 ease-out",
@@ -44,7 +42,7 @@ const SupplierSearchBar = ({
           "cursor-pointer",
         ].join(" ")}
       >
-        Refresh
+        ↻ Refresh
       </button>
 
       <div className="text-xs font-medium text-text-tertiary md:text-right">
@@ -55,4 +53,3 @@ const SupplierSearchBar = ({
 };
 
 export default SupplierSearchBar;
-

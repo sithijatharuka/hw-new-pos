@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../components/common/AppLoader";
 import CustomerDetailsModal from "../components/customer/CustomerDetailsModal";
 import CustomerFormModal from "../components/customer/CustomerFormModal";
 import ReceivePaymentModal from "../components/customer/ReceivePaymentModal";
@@ -26,6 +27,7 @@ import { loadCurrencySettings } from "../api/settings/settings";
 
 const CustomersPage = ({ api }) => {
   const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [currencySymbol, setCurrencySymbol] = useState("Rs.");
   const [currencyPosition, setCurrencyPosition] = useState("before");
   const [showFormModal, setShowFormModal] = useState(false);
@@ -56,12 +58,15 @@ const CustomersPage = ({ api }) => {
 
   const loadCustomers = async () => {
     try {
+      setLoading(true);
       const data = await fetchCustomers(api);
       setCustomers(data);
     } catch (err) {
       showError(
         err?.response?.data?.message || errorMessages.load("customers"),
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,38 +197,51 @@ const CustomersPage = ({ api }) => {
             searchQuery={searchQuery}
           />
 
-          {/* Desktop Table (lg and up) */}
-          <CustomerTable
-            customers={filteredCustomers}
-            searchQuery={searchQuery}
-            onDetails={openDetailsModal}
-            onEdit={openFormModal}
-            onDelete={handleDeleteCustomer}
-            onPayment={openPaymentModal}
-            onAddNew={() => openFormModal()}
-            currencySymbol={currencySymbol}
-            currencyPosition={currencyPosition}
-          />
+          {loading ? (
+            <div className="px-6 py-6">
+              <AppLoader
+                open
+                variant="inline"
+                title="Loading customers"
+                subtitle="Syncing customer list"
+              />
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table (lg and up) */}
+              <CustomerTable
+                customers={filteredCustomers}
+                searchQuery={searchQuery}
+                onDetails={openDetailsModal}
+                onEdit={openFormModal}
+                onDelete={handleDeleteCustomer}
+                onPayment={openPaymentModal}
+                onAddNew={() => openFormModal()}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
+              />
 
-          {/* Mobile / Tablet Card List */}
-          <CustomerMobileCard
-            customers={filteredCustomers}
-            searchQuery={searchQuery}
-            onDetails={openDetailsModal}
-            onEdit={openFormModal}
-            onDelete={handleDeleteCustomer}
-            onPayment={openPaymentModal}
-            onAddNew={() => openFormModal()}
-            currencySymbol={currencySymbol}
-            currencyPosition={currencyPosition}
-          />
+              {/* Mobile / Tablet Card List */}
+              <CustomerMobileCard
+                customers={filteredCustomers}
+                searchQuery={searchQuery}
+                onDetails={openDetailsModal}
+                onEdit={openFormModal}
+                onDelete={handleDeleteCustomer}
+                onPayment={openPaymentModal}
+                onAddNew={() => openFormModal()}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
+              />
 
-          {/* Table Footer */}
-          <CustomerFooterStats
-            customers={customers}
-            currencySymbol={currencySymbol}
-            currencyPosition={currencyPosition}
-          />
+              {/* Table Footer */}
+              <CustomerFooterStats
+                customers={customers}
+                currencySymbol={currencySymbol}
+                currencyPosition={currencyPosition}
+              />
+            </>
+          )}
         </div>
       </div>
 

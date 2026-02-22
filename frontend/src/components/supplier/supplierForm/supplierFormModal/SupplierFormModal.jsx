@@ -1,11 +1,11 @@
 // src/components/supplier/SupplierFormModal.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
 import {
   PAYMENT_TERM_TYPES,
   NET_DAY_OPTIONS,
   normalizePaymentTerms,
 } from "../../../../utils/paymentTerms";
+import { showError } from "../../../../utils/toastHelper";
 import {
   isValidEmail,
   isValidPhoneNumber,

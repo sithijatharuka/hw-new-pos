@@ -310,7 +310,7 @@ export default function ResetPassword({ api }) {
                   </span>
 
                   <span className="relative inline-flex items-center justify-center gap-2">
-                    <span>{saving ? "Resetting..." : "Reset Password"}</span>
+                    <span>{saving ? "Resetting..." : "🔑 Reset Password"}</span>
                   </span>
                 </motion.button>
 

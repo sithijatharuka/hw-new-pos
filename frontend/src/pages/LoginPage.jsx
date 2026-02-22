@@ -34,12 +34,12 @@ const LoginPage = ({ onLogin, api }) => {
     (name, value) => {
       if (name === "username") {
         if (!regex.username.test(value)) {
-          return "Username must start with a letter, 4-20 chars, letters/numbers/_ only.";
+          return "Username must start with a letter, 4-20 chars, letters/numbers/_ only";
         }
       }
       if (name === "password") {
         if (!regex.password.test(value)) {
-          return "Password must be 8+ chars, include upper, lower, number, special.";
+          return "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character";
         }
       }
       return "";
@@ -554,7 +554,7 @@ const LoginPage = ({ onLogin, api }) => {
                         </span>
 
                         <span className="relative inline-flex items-center justify-center gap-2">
-                          <span>{loading ? "Logging in ..." : "Login"}</span>
+                          <span>{loading ? "Logging in ..." : "👤 Login"}</span>
                         </span>
                       </motion.button>
 

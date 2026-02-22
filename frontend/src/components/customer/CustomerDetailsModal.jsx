@@ -58,13 +58,13 @@ const CustomerDetailsModal = ({
           <DetailRow label="Notes" value={customer.notes || "-"} />
         </div>
 
-        <div className="flex justify-end mt-5">
+        <div className="flex justify-end gap-3 mt-5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-soft cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
           >
-            Close
+            ✕ Close
           </button>
         </div>
       </div>

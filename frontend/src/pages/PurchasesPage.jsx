@@ -398,12 +398,12 @@ const PurchasesPage = ({ api }) => {
 
         <div className="flex justify-end pt-2 border-t">
           <button
-            className="btn-primary"
+            className="btn-primary inline-flex items-center justify-center gap-2"
             type="button"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving…" : "Save purchase (update stock)"}
+            {saving ? "Saving…" : "💾 Save purchase"}
           </button>
         </div>
       </div>

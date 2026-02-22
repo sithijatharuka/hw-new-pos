@@ -28,9 +28,9 @@ const ExpensesTable = ({
             <button
               type="button"
               onClick={loadExpenses}
-              className="px-3 sm:px-4 py-2 rounded-xl border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+              className="px-3 sm:px-4 py-2 rounded-xl border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2 self-start sm:self-auto"
             >
-              <span className="text-base">↻</span>
+              <span>🔄</span>
               <span>Refresh</span>
             </button>
           </div>
@@ -102,17 +102,17 @@ const ExpensesTable = ({
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            className="text-[11px] sm:text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors px-2.5 py-1 rounded-lg hover:bg-blue-50"
+                            className="inline-flex items-center justify-center gap-1 text-[11px] sm:text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors px-2.5 py-1 rounded-lg hover:bg-blue-50"
                             onClick={() => handleEdit(e)}
                           >
-                            Edit
+                            ✏️ Edit
                           </button>
                           <button
                             type="button"
-                            className="text-[11px] sm:text-sm font-medium text-red-600 hover:text-red-800 hover:underline cursor-pointer transition-colors px-2.5 py-1 rounded-lg hover:bg-red-50"
+                            className="inline-flex items-center justify-center gap-1 text-[11px] sm:text-sm font-medium text-red-600 hover:text-red-800 hover:underline cursor-pointer transition-colors px-2.5 py-1 rounded-lg hover:bg-red-50"
                             onClick={() => handleDelete(e._id)}
                           >
-                            Delete
+                            🗑️ Delete
                           </button>
                         </div>
                       </td>

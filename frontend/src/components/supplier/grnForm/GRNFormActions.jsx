@@ -12,18 +12,18 @@ const GRNFormActions = ({
       <button
         type="button"
         onClick={onCancel}
-        className="px-5 py-2.5 border cursor-pointer border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition"
+        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border cursor-pointer border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition"
       >
-        Cancel
+        ✕ Cancel
       </button>
 
       <button
         type={onSubmit ? "button" : "submit"}
         onClick={onSubmit}
         disabled={saving || !isEditable}
-        className="bg-primary text-white cursor-pointer hover:bg-primary/90 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-70 disabled:cursor-not-allowed"
+        className="inline-flex items-center justify-center gap-2 bg-primary text-white cursor-pointer hover:bg-primary/90 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        {existingGRN ? "Update GRN" : "Save GRN"}
+        {existingGRN ? "✏️ Update GRN" : "💾 Save GRN"}
       </button>
     </div>
   );

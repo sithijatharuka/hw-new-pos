@@ -128,17 +128,17 @@ export default function SupplierPayModal({
               setError("");
               onClose();
             }}
-            className="inline-flex items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-semibold border border-gray-200 bg-background-secondary text-text-secondary transition-all duration-200 ease-out hover:bg-background-subtle hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-focus/20 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold border border-gray-200 bg-background-secondary text-text-secondary transition-all duration-200 ease-out hover:bg-background-subtle hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-focus/20 cursor-pointer"
           >
-            Cancel
+            ✕ Cancel
           </button>
 
           <button
             onClick={submit}
             disabled={saving}
-            className="inline-flex bg-primary text-white hover:bg-primary/90 items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-semibold bg-primary text-white shadow-md transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-focus/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90 rounded-2xl px-5 py-2.5 text-sm font-semibold bg-primary text-white shadow-md transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-focus/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
-            {saving ? "Processing..." : "Confirm Payment"}
+            💳 {saving ? "Processing..." : "Confirm Payment"}
           </button>
         </div>
       </div>

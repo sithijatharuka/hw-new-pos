@@ -19,18 +19,18 @@ export default function ConfirmDeleteModal({
 
         <div className="flex gap-3 mt-2">
           <button
-            className="px-4 py-2 font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-focus/20"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-focus/20"
             onClick={onCancel}
             disabled={loading}
           >
-            {cancelText}
+            ✕ {cancelText}
           </button>
           <button
-            className="px-4 py-2 font-semibold text-white bg-red-600 border border-red-600 rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-error/20"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold text-white bg-red-600 border border-red-600 rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-error/20"
             onClick={onConfirm}
             disabled={loading}
           >
-            {confirmText}
+            🗑️ {confirmText}
           </button>
         </div>
       </div>

@@ -571,24 +571,24 @@ const EditStaffModal = ({
                 type="button"
                 onClick={onClose}
                 disabled={saving}
-                className={buttonBase}
+                className={buttonBase + " gap-2"}
                 style={{
                   background: colors.background.subtle,
                   color: colors.text.primary,
                   border: `1px solid ${colors.border.light}`,
                 }}
               >
-                Cancel
+                ✕ Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
                 className={
                   buttonBase +
-                  " cursor-pointer hover:-translate-y-[1px] active:translate-y-0 bg-primary text-white hover:bg-primary/90"
+                  " gap-2 cursor-pointer hover:-translate-y-[1px] active:translate-y-0 bg-primary text-white hover:bg-primary/90"
                 }
               >
-                {isCreateMode ? "Create staff" : "Save changes"}
+                {isCreateMode ? "👤 Create staff" : "✏️ Save changes"}
               </button>
             </div>
           </div>

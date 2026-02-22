@@ -9,7 +9,7 @@ const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
           type="button"
           onClick={onCancel}
           className="
-            inline-flex w-full items-center justify-center rounded-2xl border border-border-default
+            inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border-default
             bg-background-secondary px-5 py-2.5 text-sm font-semibold text-text-primary
             shadow-sm transition duration-200 ease-out
             hover:-translate-y-0.5 hover:bg-background-subtle hover:shadow-md
@@ -19,7 +19,7 @@ const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
             sm:w-auto
           "
         >
-          Cancel
+          ✕ Cancel
         </button>
 
         <button
@@ -27,7 +27,7 @@ const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
           onClick={onSubmit}
           disabled={saving}
           className="
-            inline-flex w-full items-center justify-center rounded-2xl
+            inline-flex w-full items-center justify-center gap-2 rounded-2xl
             bg-primary text-white hover:bg-primary/90 text-white px-5 py-2.5 text-sm font-semibold text-text-inverse
             shadow-md transition duration-200 ease-out
             hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg
@@ -38,7 +38,7 @@ const SupplierFormFooter = ({ saving, isEdit, onCancel, onSubmit }) => {
             sm:w-auto
           "
         >
-          {isEdit ? "Update Supplier" : "Save Supplier"}
+          {isEdit ? "✏️ Update Supplier" : "💾 Save Supplier"}
         </button>
       </div>
     </div>

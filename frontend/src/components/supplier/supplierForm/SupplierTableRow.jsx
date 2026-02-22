@@ -53,7 +53,7 @@ const SupplierTableRow = ({
         <div className="flex flex-wrap gap-2">
           <button
             className={[
-              "inline-flex items-center justify-center",
+              "inline-flex items-center justify-center gap-1",
               "rounded-xl px-3 py-2 text-xs font-semibold",
               "bg-accent-subtle text-accent",
               "border border-border-light",
@@ -68,12 +68,12 @@ const SupplierTableRow = ({
               onReceiveGoods(supplier);
             }}
           >
-            Receive Goods
+            📦 Goods
           </button>
 
           <button
             className={[
-              "inline-flex items-center justify-center",
+              "inline-flex items-center justify-center gap-1",
               "rounded-xl px-3 py-2 text-xs font-semibold",
               "bg-pending-bg text-pending",
               "border border-border-light",
@@ -88,12 +88,12 @@ const SupplierTableRow = ({
               onViewGRNs(supplier);
             }}
           >
-            View GRNs
+            📋 GRNs
           </button>
 
           <button
             className={[
-              "inline-flex items-center justify-center",
+              "inline-flex items-center justify-center gap-1",
               "rounded-xl px-3 py-2 text-xs font-semibold",
               "bg-success-bg text-success",
               "border border-border-light",
@@ -110,12 +110,12 @@ const SupplierTableRow = ({
             }}
             disabled={outstanding <= 0}
           >
-            Pay
+            💳 Pay
           </button>
 
           <button
             className={[
-              "inline-flex items-center justify-center",
+              "inline-flex items-center justify-center gap-1",
               "rounded-xl px-3 py-2 text-xs font-semibold",
               "bg-primary-subtle text-primary",
               "border border-border-light",
@@ -130,12 +130,12 @@ const SupplierTableRow = ({
               onEdit(supplier);
             }}
           >
-            Edit
+            ✏️ Edit
           </button>
 
           <button
             className={[
-              "inline-flex items-center justify-center",
+              "inline-flex items-center justify-center gap-1",
               "rounded-xl px-3 py-2 text-xs font-semibold",
               "bg-error-bg text-red-600",
               "border border-border-light",
@@ -150,7 +150,7 @@ const SupplierTableRow = ({
               onDelete(supplier);
             }}
           >
-            Delete
+            🗑️ Delete
           </button>
         </div>
       </td>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AppLoader from "../common/AppLoader";
 import CloseButton from "../common/CloseButton";
 import { validateCustomerForm } from "../common/formValidation";
 import colors from "../../themes/colors";
@@ -83,122 +84,131 @@ const CustomerFormModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 bg-white/75 backdrop-blur-sm">
-      <div
-        className="w-full max-w-md max-h-[80vh] flex flex-col shadow-lg rounded-2xl"
-        style={{
-          background: colors.background.secondary,
-          border: `1px solid ${colors.border.light}`,
-        }}
-      >
-        <div className="flex items-center justify-between p-5 pb-3">
-          <h3 className="text-lg font-semibold text-primary">
-            {initialData ? "Update Customer" : "Add New Customer"}
-          </h3>
-          <CloseButton
-            onClick={onClose}
-            size="md"
-            variant="subtle"
-            ariaLabel="Close customer form"
-          />
-        </div>
-
-        <form className="flex flex-col flex-1 min-h-0" onSubmit={handleSubmit}>
-          <div className="flex-1 px-5 space-y-3 overflow-y-auto">
-            <TextInput
-              label="Name"
-              required
-              value={form.name}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, name: v }));
-                clearFieldError("name");
-              }}
-              error={fieldErrors.name}
-            />
-            <TextInput
-              label="Phone"
-              required
-              value={form.phone}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, phone: v }));
-                clearFieldError("phone");
-              }}
-              error={fieldErrors.phone}
-            />
-            <TextInput
-              label="Address"
-              required
-              value={form.address}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, address: v }));
-                clearFieldError("address");
-              }}
-              error={fieldErrors.address}
-            />
-            <TextInput
-              label="NIC"
-              required
-              value={form.nic}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, nic: v }));
-                clearFieldError("nic");
-              }}
-              error={fieldErrors.nic}
-            />
-            <SelectInput
-              label="Customer type"
-              required
-              value={form.type}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, type: v }));
-                clearFieldError("type");
-              }}
-              options={[
-                { value: "cash", label: "Cash only" },
-                { value: "credit", label: "Credit only" },
-                { value: "both", label: "Cash & Credit" },
-              ]}
-              error={fieldErrors.type}
-            />
-            <TextInput
-              label={`Credit limit (${currencySymbol})`}
-              required
-              type="number"
-              min="0"
-              value={form.creditLimit}
-              onChange={(v) => {
-                setForm((p) => ({ ...p, creditLimit: v }));
-                clearFieldError("creditLimit");
-              }}
-              error={fieldErrors.creditLimit}
-            />
-            <TextArea
-              label="Notes (optional)"
-              value={form.notes}
-              onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 p-5 pt-3 border-t border-gray-200">
-            <button
-              type="button"
+    <>
+      <AppLoader
+        open={saving}
+        title={initialData ? "Updating customer" : "Saving customer"}
+        subtitle="Please wait a moment"
+      />
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-3 bg-white/75 backdrop-blur-sm">
+        <div
+          className="w-full max-w-md max-h-[80vh] flex flex-col shadow-lg rounded-2xl"
+          style={{
+            background: colors.background.secondary,
+            border: `1px solid ${colors.border.light}`,
+          }}
+        >
+          <div className="flex items-center justify-between p-5 pb-3">
+            <h3 className="text-lg font-semibold text-primary">
+              {initialData ? "Update Customer" : "Add New Customer"}
+            </h3>
+            <CloseButton
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 cursor-pointer rounded-xl hover:bg-soft"
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white cursor-pointer bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-60"
-              disabled={saving}
-            >
-              {initialData ? "Update" : "Save"}
-            </button>
+              size="md"
+              variant="subtle"
+              ariaLabel="Close customer form"
+            />
           </div>
-        </form>
+
+          <form
+            className="flex flex-col flex-1 min-h-0"
+            onSubmit={handleSubmit}
+          >
+            <div className="flex-1 px-5 space-y-3 overflow-y-auto">
+              <TextInput
+                label="Name"
+                required
+                value={form.name}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, name: v }));
+                  clearFieldError("name");
+                }}
+                error={fieldErrors.name}
+              />
+              <TextInput
+                label="Phone"
+                required
+                value={form.phone}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, phone: v }));
+                  clearFieldError("phone");
+                }}
+                error={fieldErrors.phone}
+              />
+              <TextInput
+                label="Address"
+                required
+                value={form.address}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, address: v }));
+                  clearFieldError("address");
+                }}
+                error={fieldErrors.address}
+              />
+              <TextInput
+                label="NIC"
+                required
+                value={form.nic}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, nic: v }));
+                  clearFieldError("nic");
+                }}
+                error={fieldErrors.nic}
+              />
+              <SelectInput
+                label="Customer type"
+                required
+                value={form.type}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, type: v }));
+                  clearFieldError("type");
+                }}
+                options={[
+                  { value: "cash", label: "Cash only" },
+                  { value: "credit", label: "Credit only" },
+                  { value: "both", label: "Cash & Credit" },
+                ]}
+                error={fieldErrors.type}
+              />
+              <TextInput
+                label={`Credit limit (${currencySymbol})`}
+                required
+                type="number"
+                value={form.creditLimit}
+                onChange={(v) => {
+                  setForm((p) => ({ ...p, creditLimit: v }));
+                  clearFieldError("creditLimit");
+                }}
+                error={fieldErrors.creditLimit}
+              />
+              <TextArea
+                label="Notes (optional)"
+                value={form.notes}
+                onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 p-5 pt-3 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-700 border border-gray-300 cursor-pointer rounded-xl hover:bg-gray-50 disabled:opacity-60"
+                disabled={saving}
+              >
+                ✕ Cancel
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white cursor-pointer bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-60"
+                disabled={saving}
+              >
+                {initialData ? "✏️ Update" : "💾 Save"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
