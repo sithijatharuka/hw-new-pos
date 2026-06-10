@@ -4,6 +4,9 @@ import { Customer } from "../models/Customer.js";
 import { Sale } from "../models/Sale.js";
 import { CreditPayment } from "../models/CreditPayment.js";
 
+const PHONE_REGEX = /^(0\d{9}|\+?\d{10,15})$/;
+const validatePhone = (phone) => phone && PHONE_REGEX.test(phone.trim());
+
 const router = express.Router();
 
 // Create customer - requires "customers" feature
@@ -13,6 +16,9 @@ router.post("/", protect, requireFeature("customers"), async (req, res) => {
     return res.status(403).json({ message: "Tenant context missing" });
   }
   const { tenantId: ignoredTenant, ...safe } = req.body;
+  if (safe.phone && !validatePhone(safe.phone)) {
+    return res.status(400).json({ message: "Invalid phone number format." });
+  }
   const customer = await Customer.create({ ...safe, tenantId });
   res.status(201).json(customer);
 });
@@ -176,7 +182,12 @@ router.put("/:id", protect, async (req, res) => {
 
     // Update fields if provided
     if (name) customer.name = name;
-    if (phone) customer.phone = phone;
+    if (phone) {
+      if (!validatePhone(phone)) {
+        return res.status(400).json({ message: "Invalid phone number format." });
+      }
+      customer.phone = phone;
+    }
     if (address) customer.address = address;
     if (nic) customer.nic = nic;
     if (type) customer.type = type;

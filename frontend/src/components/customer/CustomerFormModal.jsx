@@ -130,9 +130,13 @@ const CustomerFormModal = ({
                 required
                 value={form.phone}
                 onChange={(v) => {
-                  setForm((p) => ({ ...p, phone: v }));
+                  const digits = v.replace(/\D/g, "").slice(0, 10);
+                  setForm((p) => ({ ...p, phone: digits }));
                   clearFieldError("phone");
                 }}
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="0XXXXXXXXX"
                 error={fieldErrors.phone}
               />
               <TextInput
