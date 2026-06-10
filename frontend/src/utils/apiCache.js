@@ -20,7 +20,7 @@ class APICache {
    */
   generateKey(url, params = {}) {
     const paramStr = JSON.stringify(params);
-    return `${url}:${paramStr}`;
+    return `${url}||${paramStr}`;
   }
 
   /**
@@ -78,7 +78,7 @@ class APICache {
     const regex = new RegExp(`^${urlPattern.replace(/\*/g, ".*")}`);
 
     keys.forEach((key) => {
-      const [url] = key.split(":");
+      const url = key.split("||")[0];
       if (regex.test(url)) {
         this.cache.delete(key);
         if (this.timers.has(key)) {

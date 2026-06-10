@@ -1,12 +1,26 @@
 // All functions now accept api as the first argument
 export const loadExpenses = async (api, params = {}) => {
   const { data } = await api.get("/expenses", { params });
-  return data || [];
+  const list = data?.expenses || data || [];
+  return list.map((e) => ({
+    _id: e.expenseId || e._id,
+    category: e.category,
+    description: e.description,
+    amount: e.amount,
+    date: e.expenseDate || e.date,
+  }));
 };
 
 export const getExpenses = async (api, params = {}) => {
   const { data } = await api.get("/expenses", { params });
-  return data || [];
+  const list = data?.expenses || data || [];
+  return list.map((e) => ({
+    _id: e.expenseId || e._id,
+    category: e.category,
+    description: e.description,
+    amount: e.amount,
+    date: e.expenseDate || e.date,
+  }));
 };
 
 export const createExpense = async (api, payload) => {

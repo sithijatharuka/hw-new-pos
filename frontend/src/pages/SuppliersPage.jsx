@@ -94,7 +94,7 @@ const SuppliersPage = ({ api }) => {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const data = await getSuppliers(api, q);
+      const data = await getSuppliers(api);
       setSuppliers(data || []);
     } catch (err) {
       showError(
@@ -107,7 +107,6 @@ const SuppliersPage = ({ api }) => {
 
   useEffect(() => {
     fetchSuppliers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -164,9 +163,8 @@ const SuppliersPage = ({ api }) => {
   };
 
   const handleSaveSupplier = async (payload) => {
+    setSavingSupplier(true);
     try {
-      setSavingSupplier(true);
-
       if (editingSupplier) {
         const updated = await updateSupplier(api, editingSupplier._id, payload);
         setSuppliers((prev) =>
@@ -174,16 +172,12 @@ const SuppliersPage = ({ api }) => {
         );
         showSuccess(successMessages.update("Supplier"));
       } else {
-        // For new suppliers, set currentBalance = openingBalance
         const created = await createSupplier(api, payload);
         setSuppliers((prev) => [...prev, created]);
         showSuccess(successMessages.create("Supplier"));
       }
-
       setShowSupplierForm(false);
       setEditingSupplier(null);
-    } catch (err) {
-      showError(err?.response?.data?.message || errorMessages.save("supplier"));
     } finally {
       setSavingSupplier(false);
     }
@@ -370,7 +364,7 @@ const SuppliersPage = ({ api }) => {
           query={q}
           onQueryChange={setQ}
           isSearching={isSearching}
-          onRefresh={fetchSuppliers}
+          onRefresh={() => { setQ(""); fetchSuppliers(); }}
           loading={loading}
           filteredCount={filtered.length}
           totalCount={suppliers.length}

@@ -54,6 +54,10 @@ customerSchema.index(
   { sparse: true, name: "customer_tenant_phone" },
 );
 customerSchema.index(
+  { tenantId: 1, nic: 1 },
+  { unique: true, sparse: true, name: "customer_tenant_nic_unique" },
+);
+customerSchema.index(
   { tenantId: 1, type: 1, createdAt: -1 },
   { name: "customer_tenant_type_recent" },
 );

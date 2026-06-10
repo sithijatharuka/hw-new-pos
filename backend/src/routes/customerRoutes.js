@@ -4,6 +4,9 @@ import { Customer } from "../models/Customer.js";
 import { Sale } from "../models/Sale.js";
 import { CreditPayment } from "../models/CreditPayment.js";
 
+const PHONE_REGEX = /^(0\d{9}|\+?\d{10,15})$/;
+const validatePhone = (phone) => phone && PHONE_REGEX.test(phone.trim());
+
 const router = express.Router();
 
 // Create customer - requires "customers" feature
@@ -13,6 +16,14 @@ router.post("/", protect, requireFeature("customers"), async (req, res) => {
     return res.status(403).json({ message: "Tenant context missing" });
   }
   const { tenantId: ignoredTenant, ...safe } = req.body;
+  if (safe.phone && !validatePhone(safe.phone)) {
+    return res.status(400).json({ message: "Invalid phone number format." });
+  }
+  if (safe.nic) {
+    const nicExists = await Customer.exists({ tenantId, nic: safe.nic.toUpperCase() });
+    if (nicExists) return res.status(409).json({ message: "A customer with this NIC already exists." });
+    safe.nic = safe.nic.toUpperCase();
+  }
   const customer = await Customer.create({ ...safe, tenantId });
   res.status(201).json(customer);
 });
@@ -176,9 +187,18 @@ router.put("/:id", protect, async (req, res) => {
 
     // Update fields if provided
     if (name) customer.name = name;
-    if (phone) customer.phone = phone;
+    if (phone) {
+      if (!validatePhone(phone)) {
+        return res.status(400).json({ message: "Invalid phone number format." });
+      }
+      customer.phone = phone;
+    }
     if (address) customer.address = address;
-    if (nic) customer.nic = nic;
+    if (nic) {
+      const nicExists = await Customer.exists({ tenantId, nic: nic.toUpperCase(), _id: { $ne: customer._id } });
+      if (nicExists) return res.status(409).json({ message: "A customer with this NIC already exists." });
+      customer.nic = nic.toUpperCase();
+    }
     if (type) customer.type = type;
     if (creditLimit !== undefined) customer.creditLimit = creditLimit;
     if (notes) customer.notes = notes;

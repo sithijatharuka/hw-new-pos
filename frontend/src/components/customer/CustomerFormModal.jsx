@@ -19,11 +19,17 @@ const CustomerFormModal = ({
   onClose,
   onSubmit,
   saving = false,
+  nicError = null,
+  onNicErrorClear,
   currencySymbol = "Rs.",
   currencyPosition = "before",
 }) => {
   const [form, setForm] = useState(defaultForm);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    if (nicError) setFieldErrors((prev) => ({ ...prev, nic: nicError }));
+  }, [nicError]);
 
   useEffect(() => {
     if (initialData) {
@@ -130,9 +136,13 @@ const CustomerFormModal = ({
                 required
                 value={form.phone}
                 onChange={(v) => {
-                  setForm((p) => ({ ...p, phone: v }));
+                  const digits = v.replace(/\D/g, "").slice(0, 10);
+                  setForm((p) => ({ ...p, phone: digits }));
                   clearFieldError("phone");
                 }}
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="0XXXXXXXXX"
                 error={fieldErrors.phone}
               />
               <TextInput
@@ -152,6 +162,7 @@ const CustomerFormModal = ({
                 onChange={(v) => {
                   setForm((p) => ({ ...p, nic: v }));
                   clearFieldError("nic");
+                  onNicErrorClear?.();
                 }}
                 error={fieldErrors.nic}
               />

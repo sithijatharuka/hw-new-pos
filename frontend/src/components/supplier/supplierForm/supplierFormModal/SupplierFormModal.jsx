@@ -82,20 +82,16 @@ export default function SupplierFormModal({
       e.name = "Supplier name is required (min 2 chars).";
     if (!form.address || form.address.trim().length < 5)
       e.address = "Address is required (min 5 chars).";
-    const phoneInput = form.phoneInput.trim();
-    if (!form.phones || form.phones.length === 0)
-      e.phones = "At least one phone number is required.";
 
-    // Validate all entered numbers + pending input
-    const invalidPhones = (form.phones || []).filter(
-      (phone) => !isValidPhoneNumber(phone),
-    );
-    if (invalidPhones.length > 0)
-      e.phones = `Phone number \"${invalidPhones[0]}\" is invalid.`;
-    else if (phoneInput && !isValidPhoneNumber(phoneInput))
-      e.phones = "Enter a valid phone number and click Add.";
-    else if (phoneInput && !e.phones)
-      e.phones = "Click Add to include the phone number.";
+    if (!form.phones || form.phones.length === 0) {
+      e.phones = "At least one phone number is required.";
+    } else {
+      const invalidPhones = form.phones.filter((p) => !isValidPhoneNumber(p));
+      if (invalidPhones.length > 0)
+        e.phones = `Phone number "${invalidPhones[0]}" is invalid.`;
+      else if (form.phoneInput.trim())
+        e.phones = "Click Add to include the phone number.";
+    }
 
     const cl = Number(form.creditLimit);
     if (Number.isNaN(cl) || cl <= 0)
@@ -110,11 +106,9 @@ export default function SupplierFormModal({
     if (form.email && !isValidEmail(form.email))
       e.email = "Email address is invalid.";
 
-    // paymentTerms sanity
     const pt = normalizePaymentTerms(form.paymentTerms);
-    if (pt.type === "NET" && (Number.isNaN(pt.days) || pt.days < 0)) {
+    if (pt.type === "NET" && (Number.isNaN(pt.days) || pt.days < 0))
       e.paymentTerms = "Net days must be 0 or more.";
-    }
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -182,7 +176,17 @@ export default function SupplierFormModal({
       notes: form.notes?.trim() || undefined,
       status: form.status,
     };
-    await onSubmit(payload);
+
+    try {
+      await onSubmit(payload);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to save supplier.";
+      if (err?.response?.status === 409) {
+        setErrors((prev) => ({ ...prev, name: msg }));
+      } else {
+        showError(msg);
+      }
+    }
   };
 
   const pt = useMemo(
