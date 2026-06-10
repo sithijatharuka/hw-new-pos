@@ -24,6 +24,7 @@ import {
   successMessages,
 } from "../utils/toastHelper";
 import { loadCurrencySettings } from "../api/settings/settings";
+import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 
 const CustomersPage = ({ api }) => {
   const [customers, setCustomers] = useState([]);
@@ -39,6 +40,8 @@ const CustomersPage = ({ api }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentCustomer, setPaymentCustomer] = useState(null);
   const [paymentSaving, setPaymentSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Prefix search hook with debouncing
   const {
@@ -114,16 +117,20 @@ const CustomersPage = ({ api }) => {
     }
   };
 
-  const handleDeleteCustomer = async (customer) => {
-    if (!confirm(`Delete "${customer.name}"?`)) return;
+  const handleDeleteCustomer = (customer) => setDeleteTarget(customer);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteCustomer(customer._id);
-      setCustomers((prev) => prev.filter((c) => c._id !== customer._id));
+      await deleteCustomer(api, deleteTarget._id);
+      setCustomers((prev) => prev.filter((c) => c._id !== deleteTarget._id));
       showSuccess(successMessages.delete("Customer"));
+      setDeleteTarget(null);
     } catch (err) {
-      showError(
-        err?.response?.data?.message || errorMessages.delete("customer"),
-      );
+      showError(err?.response?.data?.message || errorMessages.delete("customer"));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -267,6 +274,15 @@ const CustomersPage = ({ api }) => {
         onNicErrorClear={() => setFormNicError(null)}
         currencySymbol={currencySymbol}
         currencyPosition={currencyPosition}
+      />
+
+      <ConfirmDeleteModal
+        open={!!deleteTarget}
+        title="Delete Customer"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        loading={deleting}
       />
 
       {/* Receive Payment Modal */}
