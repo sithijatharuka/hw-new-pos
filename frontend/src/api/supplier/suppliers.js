@@ -1,6 +1,7 @@
 // All functions now accept api as the first argument
 export const getSuppliers = async (api, query) => {
-  const { data } = await api.get("/suppliers", { params: { q: query } });
+  const params = query ? { q: query } : {};
+  const { data } = await api.get("/suppliers", { params });
   return data || [];
 };
 

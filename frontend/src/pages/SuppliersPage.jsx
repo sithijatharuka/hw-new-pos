@@ -94,7 +94,7 @@ const SuppliersPage = ({ api }) => {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const data = await getSuppliers(api, q);
+      const data = await getSuppliers(api);
       setSuppliers(data || []);
     } catch (err) {
       showError(
@@ -107,7 +107,6 @@ const SuppliersPage = ({ api }) => {
 
   useEffect(() => {
     fetchSuppliers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -365,7 +364,7 @@ const SuppliersPage = ({ api }) => {
           query={q}
           onQueryChange={setQ}
           isSearching={isSearching}
-          onRefresh={fetchSuppliers}
+          onRefresh={() => { setQ(""); fetchSuppliers(); }}
           loading={loading}
           filteredCount={filtered.length}
           totalCount={suppliers.length}
