@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import AppLoader from "../../common/AppLoader";
+import AppLoader from "../../../common/AppLoader";
 import {
   showSuccess,
   showError,
