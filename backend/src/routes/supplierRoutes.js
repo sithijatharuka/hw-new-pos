@@ -4,6 +4,31 @@ import { Supplier } from "../models/Supplier.js";
 import { Purchase } from "../models/Purchase.js";
 import logger from "../utils/logger.js";
 
+const PHONE_REGEX = /^(0\d{9}|\+?\d{10,15})$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateSupplierBody = (body) => {
+  const { name, phones, address, email, creditLimit, openingBalance } = body;
+  if (!name || name.trim().length < 2)
+    return "Supplier name is required (min 2 chars).";
+  if (!address || address.trim().length < 5)
+    return "Address is required (min 5 chars).";
+  if (!phones || !Array.isArray(phones) || phones.length === 0)
+    return "At least one phone number is required.";
+  const badPhone = phones.find((p) => !PHONE_REGEX.test(p.trim()));
+  if (badPhone) return `Phone number "${badPhone}" is invalid.`;
+  if (email && !EMAIL_REGEX.test(email.trim()))
+    return "Email address is invalid.";
+  const cl = Number(creditLimit);
+  if (Number.isNaN(cl) || cl <= 0)
+    return "Credit limit must be greater than 0.";
+  const ob = Number(openingBalance ?? 0);
+  if (Number.isNaN(ob) || ob < 0)
+    return "Opening balance must be 0 or greater.";
+  if (ob > cl) return "Opening balance cannot exceed credit limit.";
+  return null;
+};
+
 const router = express.Router();
 
 router.post("/", protect, requireFeature("suppliers"), async (req, res) => {
@@ -12,7 +37,15 @@ router.post("/", protect, requireFeature("suppliers"), async (req, res) => {
     return res.status(403).json({ message: "Tenant context missing" });
   }
   const { tenantId: ignoredTenant, ...safe } = req.body;
-  const supplier = await Supplier.create({ ...safe, tenantId });
+
+  const validationError = validateSupplierBody(safe);
+  if (validationError) return res.status(400).json({ message: validationError });
+
+  const duplicate = await Supplier.exists({ tenantId, name: safe.name.trim() });
+  if (duplicate)
+    return res.status(409).json({ message: "A supplier with this name already exists." });
+
+  const supplier = await Supplier.create({ ...safe, name: safe.name.trim(), tenantId });
   res.status(201).json(supplier);
 });
 
@@ -45,6 +78,17 @@ router.put("/:id", protect, requireFeature("suppliers"), async (req, res) => {
       "notes",
       "status",
     ];
+
+    if (req.body.name) {
+      const nameConflict = await Supplier.exists({
+        tenantId,
+        name: req.body.name.trim(),
+        _id: { $ne: supplier._id },
+      });
+      if (nameConflict)
+        return res.status(409).json({ message: "A supplier with this name already exists." });
+    }
+
     fields.forEach((f) => {
       if (req.body[f] !== undefined) {
         supplier[f] = req.body[f];

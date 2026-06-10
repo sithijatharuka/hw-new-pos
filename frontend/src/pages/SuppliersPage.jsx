@@ -164,9 +164,8 @@ const SuppliersPage = ({ api }) => {
   };
 
   const handleSaveSupplier = async (payload) => {
+    setSavingSupplier(true);
     try {
-      setSavingSupplier(true);
-
       if (editingSupplier) {
         const updated = await updateSupplier(api, editingSupplier._id, payload);
         setSuppliers((prev) =>
@@ -174,16 +173,12 @@ const SuppliersPage = ({ api }) => {
         );
         showSuccess(successMessages.update("Supplier"));
       } else {
-        // For new suppliers, set currentBalance = openingBalance
         const created = await createSupplier(api, payload);
         setSuppliers((prev) => [...prev, created]);
         showSuccess(successMessages.create("Supplier"));
       }
-
       setShowSupplierForm(false);
       setEditingSupplier(null);
-    } catch (err) {
-      showError(err?.response?.data?.message || errorMessages.save("supplier"));
     } finally {
       setSavingSupplier(false);
     }

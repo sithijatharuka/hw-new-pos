@@ -90,7 +90,7 @@ supplierSchema.index(
 );
 supplierSchema.index(
   { tenantId: 1, name: 1 },
-  { name: "supplier_tenant_name" },
+  { unique: true, name: "supplier_tenant_name_unique" },
 );
 supplierSchema.index(
   { tenantId: 1, "paymentTerms.type": 1 },
