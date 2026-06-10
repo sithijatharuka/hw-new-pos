@@ -33,6 +33,7 @@ const CustomersPage = ({ api }) => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [formSaving, setFormSaving] = useState(false);
+  const [formNicError, setFormNicError] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [detailsCustomer, setDetailsCustomer] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -89,25 +90,25 @@ const CustomersPage = ({ api }) => {
     setFormSaving(true);
     try {
       if (editingCustomer) {
-        // Update existing
-        const updated = await updateCustomer(
-          api,
-          editingCustomer._id,
-          formData,
-        );
+        const updated = await updateCustomer(api, editingCustomer._id, formData);
         setCustomers((prev) =>
           prev.map((c) => (c._id === updated._id ? updated : c)),
         );
         showSuccess(successMessages.update("Customer"));
+        closeFormModal();
       } else {
-        // Create new
         const created = await createCustomer(api, formData);
         setCustomers((prev) => [...prev, created]);
         showSuccess(successMessages.create("Customer"));
+        closeFormModal();
       }
-      closeFormModal();
     } catch (err) {
-      showError(err?.response?.data?.message || errorMessages.save("customer"));
+      const msg = err?.response?.data?.message || errorMessages.save("customer");
+      if (err?.response?.status === 409) {
+        setFormNicError(msg);
+      } else {
+        showError(msg);
+      }
     } finally {
       setFormSaving(false);
     }
@@ -149,6 +150,7 @@ const CustomersPage = ({ api }) => {
   const closeFormModal = () => {
     setShowFormModal(false);
     setEditingCustomer(null);
+    setFormNicError(null);
   };
 
   const openDetailsModal = (customer) => {
@@ -261,6 +263,8 @@ const CustomersPage = ({ api }) => {
         onClose={closeFormModal}
         onSubmit={handleCreateOrUpdate}
         saving={formSaving}
+        nicError={formNicError}
+        onNicErrorClear={() => setFormNicError(null)}
         currencySymbol={currencySymbol}
         currencyPosition={currencyPosition}
       />

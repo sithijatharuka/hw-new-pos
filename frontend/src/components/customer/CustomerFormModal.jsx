@@ -19,11 +19,17 @@ const CustomerFormModal = ({
   onClose,
   onSubmit,
   saving = false,
+  nicError = null,
+  onNicErrorClear,
   currencySymbol = "Rs.",
   currencyPosition = "before",
 }) => {
   const [form, setForm] = useState(defaultForm);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    if (nicError) setFieldErrors((prev) => ({ ...prev, nic: nicError }));
+  }, [nicError]);
 
   useEffect(() => {
     if (initialData) {
@@ -156,6 +162,7 @@ const CustomerFormModal = ({
                 onChange={(v) => {
                   setForm((p) => ({ ...p, nic: v }));
                   clearFieldError("nic");
+                  onNicErrorClear?.();
                 }}
                 error={fieldErrors.nic}
               />
