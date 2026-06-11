@@ -12,36 +12,19 @@
  * Maps URL patterns to cache control directives
  */
 const CACHE_CONFIG = {
-  // Static data endpoints - cache for longer (10 minutes)
-  "/items": "private, max-age=600",
-  "/suppliers": "private, max-age=600",
-  "/customers": "private, max-age=600",
-  "/settings": "private, max-age=600",
-
-  // Frequently updated dashboard - shorter cache (2 minutes)
-  "/dashboard": "private, max-age=120",
-
-  // Sales data - moderate cache (3 minutes)
-  "/sales": "private, max-age=180",
-
-  // Expenses - moderate cache (3 minutes)
-  "/expenses": "private, max-age=180",
-
-  // Reports data
-  "/reports": "private, max-age=300",
-
-  // GRN endpoints
-  "/grns": "private, max-age=300",
-
-  // User data - don't cache (sensitive)
-  "/users": "private, no-cache",
-  "/auth": "private, no-cache, no-store",
-
-  // Purchase data
-  "/purchases": "private, max-age=300",
-
-  // OTP endpoints - never cache
-  "/otp": "private, no-cache, no-store",
+  "/items": "no-store",
+  "/suppliers": "no-store",
+  "/customers": "no-store",
+  "/settings": "no-store",
+  "/dashboard": "no-store",
+  "/sales": "no-store",
+  "/expenses": "no-store",
+  "/reports": "no-store",
+  "/grns": "no-store",
+  "/users": "no-store",
+  "/auth": "no-store",
+  "/purchases": "no-store",
+  "/otp": "no-store",
 };
 
 /**
@@ -53,7 +36,7 @@ const CACHE_CONFIG = {
 function getCacheControl(url, method) {
   // Never cache mutations
   if (method !== "GET" && method !== "HEAD") {
-    return "private, no-cache, no-store, must-revalidate";
+    return "no-store";
   }
 
   // Check if URL matches any cache config pattern
@@ -63,8 +46,8 @@ function getCacheControl(url, method) {
     }
   }
 
-  // Default: cache GET requests for 5 minutes
-  return "private, max-age=300";
+  // Default: do not cache
+  return "no-store";
 }
 
 /**
@@ -76,36 +59,15 @@ export function setCacheControl(req, res, next) {
 
   // Override the send function to set cache headers
   res.send = function (data) {
-    // Only set cache headers for successful responses
-    if (res.statusCode >= 200 && res.statusCode < 400) {
-      const cacheControl = getCacheControl(req.path, req.method);
+    const cacheControl =
+      res.statusCode >= 200 && res.statusCode < 400
+        ? getCacheControl(req.path, req.method)
+        : "no-store";
 
-      // Only set if not already set
-      if (!res.getHeader("Cache-Control")) {
-        res.setHeader("Cache-Control", cacheControl);
-      }
-
-      // Add ETag and Last-Modified for better caching
-      if (req.method === "GET" || req.method === "HEAD") {
-        // Set Last-Modified if not already set
-        if (!res.getHeader("Last-Modified")) {
-          res.setHeader("Last-Modified", new Date().toUTCString());
-        }
-
-        // Add Vary header for requests with query parameters
-        if (req.query && Object.keys(req.query).length > 0) {
-          res.setHeader("Vary", "Accept-Encoding");
-        }
-      }
-    } else {
-      // Never cache error responses
-      res.setHeader(
-        "Cache-Control",
-        "private, no-cache, no-store, must-revalidate",
-      );
+    if (!res.getHeader("Cache-Control")) {
+      res.setHeader("Cache-Control", cacheControl);
     }
 
-    // Call the original send
     return originalSend.call(this, data);
   };
 

@@ -165,7 +165,7 @@ const InventoryPage = ({ api }) => {
     try {
       await itemApi.activateItem(api, id);
       toast.success("Item activated", { duration: 4000 });
-      fetchItems();
+      await fetchItems();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to activate item", {
         duration: 4000,
@@ -177,7 +177,7 @@ const InventoryPage = ({ api }) => {
     try {
       await itemApi.deactivateItem(api, id);
       toast.success("Item deactivated", { duration: 4000 });
-      fetchItems();
+      await fetchItems();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to deactivate item", {
         duration: 4000,

@@ -64,5 +64,6 @@ export const usePrefixSearch = (
     query,
     setQuery,
     filteredItems,
+    isSearching,
   };
 };
