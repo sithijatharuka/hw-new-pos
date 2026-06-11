@@ -21,6 +21,8 @@ const CustomerFormModal = ({
   saving = false,
   nicError = null,
   onNicErrorClear,
+  phoneError = null,
+  onPhoneErrorClear,
   currencySymbol = "Rs.",
   currencyPosition = "before",
 }) => {
@@ -30,6 +32,10 @@ const CustomerFormModal = ({
   useEffect(() => {
     if (nicError) setFieldErrors((prev) => ({ ...prev, nic: nicError }));
   }, [nicError]);
+
+  useEffect(() => {
+    if (phoneError) setFieldErrors((prev) => ({ ...prev, phone: phoneError }));
+  }, [phoneError]);
 
   useEffect(() => {
     if (initialData) {
@@ -139,6 +145,7 @@ const CustomerFormModal = ({
                   const digits = v.replace(/\D/g, "").slice(0, 10);
                   setForm((p) => ({ ...p, phone: digits }));
                   clearFieldError("phone");
+                  onPhoneErrorClear?.();
                 }}
                 inputMode="numeric"
                 maxLength={10}
