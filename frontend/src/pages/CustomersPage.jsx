@@ -35,6 +35,7 @@ const CustomersPage = ({ api }) => {
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [formSaving, setFormSaving] = useState(false);
   const [formNicError, setFormNicError] = useState(null);
+  const [formPhoneError, setFormPhoneError] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [detailsCustomer, setDetailsCustomer] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -108,7 +109,12 @@ const CustomersPage = ({ api }) => {
     } catch (err) {
       const msg = err?.response?.data?.message || errorMessages.save("customer");
       if (err?.response?.status === 409) {
-        setFormNicError(msg);
+        const msg409 = err?.response?.data?.message || "";
+        if (msg409.toLowerCase().includes("phone")) {
+          setFormPhoneError(msg409);
+        } else {
+          setFormNicError(msg409);
+        }
       } else {
         showError(msg);
       }
@@ -158,6 +164,7 @@ const CustomersPage = ({ api }) => {
     setShowFormModal(false);
     setEditingCustomer(null);
     setFormNicError(null);
+    setFormPhoneError(null);
   };
 
   const openDetailsModal = (customer) => {
@@ -272,6 +279,8 @@ const CustomersPage = ({ api }) => {
         saving={formSaving}
         nicError={formNicError}
         onNicErrorClear={() => setFormNicError(null)}
+        phoneError={formPhoneError}
+        onPhoneErrorClear={() => setFormPhoneError(null)}
         currencySymbol={currencySymbol}
         currencyPosition={currencyPosition}
       />

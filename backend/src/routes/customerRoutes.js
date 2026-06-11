@@ -19,6 +19,10 @@ router.post("/", protect, requireFeature("customers"), async (req, res) => {
   if (safe.phone && !validatePhone(safe.phone)) {
     return res.status(400).json({ message: "Invalid phone number format." });
   }
+  if (safe.phone) {
+    const phoneExists = await Customer.exists({ tenantId, phone: safe.phone.trim() });
+    if (phoneExists) return res.status(409).json({ message: "A customer with this phone number already exists." });
+  }
   if (safe.nic) {
     const nicExists = await Customer.exists({ tenantId, nic: safe.nic.toUpperCase() });
     if (nicExists) return res.status(409).json({ message: "A customer with this NIC already exists." });
@@ -191,6 +195,8 @@ router.put("/:id", protect, async (req, res) => {
       if (!validatePhone(phone)) {
         return res.status(400).json({ message: "Invalid phone number format." });
       }
+      const phoneExists = await Customer.exists({ tenantId, phone: phone.trim(), _id: { $ne: customer._id } });
+      if (phoneExists) return res.status(409).json({ message: "A customer with this phone number already exists." });
       customer.phone = phone;
     }
     if (address) customer.address = address;
