@@ -245,7 +245,7 @@ const CustomersPage = ({ api }) => {
 
               {/* Table Footer */}
               <CustomerFooterStats
-                customers={customers}
+                customers={filteredCustomers}
                 currencySymbol={currencySymbol}
                 currencyPosition={currencyPosition}
               />
