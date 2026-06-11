@@ -270,15 +270,7 @@ const InventoryPage = ({ api }) => {
           setEditingItem(null);
           await fetchItems();
         }}
-        onCategoryAdd={() =>
-          toast.info("Category management coming soon", { duration: 4000 })
-        }
-        onBaseUnitAdd={() =>
-          toast.info("Unit management coming soon", { duration: 4000 })
-        }
-        onCategoryDelete={(cat) =>
-          toast.info(`Category delete: ${cat}`, { duration: 4000 })
-        }
+
       />
 
       {/* Detail Modal (with batches) */}
