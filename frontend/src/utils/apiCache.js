@@ -71,11 +71,13 @@ class APICache {
   }
 
   /**
-   * Clear cache by URL pattern (supports wildcards)
+   * Clear cache by URL pattern (supports wildcards with *)
    */
   invalidate(urlPattern) {
     const keys = Array.from(this.cache.keys());
-    const regex = new RegExp(`^${urlPattern.replace(/\*/g, ".*")}`);
+    // Escape all regex special chars except *, then replace * with .*
+    const escaped = urlPattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+    const regex = new RegExp(`^${escaped}`);
 
     keys.forEach((key) => {
       const url = key.split("||")[0];
@@ -158,53 +160,54 @@ export function getTTLForURL(url) {
  */
 export const INVALIDATION_MAP = {
   // POST /sales invalidates dashboard and sales cache
-  "POST:/sales": ["/dashboard/.*", "/sales"],
+  "POST:/sales": ["/dashboard/*", "/sales"],
 
   // PUT /sales/:id invalidates dashboard and sales cache
-  "PUT:/sales/.*": ["/dashboard/.*", "/sales"],
+  "PUT:/sales/*": ["/dashboard/*", "/sales"],
 
   // POST /expenses invalidates dashboard and expenses cache
-  "POST:/expenses": ["/dashboard/.*", "/expenses"],
+  "POST:/expenses": ["/dashboard/*", "/expenses"],
 
   // PUT /expenses/:id invalidates dashboard and expenses cache
-  "PUT:/expenses/.*": ["/dashboard/.*", "/expenses"],
+  "PUT:/expenses/*": ["/dashboard/*", "/expenses"],
 
   // DELETE /expenses/:id invalidates dashboard and expenses cache
-  "DELETE:/expenses/.*": ["/dashboard/.*", "/expenses"],
+  "DELETE:/expenses/*": ["/dashboard/*", "/expenses"],
 
   // Item operations invalidate items cache
-  "POST:/items": ["/items.*", "/dashboard/.*"],
-  "PUT:/items/.*": ["/items.*", "/dashboard/.*"],
-  "DELETE:/items/.*": ["/items.*", "/dashboard/.*"],
+  "POST:/items": ["/items*", "/dashboard/*"],
+  "PUT:/items/*": ["/items*", "/dashboard/*"],
+  "PATCH:/items/*": ["/items*", "/dashboard/*"],
+  "DELETE:/items/*": ["/items*", "/dashboard/*"],
 
   // Supplier operations invalidate suppliers cache
-  "POST:/suppliers": ["/suppliers.*", "/dashboard/.*"],
-  "PUT:/suppliers/.*": ["/suppliers.*", "/dashboard/.*"],
-  "DELETE:/suppliers/.*": ["/suppliers.*", "/dashboard/.*"],
+  "POST:/suppliers": ["/suppliers*", "/dashboard/*"],
+  "PUT:/suppliers/*": ["/suppliers*", "/dashboard/*"],
+  "DELETE:/suppliers/*": ["/suppliers*", "/dashboard/*"],
 
   // Customer operations invalidate customers cache (if cached)
-  "POST:/customers": ["/customers.*", "/dashboard/.*"],
-  "PUT:/customers/.*": ["/customers.*", "/dashboard/.*"],
-  "DELETE:/customers/.*": ["/customers.*", "/dashboard/.*"],
+  "POST:/customers": ["/customers*", "/dashboard/*"],
+  "PUT:/customers/*": ["/customers*", "/dashboard/*"],
+  "DELETE:/customers/*": ["/customers*", "/dashboard/*"],
 
   // Purchase operations
-  "POST:/purchases": ["/purchases.*", "/dashboard/.*"],
-  "PUT:/purchases/.*": ["/purchases.*", "/dashboard/.*"],
-  "DELETE:/purchases/.*": ["/purchases.*", "/dashboard/.*"],
+  "POST:/purchases": ["/purchases*", "/dashboard/*"],
+  "PUT:/purchases/*": ["/purchases*", "/dashboard/*"],
+  "DELETE:/purchases/*": ["/purchases*", "/dashboard/*"],
 
   // Settings updates
   "PUT:/settings": ["/settings"],
   "POST:/settings": ["/settings"],
 
   // User operations
-  "POST:/users": ["/users.*"],
-  "PUT:/users/.*": ["/users.*"],
-  "DELETE:/users/.*": ["/users.*"],
+  "POST:/users": ["/users*"],
+  "PUT:/users/*": ["/users*"],
+  "DELETE:/users/*": ["/users*"],
 
   // GRN operations - affect dashboard and inventory
-  "POST:/grns": ["/grns.*", "/dashboard/.*", "/items.*"],
-  "PUT:/grns/.*": ["/grns.*", "/dashboard/.*", "/items.*"],
-  "DELETE:/grns/.*": ["/grns.*", "/dashboard/.*", "/items.*"],
+  "POST:/grns": ["/grns*", "/dashboard/*", "/items*"],
+  "PUT:/grns/*": ["/grns*", "/dashboard/*", "/items*"],
+  "DELETE:/grns/*": ["/grns*", "/dashboard/*", "/items*"],
 };
 
 /**
@@ -214,23 +217,18 @@ export function invalidateCacheForRequest(method, url) {
   // Extract base path from URL (remove query params and hash)
   const basePath = url.split("?")[0].split("#")[0];
 
-  // Find matching invalidation patterns
   for (const [pattern, invalidPatterns] of Object.entries(INVALIDATION_MAP)) {
     const [patternMethod, patternPath] = pattern.split(":");
 
-    // Pattern paths already use .* for wildcards, so no need to replace
-    // Just escape special regex characters other than . and *
+    // Escape regex special chars except *, then expand * to .*
     const regexPattern = patternPath
-      .replace(/\./g, "\\.") // escape dots
-      .replace(/\*/g, ".*"); // convert remaining * to .*
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, ".*");
 
-    const pathRegex = new RegExp(`^${regexPattern}`);
+    const pathRegex = new RegExp(`^${regexPattern}$`);
 
     if (patternMethod === method && pathRegex.test(basePath)) {
-      invalidPatterns.forEach((invalidPattern) => {
-        apiCache.invalidate(invalidPattern);
-      });
-      break;
+      invalidPatterns.forEach((p) => apiCache.invalidate(p));
     }
   }
 }

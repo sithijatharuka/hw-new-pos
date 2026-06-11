@@ -22,28 +22,25 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
     const token = getAccessToken?.();
     if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    // Check cache for GET requests before making API call
     const method = config.method?.toUpperCase() || "GET";
     const params = config.params || {};
 
     if (method === "GET") {
+      // Tell any intermediate proxy/browser not to serve a cached copy
+      config.headers["Cache-Control"] = "no-cache";
+
       const cached = apiCache.get(config.url, params);
       if (cached) {
-        // Store cached data and flag in config
         config._fromCache = true;
-        config._cachedData = cached;
-
-        // Replace adapter with one that returns cached response immediately
-        config.adapter = () => {
-          return Promise.resolve({
+        config.adapter = () =>
+          Promise.resolve({
             data: cached,
             status: 200,
             statusText: "OK (from cache)",
             headers: {},
-            config: config,
+            config,
             request: null,
           });
-        };
       }
     }
 
@@ -69,15 +66,13 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
       const method = config.method?.toUpperCase() || "GET";
       const params = config.params || {};
 
-      // Don't re-cache data that came from cache
-      if (config._fromCache) {
-        return response;
-      }
+      if (config._fromCache) return response;
 
-      // Cache successful GET responses
       if (method === "GET" && response.data) {
         const ttl = getTTLForURL(config.url);
         apiCache.set(config.url, params, response.data, ttl);
+      } else if (method !== "GET") {
+        invalidateCacheForRequest(method, config.url);
       }
 
       return response;
@@ -131,24 +126,6 @@ export const createApiClient = (getAccessToken, setAccessToken, logout) => {
 
         return Promise.reject(refreshErr);
       }
-    },
-  );
-
-  // Cache invalidation interceptor for mutations
-  api.interceptors.response.use(
-    (response) => {
-      const config = response.config;
-      const method = config.method?.toUpperCase() || "GET";
-
-      // Invalidate cache for mutations (POST, PUT, DELETE)
-      if (method !== "GET") {
-        invalidateCacheForRequest(method, config.url);
-      }
-
-      return response;
-    },
-    (error) => {
-      return Promise.reject(error);
     },
   );
 
