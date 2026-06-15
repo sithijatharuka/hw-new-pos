@@ -1,6 +1,6 @@
 export const BARCODE_TYPES = [
   { label: "Company / Existing Barcode", value: "COMPANY" },
-  { label: "Create New Barcode", value: "CUSTOM" },
+  { label: "Generate New Barcode", value: "GENERATE" },
 ];
 
 export const LABEL_SIZES = [

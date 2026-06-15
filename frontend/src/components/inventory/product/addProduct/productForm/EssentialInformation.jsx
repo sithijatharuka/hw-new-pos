@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { showSuccess, showError } from "../../../../../utils/toastHelper";
 import InputModal from "../../../../common/InputModal";
+import BarcodeForm from "../../../../../features/barcode/components/BarcodeForm";
+import { BARCODE_TYPES } from "../../../../../features/barcode/constants/barcodeConstants";
 
 const EssentialInformation = ({
   form,
@@ -19,6 +21,18 @@ const EssentialInformation = ({
 }) => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
+
+  // Barcode feature state
+  const [barcodeFormData, setBarcodeFormData] = useState({
+    barcodeType: BARCODE_TYPES[0].value,
+    barcode: form.barcode || "",
+  });
+
+  // Keep barcode form in sync with parent form field
+  const handleBarcodeFormChange = (next) => {
+    setBarcodeFormData(next);
+    updateField("barcode", next.barcode);
+  };
 
   // Local state for custom categories and units
   const [localCustomCategories, setLocalCustomCategories] = useState(
@@ -207,21 +221,14 @@ const EssentialInformation = ({
           {errs.name && <p className="text-xs text-red-600">{errs.name}</p>}
         </div>
 
-        {/* Barcode */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Barcode (unique)
-          </label>
-          <input
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all ${
-              errs.barcode ? "border-red-300 bg-red-50" : "border-gray-300"
-            }`}
-            value={form.barcode}
-            onChange={(e) => updateField("barcode", e.target.value)}
-            placeholder="Optional barcode"
+        {/* Barcode – managed by BarcodeForm */}
+        <div className="md:col-span-2 lg:col-span-3">
+          <BarcodeForm
+            formData={barcodeFormData}
+            setFormData={handleBarcodeFormChange}
           />
           {errs.barcode && (
-            <p className="text-xs text-red-600">{errs.barcode}</p>
+            <p className="mt-1 text-xs text-red-600">{errs.barcode}</p>
           )}
         </div>
 

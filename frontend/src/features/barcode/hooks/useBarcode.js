@@ -5,8 +5,9 @@ export default function useBarcode() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const openPreview = (item = mockBarcodeItem) => {
-    setSelectedItem(item);
+  // Pass a real item object; falls back to mock only when nothing is provided
+  const openPreview = (item) => {
+    setSelectedItem(item?.barcode ? item : mockBarcodeItem);
     setPreviewOpen(true);
   };
 
