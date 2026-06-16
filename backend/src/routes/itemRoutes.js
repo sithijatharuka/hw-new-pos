@@ -254,6 +254,26 @@ router.get("/:id/batches", protect, async (req, res) => {
 
 /**
  * ----------------------------
+ * GET SINGLE ITEM BY ID
+ * ----------------------------
+ */
+router.get("/:id", protect, async (req, res) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) return res.status(403).json({ message: "Tenant context missing" });
+    const { id } = req.params;
+    if (!isValidId(id)) return res.status(400).json({ message: "Invalid item id" });
+
+    const item = await Item.findOne({ _id: id, tenantId });
+    if (!item) return res.status(404).json({ message: "Item not found" });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * ----------------------------
  * CREATE / UPDATE (MASTER ONLY)
  * ----------------------------
  */
@@ -286,6 +306,14 @@ router.post("/", protect, async (req, res) => {
           payload.category || "Uncategorized"
         }" category`,
       });
+    }
+
+    // Duplicate barcode check
+    if (payload.barcode) {
+      const barcodeExists = await Item.exists({ tenantId, barcode: payload.barcode });
+      if (barcodeExists) {
+        return res.status(400).json({ message: `Barcode "${payload.barcode}" is already in use by another item` });
+      }
     }
 
     const item = await Item.create({
@@ -327,6 +355,14 @@ router.put("/:id", protect, async (req, res) => {
 
     const item = await Item.findOne({ _id: id, tenantId });
     if (!item) return res.status(404).json({ message: "Item not found" });
+
+    // Duplicate barcode check (exclude the item being updated)
+    if (payload.barcode && payload.barcode !== item.barcode) {
+      const barcodeExists = await Item.exists({ tenantId, barcode: payload.barcode, _id: { $ne: id } });
+      if (barcodeExists) {
+        return res.status(400).json({ message: `Barcode "${payload.barcode}" is already in use by another item` });
+      }
+    }
 
     Object.assign(item, payload);
     await item.save();

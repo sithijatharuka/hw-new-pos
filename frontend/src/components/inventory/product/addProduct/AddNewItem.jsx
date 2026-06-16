@@ -443,6 +443,7 @@ const AddNewItem = ({
         {/* Body */}
         <div className="max-h-[55vh] overflow-y-auto">
           <ItemForm
+            api={api}
             form={form}
             errs={errs}
             hasSubmitted={hasSubmitted}
