@@ -7,6 +7,7 @@ import TrackingMode from "./productForm/TrackingMode";
 import SupplierStatus from "./productForm/SupplierStatus";
 
 const ItemForm = ({
+  api,
   form,
   errs,
   hasSubmitted,
@@ -25,6 +26,7 @@ const ItemForm = ({
   return (
     <div className="p-4 space-y-8 sm:p-6">
       <EssentialInformation
+        api={api}
         form={form}
         errs={errs}
         hasSubmitted={hasSubmitted}

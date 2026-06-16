@@ -5,6 +5,7 @@ import BarcodeForm from "../../../../../features/barcode/components/BarcodeForm"
 import { BARCODE_TYPES } from "../../../../../features/barcode/constants/barcodeConstants";
 
 const EssentialInformation = ({
+  api,
   form,
   errs,
   hasSubmitted,
@@ -232,8 +233,10 @@ const EssentialInformation = ({
         {/* Barcode – managed by BarcodeForm */}
         <div className="md:col-span-2 lg:col-span-3">
           <BarcodeForm
+            api={api}
             formData={barcodeFormData}
             setFormData={handleBarcodeFormChange}
+            excludeId={form._id}
           />
           {errs.barcode && (
             <p className="mt-1 text-xs text-red-600">{errs.barcode}</p>

@@ -1,51 +1,88 @@
 import { useState, useEffect } from "react";
 import { BARCODE_TYPES } from "../constants/barcodeConstants";
+import { generateBarcodeImage, checkBarcodeUnique } from "../api/barcodeApi";
 
-// Generates a simple numeric barcode value from a name/value string (UI only)
-// TODO: implement backend code here for barcode persistence
+// Generates a unique barcode string value (UI only – image is produced by backend)
 const generateBarcodeValue = (input) => {
   const base = input.trim().toUpperCase().replace(/\s+/g, "-");
   const suffix = Math.floor(100000 + Math.random() * 900000);
   return `${base}-${suffix}`;
 };
 
-const BARCODE_IMG_URL = (value) =>
-  `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(value)}&code=Code128&dpi=96`;
-
-export default function BarcodeForm({ formData, setFormData }) {
-  const [generateInput, setGenerateInput] = useState("");
-  const [scanInput, setScanInput] = useState(formData.barcode || "");
-  const [previewValue, setPreviewValue] = useState(formData.barcode || "");
-
-  // Re-sync when the parent passes an existing barcode (edit mode)
-  useEffect(() => {
-    setScanInput(formData.barcode || "");
-    setPreviewValue(formData.barcode || "");
-  }, [formData.barcode]);
+export default function BarcodeForm({ api, formData, setFormData, excludeId }) {
+  const [barcodeInput, setBarcodeInput] = useState(formData.barcode || "");
+  const [previewImg, setPreviewImg] = useState("");
+  const [imgLoading, setImgLoading] = useState(false);
+  const [duplicateError, setDuplicateError] = useState("");
 
   const isCompany = formData.barcodeType === "COMPANY";
   const isGenerate = formData.barcodeType === "GENERATE";
 
+  // Re-sync when the parent passes an existing barcode (edit mode)
+  useEffect(() => {
+    setBarcodeInput(formData.barcode || "");
+    setDuplicateError("");
+    if (formData.barcode) fetchImage(formData.barcode);
+    else setPreviewImg("");
+  }, [formData.barcode]);
+
+  const fetchImage = async (value) => {
+    if (!value || !api) return;
+    setImgLoading(true);
+    try {
+      const img = await generateBarcodeImage(api, value);
+      setPreviewImg(img);
+    } catch {
+      setPreviewImg("");
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
   const handleTypeChange = (val) => {
-    setPreviewValue("");
-    setScanInput("");
-    setGenerateInput("");
+    setBarcodeInput("");
+    setPreviewImg("");
+    setDuplicateError("");
     setFormData({ ...formData, barcodeType: val, barcode: "" });
   };
 
-  // Company path: user types / scans → confirm on blur or Enter
-  const commitScan = (val) => {
-    const trimmed = val.trim();
-    setPreviewValue(trimmed);
+  // Checks uniqueness then commits; returns false if duplicate
+  const commitValue = async (trimmed) => {
+    if (!trimmed) {
+      setBarcodeInput("");
+      setPreviewImg("");
+      setDuplicateError("");
+      setFormData({ ...formData, barcode: "" });
+      return;
+    }
+    try {
+      const result = await checkBarcodeUnique(api, trimmed, excludeId);
+      if (!result.available) {
+        setDuplicateError(result.message || "Barcode is already in use");
+        setBarcodeInput(trimmed);
+        setPreviewImg("");
+        // Do NOT propagate the duplicate value to the parent form
+        setFormData({ ...formData, barcode: "" });
+        return;
+      }
+    } catch {
+      // If the check fails (network error), allow proceeding — backend will catch it on save
+    }
+    setDuplicateError("");
+    setBarcodeInput(trimmed);
     setFormData({ ...formData, barcode: trimmed });
+    fetchImage(trimmed);
   };
 
-  // Generate path: derive a barcode value from the name input
+  // Company path: commit on blur or Enter
+  const commitScan = (val) => commitValue(val.trim());
+
+  // Generate path: auto-generate a value, fill the (disabled) input, check & fetch image
   const handleGenerate = () => {
-    if (!generateInput.trim()) return;
-    const generated = generateBarcodeValue(generateInput);
-    setPreviewValue(generated);
-    setFormData({ ...formData, barcode: generated });
+    const seed = barcodeInput.trim() || "ITEM";
+    const generated = generateBarcodeValue(seed);
+    setBarcodeInput(generated);
+    commitValue(generated);
   };
 
   const barcodeTypeLabel =
@@ -80,61 +117,56 @@ export default function BarcodeForm({ formData, setFormData }) {
         </div>
       </div>
 
-      {/* Step 2 – Company / Existing path */}
-      {isCompany && (
+      {/* Step 2 – Barcode input (editable in COMPANY mode, disabled + auto-filled in GENERATE mode) */}
+      {(isCompany || isGenerate) && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Enter Barcode
+            {isGenerate ? "Generated Barcode" : "Enter Barcode"}
           </label>
           <div className="flex gap-2">
             <input
-              className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-              placeholder="Type or scan barcode value"
-              value={scanInput}
-              onChange={(e) => setScanInput(e.target.value)}
-              onBlur={(e) => commitScan(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && commitScan(scanInput)}
+              className={`flex-1 px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all ${
+                duplicateError
+                  ? "border-red-400 bg-red-50"
+                  : isGenerate
+                  ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                  : "border-gray-300"
+              }`}
+              placeholder={isGenerate ? "Click \"Generate Barcode\" to auto-fill" : "Type or scan barcode value"}
+              value={barcodeInput}
+              disabled={isGenerate}
+              onChange={(e) => { setBarcodeInput(e.target.value); setDuplicateError(""); }}
+              onBlur={(e) => isCompany && commitScan(e.target.value)}
+              onKeyDown={(e) => isCompany && e.key === "Enter" && commitScan(barcodeInput)}
             />
-            {/* TODO: implement backend code here – wire physical scanner input / camera scan */}
-            <button
-              type="button"
-              onClick={() => commitScan(scanInput)}
-              className="px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer whitespace-nowrap"
-            >
-              📷 Scan Barcode
-            </button>
+            {isCompany && (
+              <button
+                type="button"
+                onClick={() => commitScan(barcodeInput)}
+                className="px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer whitespace-nowrap"
+              >
+                📷 Scan Barcode
+              </button>
+            )}
+            {isGenerate && (
+              <button
+                type="button"
+                onClick={handleGenerate}
+                className="px-4 py-3 rounded-xl text-white text-sm font-medium hover:opacity-90 transition-all cursor-pointer whitespace-nowrap"
+                style={{ backgroundColor: "#1F3A5F" }}
+              >
+                Generate Barcode
+              </button>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Step 2 – Generate path */}
-      {isGenerate && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Enter Barcode Name / Value
-          </label>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-              placeholder="e.g., HP-INK-001"
-              value={generateInput}
-              onChange={(e) => setGenerateInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-            />
-            <button
-              type="button"
-              onClick={handleGenerate}
-              className="px-4 py-3 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all cursor-pointer whitespace-nowrap"
-              style={{ backgroundColor: "#1F3A5F" }}
-            >
-              Generate Barcode
-            </button>
-          </div>
+          {duplicateError && (
+            <p className="text-xs text-red-600 mt-1">{duplicateError}</p>
+          )}
         </div>
       )}
 
       {/* Step 3 – Preview card (shown after a value is committed) */}
-      {previewValue && (
+      {barcodeInput && (
         <>
           <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4 space-y-3">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -151,20 +183,26 @@ export default function BarcodeForm({ formData, setFormData }) {
                   Barcode Number
                 </p>
                 <p className="mt-0.5 font-medium text-gray-900 break-all">
-                  {previewValue}
+                  {barcodeInput}
                 </p>
               </div>
             </div>
 
-            {/* Barcode image */}
+            {/* Barcode image – generated by backend via bwip-js (Code128 PNG) */}
             <div className="flex flex-col items-center py-3 bg-white rounded-lg border border-gray-200">
-              <img
-                src={BARCODE_IMG_URL(previewValue)}
-                alt="barcode preview"
-                className="h-16 object-contain"
-              />
+              {imgLoading ? (
+                <p className="text-xs text-gray-400 py-4">Generating…</p>
+              ) : previewImg ? (
+                <img
+                  src={previewImg}
+                  alt="barcode preview"
+                  className="h-16 object-contain"
+                />
+              ) : (
+                <p className="text-xs text-gray-400 py-4">Preview unavailable</p>
+              )}
               <p className="mt-2 text-xs text-gray-500 tracking-widest font-mono">
-                {previewValue}
+                {barcodeInput}
               </p>
             </div>
           </div>

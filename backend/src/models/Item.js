@@ -133,7 +133,7 @@ itemSchema.index(
 );
 itemSchema.index(
   { tenantId: 1, barcode: 1 },
-  { sparse: true, name: "item_tenant_barcode" },
+  { unique: true, sparse: true, name: "item_tenant_barcode" },
 );
 itemSchema.index(
   { tenantId: 1, category: 1, isActive: 1 },
