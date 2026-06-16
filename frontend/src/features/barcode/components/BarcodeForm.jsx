@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BARCODE_TYPES } from "../constants/barcodeConstants";
 
 // Generates a simple numeric barcode value from a name/value string (UI only)
@@ -16,6 +16,12 @@ export default function BarcodeForm({ formData, setFormData }) {
   const [generateInput, setGenerateInput] = useState("");
   const [scanInput, setScanInput] = useState(formData.barcode || "");
   const [previewValue, setPreviewValue] = useState(formData.barcode || "");
+
+  // Re-sync when the parent passes an existing barcode (edit mode)
+  useEffect(() => {
+    setScanInput(formData.barcode || "");
+    setPreviewValue(formData.barcode || "");
+  }, [formData.barcode]);
 
   const isCompany = formData.barcodeType === "COMPANY";
   const isGenerate = formData.barcodeType === "GENERATE";

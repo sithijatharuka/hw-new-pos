@@ -1,44 +1,12 @@
-import Item from "../../models/Item.js";
-import { validateBarcode } from "./barcode.validation.js";
+import { Item } from "../../models/Item.js";
 
-class BarcodeService {
-  async validate(data) {
-    return validateBarcode(data);
-  }
+export const findItemForBarcode = (id, tenantId) =>
+  Item.findOne({ _id: id, tenantId }).select("sku name barcode sellingPrice baseUnit");
 
-  async getItemByBarcode(
-    barcode,
-    tenantId
-  ) {
-    const item = await Item.findOne({
-      barcode,
-      tenantId,
-    });
-
-    if (!item) {
-      throw new Error(
-        "No item found for this barcode."
-      );
-    }
-
-    return item;
-  }
-
-  async previewBarcode(
-    itemId,
-    tenantId
-  ) {
-    const item = await Item.findOne({
-      _id: itemId,
-      tenantId,
-    });
-
-    if (!item) {
-      throw new Error("Item not found");
-    }
-
-    return item;
-  }
-}
-
-export default new BarcodeService();
+export const updateItemBarcode = async (id, tenantId, barcode) => {
+  const item = await Item.findOne({ _id: id, tenantId });
+  if (!item) return null;
+  item.barcode = barcode;
+  await item.save();
+  return item;
+};

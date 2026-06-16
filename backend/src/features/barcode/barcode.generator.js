@@ -1,13 +1,9 @@
-import bwipjs from "bwip-js";
-
-export const generateBarcodeImage = async (
-  barcode
-) => {
-  return bwipjs.toBuffer({
-    bcid: "code128",
-    text: barcode,
-    scale: 3,
-    height: 10,
-    includetext: true,
-  });
+/**
+ * Generates a unique barcode string from a seed string.
+ * Format: SEED-XXXXXX  (uppercase slug + 6-digit random suffix)
+ */
+export const generateBarcodeValue = (seed = "") => {
+  const base = seed.trim().toUpperCase().replace(/\s+/g, "-");
+  const suffix = Math.floor(100000 + Math.random() * 900000);
+  return `${base}-${suffix}`;
 };

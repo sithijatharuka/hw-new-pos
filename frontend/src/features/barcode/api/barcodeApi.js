@@ -1,21 +1,10 @@
-import axios from "../../../api/axios";
+// All functions accept `api` (the shared axios instance from client.js)
 
-// Get barcode preview (real backend later)
-export const getBarcodePreview = (itemId) => {
-  return axios.get(`/barcode/preview/${itemId}`);
-};
+export const getBarcodePreview = (api, itemId) =>
+  api.get(`/barcode/preview/${itemId}`).then((r) => r.data);
 
-// Download PDF
-export const downloadBarcodePDF = (itemId) => {
-  return axios.get(`/barcode/download/pdf/${itemId}`);
-};
+export const saveBarcode = (api, itemId, barcode) =>
+  api.patch(`/barcode/${itemId}`, { barcode }).then((r) => r.data);
 
-// Download PNG
-export const downloadBarcodePNG = (itemId) => {
-  return axios.get(`/barcode/download/png/${itemId}`);
-};
-
-// Search item by barcode (POS)
-export const getItemByBarcode = (barcode) => {
-  return axios.get(`/items/barcode/${barcode}`);
-};
+export const searchItemByBarcode = (api, barcode) =>
+  api.get(`/items/barcode/${encodeURIComponent(barcode)}`).then((r) => r.data);

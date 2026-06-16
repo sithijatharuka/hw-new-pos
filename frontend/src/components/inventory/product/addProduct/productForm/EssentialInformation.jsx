@@ -22,11 +22,19 @@ const EssentialInformation = ({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
 
-  // Barcode feature state
+  // Barcode feature state – re-sync when the parent form changes (e.g. edit mode)
   const [barcodeFormData, setBarcodeFormData] = useState({
     barcodeType: BARCODE_TYPES[0].value,
     barcode: form.barcode || "",
   });
+
+  // Keep barcode in sync whenever the parent form.barcode changes (edit modal open)
+  React.useEffect(() => {
+    setBarcodeFormData((prev) => ({
+      ...prev,
+      barcode: form.barcode || "",
+    }));
+  }, [form.barcode]);
 
   // Keep barcode form in sync with parent form field
   const handleBarcodeFormChange = (next) => {

@@ -1,26 +1,13 @@
 import express from "express";
-
-import {
-  validateBarcodeController,
-  getItemByBarcodeController,
-  previewBarcodeController,
-} from "./barcode.controller.js";
+import { protect } from "../../middleware/authMiddleware.js";
+import { getBarcodePreview, saveBarcode } from "./barcode.controller.js";
 
 const router = express.Router();
 
-router.post(
-  "/validate",
-  validateBarcodeController
-);
+// GET /api/barcode/preview/:id  – fetch barcode label data for an item
+router.get("/preview/:id", protect, getBarcodePreview);
 
-router.get(
-  "/item/:barcode",
-  getItemByBarcodeController
-);
-
-router.get(
-  "/preview/:itemId",
-  previewBarcodeController
-);
+// PATCH /api/barcode/:id        – save / update barcode on an item
+router.patch("/:id", protect, saveBarcode);
 
 export default router;

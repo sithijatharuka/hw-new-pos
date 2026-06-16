@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { mockBarcodeItem } from "../mock/barcodeMockData";
 
 export default function useBarcode() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Pass a real item object; falls back to mock only when nothing is provided
   const openPreview = (item) => {
-    setSelectedItem(item?.barcode ? item : mockBarcodeItem);
+    if (!item) return;
+    // Use barcode or fall back to SKU so the preview always has a scannable value
+    setSelectedItem({
+      ...item,
+      barcodeImage: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+        item.barcode || item.sku || item._id
+      )}&code=Code128`,
+    });
     setPreviewOpen(true);
   };
 
@@ -16,10 +21,5 @@ export default function useBarcode() {
     setSelectedItem(null);
   };
 
-  return {
-    selectedItem,
-    previewOpen,
-    openPreview,
-    closePreview,
-  };
+  return { selectedItem, previewOpen, openPreview, closePreview };
 }
