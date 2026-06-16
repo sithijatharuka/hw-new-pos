@@ -208,6 +208,15 @@ export const INVALIDATION_MAP = {
   "POST:/grns": ["/grns*", "/dashboard/*", "/items*"],
   "PUT:/grns/*": ["/grns*", "/dashboard/*", "/items*"],
   "DELETE:/grns/*": ["/grns*", "/dashboard/*", "/items*"],
+
+  // GRN post - updates item stock levels and supplier balance
+  "POST:/grns/*/post": ["/grns*", "/dashboard/*", "/items*", "/suppliers*"],
+
+  // Supplier payment - updates supplier currentBalance
+  "POST:/suppliers/*/pay": ["/suppliers*", "/dashboard/*"],
+
+  // Customer payment - updates customer credit balance
+  "POST:/customers/*/receive-payment": ["/customers*", "/dashboard/*"],
 };
 
 /**
