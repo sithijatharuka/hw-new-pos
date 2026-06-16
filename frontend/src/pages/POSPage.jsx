@@ -290,7 +290,7 @@ const POSPage = ({ api }) => {
     }
 
     try {
-      const item = await searchItemByBarcode(code);
+      const item = await searchItemByBarcode(api, code);
       handleSelectItem(null, item);
       showSuccess(`Item added: ${item.name}`);
       setBarcode("");

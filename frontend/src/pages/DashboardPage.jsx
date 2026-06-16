@@ -18,14 +18,8 @@ import {
   getExpensesSummary,
 } from "../api/dashboard/dashboard";
 import { loadCurrencySettings } from "../api/settings/settings";
-import { createApiClient } from "../api/client";
 
-const DashboardPage = () => {
-  // Dummy access token logic for now (replace with real auth logic as needed)
-  const getAccessToken = () => localStorage.getItem("accessToken") || "";
-  const setAccessToken = (token) => localStorage.setItem("accessToken", token);
-  const logout = () => localStorage.removeItem("accessToken");
-  const api = createApiClient(getAccessToken, setAccessToken, logout);
+const DashboardPage = ({ api }) => {
   // Date range state
   const [dateRange, setDateRange] = useState("today");
   const [customStartDate, setCustomStartDate] = useState(

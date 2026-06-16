@@ -66,7 +66,7 @@ const PurchasesPage = ({ api }) => {
 
   useEffect(() => {
     const fetchSuppliers = async () => {
-      const data = await getSuppliers(supplierQuery);
+      const data = await getSuppliers(api, supplierQuery);
       setSuppliers(data);
       // keep selected supplier if still in list
       if (supplierId && !data.find((s) => s._id === supplierId)) {
@@ -193,7 +193,7 @@ const PurchasesPage = ({ api }) => {
         status: paymentStatus,
         note,
       };
-      const data = await createPurchase(payload);
+      const data = await createPurchase(api, payload);
       setMessage("Purchase saved and stock updated.");
       setLines([emptyLine()]);
       setBillNumber("");
