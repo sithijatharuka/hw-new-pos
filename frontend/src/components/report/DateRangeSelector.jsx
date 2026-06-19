@@ -2,14 +2,14 @@ import React from "react";
 
 const DateRangeSelector = ({
   dateRange,
-  setDateRange,
+  onDateRangeChange: setDateRange,
   customStartDate,
-  setCustomStartDate,
+  onCustomStartDateChange: setCustomStartDate,
   customEndDate,
-  setCustomEndDate,
+  onCustomEndDateChange: setCustomEndDate,
   dateRangeError,
-  startDate,
-  endDate,
+  activeStartDate: startDate,
+  activeEndDate: endDate,
   isSingleDay,
 }) => {
   return (

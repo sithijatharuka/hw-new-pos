@@ -27,22 +27,6 @@ import {
 } from "../utils/reportExports";
 
 const ReportsPage = ({ api }) => {
-  // Validate api prop
-  if (!api) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4 py-6 bg-gray-50">
-        <div className="p-6 text-center bg-white border border-red-200 shadow-md rounded-2xl">
-          <p className="text-lg font-semibold text-red-600">
-            Configuration Error
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            API client not initialized
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // Date range states
   const [dateRange, setDateRange] = useState("today");
   const [customStartDate, setCustomStartDate] = useState(
@@ -92,7 +76,7 @@ const ReportsPage = ({ api }) => {
     return `${year}-${month}-${day}`;
   };
 
-  // Calculate date range based on selection
+  // Calculate date range based on selection (pure - no setState calls)
   const getDateRangeParams = useCallback(() => {
     const today = new Date();
     let startDate, endDate;
@@ -101,36 +85,31 @@ const ReportsPage = ({ api }) => {
       case "today":
         startDate = endDate = formatLocalDate(today);
         break;
-      case "yesterday":
+      case "yesterday": {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         startDate = endDate = formatLocalDate(yesterday);
         break;
-      case "last7days":
+      }
+      case "last7days": {
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 6);
         startDate = formatLocalDate(weekAgo);
         endDate = formatLocalDate(today);
         break;
-      case "last30days":
+      }
+      case "last30days": {
         const monthAgo = new Date(today);
         monthAgo.setDate(monthAgo.getDate() - 29);
         startDate = formatLocalDate(monthAgo);
         endDate = formatLocalDate(today);
         break;
-      case "custom":
+      }
+      case "custom": {
         startDate = customStartDate;
         endDate = customEndDate;
-        // Validate max 90 days range
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const daysDiff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
-        if (daysDiff > 90) {
-          setDateRangeError("Date range cannot exceed 90 days");
-          return null;
-        }
-        setDateRangeError(null);
         break;
+      }
       default:
         startDate = endDate = formatLocalDate(today);
     }
@@ -196,12 +175,20 @@ const ReportsPage = ({ api }) => {
       setLoading(true);
       setError(null);
 
-      const dateParams = getDateRangeParams();
-      if (!dateParams) {
-        setLoading(false);
-        return;
+      const { startDate, endDate } = getDateRangeParams();
+
+      // Validate 90-day max for custom range
+      if (dateRange === "custom") {
+        const daysDiff = Math.floor(
+          (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24),
+        );
+        if (daysDiff > 90) {
+          setDateRangeError("Date range cannot exceed 90 days");
+          setLoading(false);
+          return;
+        }
+        setDateRangeError(null);
       }
-      const { startDate, endDate } = dateParams;
       const isSingleDay = startDate === endDate;
       const isRangeMode = !["today", "yesterday"].includes(dateRange);
 
@@ -365,6 +352,17 @@ const ReportsPage = ({ api }) => {
   };
 
   // Error state
+  if (!api) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4 py-6 bg-gray-50">
+        <div className="p-6 text-center bg-white border border-red-200 shadow-md rounded-2xl">
+          <p className="text-lg font-semibold text-red-600">Configuration Error</p>
+          <p className="mt-2 text-sm text-gray-600">API client not initialized</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4 py-6 bg-gray-50 sm:px-6 lg:px-8">
@@ -389,8 +387,7 @@ const ReportsPage = ({ api }) => {
     );
   }
 
-  const dateParams = getDateRangeParams();
-  const { startDate, endDate } = dateParams || {};
+  const { startDate, endDate } = getDateRangeParams();
 
   return (
     <div className="min-h-screen bg-gray-50">
