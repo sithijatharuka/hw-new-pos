@@ -101,7 +101,7 @@ const GRNDetailsSummary = ({
             Grand Total
           </div>
           <div style={{ color: "#111", fontWeight: "600" }}>
-            {formatMoney(grandTotal)}
+            {formatCurrency(Number(grandTotal || 0), currencySymbol, currencyPosition)}
           </div>
         </div>
 
