@@ -592,6 +592,7 @@ const POSPage = ({ api }) => {
         <div className="overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl">
           {/* Search & Barcode */}
           <POSSearchSection
+            api={api}
             query={query}
             setQuery={setQuery}
             isSearching={isSearching}
