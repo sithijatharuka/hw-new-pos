@@ -15,6 +15,7 @@ const emptyBatchModal = {
 };
 
 const POSSearchSection = ({
+  api,
   query,
   setQuery,
   isSearching,
@@ -49,7 +50,7 @@ const POSSearchSection = ({
     });
 
     try {
-      const data = await getItemBatches(item._id);
+      const data = await getItemBatches(api, item._id);
       // data.batches is the array we want
       setBatchModal((prev) => ({
         ...prev,
@@ -73,13 +74,11 @@ const POSSearchSection = ({
     const selected = batchModal.selectedBatch;
     if (!selected || !batchModal.item) return;
 
-    // Use batch.sellingPrice if available, else fallback to item.sellingPrice
+    // Use batch.sellingPrice if set (> 0), else fallback to item.sellingPrice
     const batchPrice =
-      typeof selected.sellingPrice === "number"
-        ? selected.sellingPrice
-        : Number(selected.sellingPrice) ||
-          Number(batchModal.item.sellingPrice) ||
-          0;
+      selected.sellingPrice > 0
+        ? Number(selected.sellingPrice)
+        : Number(batchModal.item.sellingPrice) || 0;
 
     // Attach batchNumber and batchId directly for validation
     const itemWithBatch = {
@@ -298,13 +297,9 @@ const POSSearchSection = ({
                               <div className="text-right">
                                 <div className="text-sm font-semibold text-gray-900">
                                   {formatCurrency(
-                                    typeof batch.sellingPrice === "number"
-                                      ? batch.sellingPrice
-                                      : Number(batch.sellingPrice) ||
-                                          Number(
-                                            batchModal.item?.sellingPrice,
-                                          ) ||
-                                          0,
+                                    selected.sellingPrice > 0
+                                      ? Number(selected.sellingPrice)
+                                      : Number(batchModal.item?.sellingPrice) || 0,
                                     currencySymbol,
                                     currencyPosition,
                                   )}

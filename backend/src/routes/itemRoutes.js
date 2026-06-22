@@ -221,6 +221,7 @@ router.get("/:id/batches", protect, async (req, res) => {
           0,
           Number(b.qtyOnHand || 0) - Number(b.reserved || 0),
         ),
+        sellingPrice: b.sellingPrice != null ? Number(b.sellingPrice) : null,
       }))
       // FEFO-ish sort (earliest expiry first), then batchNumber
       .sort((a, b) => {
