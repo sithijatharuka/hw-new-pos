@@ -528,7 +528,7 @@ const POSPage = ({ api }) => {
         saveSaleOffline(payload);
         showSuccess("Saved offline. Will sync when online");
       } else {
-        const savedSale = await saveSale(payload);
+        const savedSale = await saveSale(api, payload);
         showSuccess("Sale saved successfully");
 
         if (

@@ -101,7 +101,7 @@ const saleSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["paid", "partial", "credit", "cancelled"],
+      enum: ["paid", "partial", "credit", "cancelled", "pending"],
       default: "paid",
     },
     isTaxInvoice: { type: Boolean, default: false },
