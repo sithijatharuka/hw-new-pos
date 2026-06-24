@@ -9,7 +9,7 @@ Sri Lanka–focused POS for hardware shops.
 - Barcode printing & scanning
 - Inventory with product CRUD
 - Expenses, reports, customers, suppliers
-- Settings screen for shop info & VAT
+- Settings screen for shop info & VAT *
 
 ## Quick start
 
