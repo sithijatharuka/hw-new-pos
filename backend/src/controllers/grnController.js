@@ -265,14 +265,16 @@ export const postGRN = async (req, res) => {
         );
 
         if (existingBatch) {
-          // Update existing batch quantity
+          // Update existing batch quantity and selling price
           existingBatch.qtyOnHand = Number(existingBatch.qtyOnHand || 0) + qty;
+          if (unitCost > 0) existingBatch.sellingPrice = unitCost;
         } else {
           // Create new batch
           item.batches.push({
             batchNumber: batchNumber,
             qtyOnHand: qty,
             reserved: 0,
+            sellingPrice: unitCost > 0 ? unitCost : undefined,
           });
         }
 
