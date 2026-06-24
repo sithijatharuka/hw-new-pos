@@ -297,8 +297,8 @@ const POSSearchSection = ({
                               <div className="text-right">
                                 <div className="text-sm font-semibold text-gray-900">
                                   {formatCurrency(
-                                    selected.sellingPrice > 0
-                                      ? Number(selected.sellingPrice)
+                                    batch.sellingPrice > 0
+                                      ? Number(batch.sellingPrice)
                                       : Number(batchModal.item?.sellingPrice) || 0,
                                     currencySymbol,
                                     currencyPosition,
