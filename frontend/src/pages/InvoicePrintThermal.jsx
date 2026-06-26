@@ -5,7 +5,7 @@ import { getSale } from "../api/sales/sales";
 import { getSettings } from "../api/settings/settings";
 import { formatCurrency } from "../utils/currency";
 
-const InvoicePrintThermal = () => {
+const InvoicePrintThermal = ({ api }) => {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -18,8 +18,8 @@ const InvoicePrintThermal = () => {
       setLoading(true);
       try {
         const [saleData, settingsData] = await Promise.all([
-          getSale(id),
-          getSettings(),
+          getSale(api, id),
+          getSettings(api),
         ]);
         setSale(saleData);
         setShop(settingsData);
