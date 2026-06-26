@@ -159,11 +159,11 @@ export function getTTLForURL(url) {
  * Use .* to match path segments and parameters
  */
 export const INVALIDATION_MAP = {
-  // POST /sales invalidates dashboard and sales cache
-  "POST:/sales": ["/dashboard/*", "/sales"],
+  // POST /sales invalidates dashboard, sales, and items (stock deducted)
+  "POST:/sales": ["/dashboard/*", "/sales", "/items*"],
 
-  // PUT /sales/:id invalidates dashboard and sales cache
-  "PUT:/sales/*": ["/dashboard/*", "/sales"],
+  // PUT /sales/:id invalidates dashboard, sales, and items cache
+  "PUT:/sales/*": ["/dashboard/*", "/sales", "/items*"],
 
   // POST /expenses invalidates dashboard and expenses cache
   "POST:/expenses": ["/dashboard/*", "/expenses"],
