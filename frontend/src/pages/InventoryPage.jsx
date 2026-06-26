@@ -275,6 +275,7 @@ const InventoryPage = ({ api }) => {
 
       {/* Detail Modal (with batches) */}
       <ItemDetailModal
+        api={api}
         item={selectedItem}
         open={showDetailModal}
         onClose={() => setShowDetailModal(false)}
