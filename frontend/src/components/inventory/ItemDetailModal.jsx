@@ -4,7 +4,7 @@ import CloseButton from "../common/CloseButton";
 import { showError, errorMessages } from "../../utils/toastHelper";
 import { getItemBatches } from "../../api/inventory/items";
 
-const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
+const ItemDetailModal = ({ api, item, open, onClose, onEdit }) => {
   const [batches, setBatches] = useState([]);
   const [batchesLoading, setBatchesLoading] = useState(false);
 
@@ -16,7 +16,7 @@ const ItemDetailModal = ({ item, open, onClose, onEdit }) => {
 
       try {
         setBatchesLoading(true);
-        const data = await getItemBatches(item._id);
+        const data = await getItemBatches(api, item._id);
         setBatches(data?.batches || []);
       } catch (err) {
         showError(
