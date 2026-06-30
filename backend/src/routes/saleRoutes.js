@@ -62,12 +62,19 @@ const hydrateAndCalculateSale = async (payload, tenantId) => {
   const discountTotal = Number(payload.discountTotal || 0);
   const grandTotal = subTotal - discountTotal + taxTotal;
 
+  const sumPayments = (payload.payments || []).reduce(
+    (s, p) => s + (Number(p.amount) || 0),
+    0,
+  );
+  const balanceDue = Math.max(0, grandTotal - sumPayments);
+
   return {
     ...payload,
     subTotal,
     taxTotal,
     discountTotal,
     grandTotal,
+    balanceDue,
   };
 };
 

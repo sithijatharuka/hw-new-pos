@@ -51,6 +51,7 @@ const InvoicePrintThermal = ({ api }) => {
   const isTaxInvoice = sale.isTaxInvoice;
   const paidAmount =
     sale.payments?.reduce((s, p) => s + (p.amount || 0), 0) || 0;
+  const changeDue = paidAmount - (sale.grandTotal || 0);
 
   return (
     <div className="w-full flex justify-center bg-soft print:bg-white">
@@ -167,16 +168,25 @@ const InvoicePrintThermal = ({ api }) => {
               {formatCurrency(paidAmount, currencySymbol, currencyPosition)}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span>Balance</span>
-            <span>
-              {formatCurrency(
-                sale.balanceDue,
-                currencySymbol,
-                currencyPosition,
-              )}
-            </span>
-          </div>
+          {changeDue > 0 ? (
+            <div className="flex justify-between font-semibold">
+              <span>Change</span>
+              <span>
+                {formatCurrency(changeDue, currencySymbol, currencyPosition)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex justify-between">
+              <span>Balance</span>
+              <span>
+                {formatCurrency(
+                  sale.balanceDue,
+                  currencySymbol,
+                  currencyPosition,
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Payment methods */}
