@@ -74,13 +74,20 @@ export const AVAILABLE_FEATURES = [
     icon: "👤",
     category: "Admin",
   },
+  {
+    id: "return-exchange",
+    label: "Return & Exchange",
+    description: "Process product returns and exchanges",
+    icon: "🔄",
+    category: "Core",
+  },
 ];
 
 /**
  * Default features for different roles
  */
 export const DEFAULT_FEATURES_BY_ROLE = {
-  cashier: ["dashboard", "pos", "customers"],
+  cashier: ["dashboard", "pos", "customers", "return-exchange"],
   manager: [
     "dashboard",
     "pos",

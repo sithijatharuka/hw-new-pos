@@ -20,6 +20,7 @@ import InvoicePrintThermal from "./pages/InvoicePrintThermal";
 import BarcodePrintPage from "./pages/BarcodePrintPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ReturnPage from "./features/return-exchange/pages/ReturnPage";
 
 import { createApiClient } from "./api/client";
 import AppLoader from "./components/common/AppLoader";
@@ -242,6 +243,15 @@ const App = () => {
             element={
               <FeatureRoute featureId="settings" user={user}>
                 <SettingsPage user={user} api={api} />
+              </FeatureRoute>
+            }
+          />
+
+          <Route
+            path="/return-exchange"
+            element={
+              <FeatureRoute featureId="return-exchange" user={user}>
+                <ReturnPage api={api} />
               </FeatureRoute>
             }
           />

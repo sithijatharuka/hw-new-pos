@@ -44,6 +44,7 @@ export const getUserFeatures = (user) => {
       "expenses",
       "settings",
       "users",
+      "return-exchange",
     ];
   }
 
