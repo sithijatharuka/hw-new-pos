@@ -84,6 +84,7 @@ const POSPaymentsSection = ({
                         amount: Number(e.target.value || 0),
                       })
                     }
+                    onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
                   />
                   {err.amount && (
