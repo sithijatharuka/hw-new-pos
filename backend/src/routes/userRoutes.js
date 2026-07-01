@@ -119,7 +119,9 @@ router.post(
     } catch (err) {
       logger.error("[staff-create] error:", { error: err.message });
       if (err?.code === 11000) {
-        return res.status(400).json({ message: "Username already exists" });
+        const field = Object.keys(err.keyPattern || {})[0] || "field";
+        const msg = field === "username" ? "Username already exists" : `${field} already exists`;
+        return res.status(400).json({ message: msg });
       }
       return res.status(500).json({ message: "Failed to create staff user" });
     }
