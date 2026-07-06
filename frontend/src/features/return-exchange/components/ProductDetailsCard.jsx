@@ -40,9 +40,6 @@ const ProductDetailsCard = ({
               {paymentBadge.label}
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-text-tertiary">
-            {sale.customerName} · {sale.date}
-          </p>
         </div>
         <span className="rounded-xl bg-status-success-bg px-3 py-1 text-xs font-semibold text-status-success-text w-fit">
           {formatCurrency(sale.total, currencySymbol, currencyPosition)}

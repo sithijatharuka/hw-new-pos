@@ -1,32 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MOCK_SALES } from "../constants/returnReasons";
-
-// TODO: ADD BACKEND CODE HERE — replace mock lookup with:
-//   returnApi.findProductBySku(sku)  /  returnApi.findProductByBarcode(barcode)
-
-const findProductInSales = (query, type) => {
-  const q = query.trim().toLowerCase();
-  for (const sale of MOCK_SALES) {
-    for (const item of sale.items) {
-      const match =
-        type === "sku"
-          ? item.sku.toLowerCase() === q
-          : item.barcode?.toLowerCase() === q;
-      if (match) return { sale, item };
-    }
-  }
-  return null;
-};
+import * as returnApi from "../api/returnApi";
 
 /**
  * ReturnSearchBar
  * Props:
+ *   api          – axios instance (passed from ReturnPage)
  *   label        – section heading shown above the bar
  *   onFound      – ({ sale, item }) called on successful match
  *   onNotFound   – (query) called when no match
  *   autoFocus    – whether to focus input on mount
  */
 const ReturnSearchBar = ({
+  api,
   label = "Scan Barcode / Enter Product Code",
   onFound,
   onNotFound,
@@ -42,22 +27,24 @@ const ReturnSearchBar = ({
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
-  const runSearch = () => {
+  const runSearch = async () => {
     const q = query.trim();
     if (!q) { setError("Please enter a value."); return; }
     setError("");
     setIsSearching(true);
-
-    // TODO: ADD BACKEND CODE HERE — await returnApi.findProduct(q, searchType)
-    setTimeout(() => {
-      const result = findProductInSales(q, searchType);
-      setIsSearching(false);
-      if (result) {
-        onFound?.(result);
-      } else {
+    try {
+      const result = await returnApi.searchProduct(api, q, searchType);
+      onFound?.(result);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Product not found";
+      if (err?.response?.status === 404) {
         onNotFound?.(q);
+      } else {
+        setError(msg);
       }
-    }, 350);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleClear = () => {
