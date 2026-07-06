@@ -7,7 +7,7 @@ import ExchangePanel from "../components/ExchangePanel";
 import { mapReturnData } from "../utils/mapReturnData";
 import { showSuccess } from "../../../utils/toastHelper";
 
-// TODO: ADD BACKEND CODE HERE — import returnApi and replace stub submissions
+import * as returnApi from "../api/returnApi";
 
 // ─── Steps ───────────────────────────────────────────────────────────────────
 // STEP 1 → Scan / search returned product
@@ -65,7 +65,7 @@ const StepIndicator = ({ current, mode }) => {
 };
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-const ReturnPage = ({ api }) => {
+const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClient
   const [mode, setMode] = useState("return");
   const [step, setStep] = useState(STEP.SEARCH);
 
@@ -132,7 +132,7 @@ const ReturnPage = ({ api }) => {
     return errs;
   };
 
-  const handleReturnSubmit = () => {
+  const handleReturnSubmit = async () => {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -147,14 +147,16 @@ const ReturnPage = ({ api }) => {
       exchangeItems: [],
     });
 
-    // TODO: ADD BACKEND CODE HERE — await returnApi.createReturn(api, payload)
-    // On success: increase foundItem stock by returnQty, reduce sale total, reduce profit, update dashboard
-    console.log("Return payload:", payload);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await returnApi.createReturn(api, payload);
       showSuccess("Return processed successfully");
       resetAll(true);
-    }, 800);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to process return";
+      setErrors({ submit: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleExchangeSubmit = ({ newProduct, newSize, newQty }) => {
@@ -202,7 +204,7 @@ const ReturnPage = ({ api }) => {
               <button
                 key={tab.value}
                 type="button"
-                onClick={() => handleTabChange(tab.value)}
+                // onClick={() => handleTabChange(tab.value)}
                 className={[
                   "flex-1 px-5 py-4 text-left transition-all cursor-pointer focus:outline-none",
                   "border-b-2",
@@ -240,6 +242,7 @@ const ReturnPage = ({ api }) => {
           {step === STEP.SEARCH && (
             <div className="space-y-4">
               <ReturnSearchBar
+                api={api}
                 label="Scan Barcode / Enter Product Code"
                 onFound={handleProductFound}
                 onNotFound={handleNotFound}

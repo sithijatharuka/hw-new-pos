@@ -25,6 +25,7 @@ import grnRoutes from "./routes/grnRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import otpRoutes from "./routes/otpRoutes.js";
 import barcodeRoutes from "./features/barcode/barcode.routes.js";
+import returnRoutes from "./features/return-exchange/return.routes.js";
 
 dotenv.config();
 
@@ -120,6 +121,7 @@ app.use("/api/grns", grnRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/barcode", barcodeRoutes);
+app.use("/api/returns", returnRoutes);
 
 // 404 + error (keep these LAST)
 app.use(notFound);

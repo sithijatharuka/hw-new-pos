@@ -14,13 +14,14 @@ export const AVAILABLE_FEATURES = [
   { id: "expenses", label: "Expenses", category: "Finance" },
   { id: "settings", label: "Settings", category: "Admin" },
   { id: "users", label: "User Management", category: "Admin" },
+  { id: "return-exchange", label: "Return & Exchange", category: "Core" },
 ];
 
 /**
  * Default features for different roles
  */
 export const DEFAULT_FEATURES_BY_ROLE = {
-  cashier: ["dashboard", "pos", "customers"],
+  cashier: ["dashboard", "pos", "customers", "return-exchange"],
   manager: [
     "dashboard",
     "pos",
