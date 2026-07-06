@@ -204,7 +204,7 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
               <button
                 key={tab.value}
                 type="button"
-                // onClick={() => handleTabChange(tab.value)}
+                onClick={() => handleTabChange(tab.value)}
                 className={[
                   "flex-1 px-5 py-4 text-left transition-all cursor-pointer focus:outline-none",
                   "border-b-2",

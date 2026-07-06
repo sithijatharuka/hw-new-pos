@@ -1,9 +1,6 @@
 import React from "react";
 import { formatCurrency } from "../../../utils/currency";
 
-// TODO: ADD BACKEND CODE HERE — billingPrice should be validated against the
-//       original sale price from the API; size options should be fetched per product
-
 const ProductDetailsCard = ({
   heading = "Returned Product",
   sale,
