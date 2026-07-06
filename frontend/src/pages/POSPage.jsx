@@ -127,16 +127,17 @@ const POSPage = ({ api }) => {
   }, [allItems]);
 
   // Load customers
+  const refreshCustomers = async () => {
+    try {
+      const custs = await loadCustomers(api);
+      setCustomers(custs);
+    } catch (error) {
+      console.error("Failed to load customers:", error);
+    }
+  };
+
   useEffect(() => {
-    const initCustomers = async () => {
-      try {
-        const custs = await loadCustomers(api);
-        setCustomers(custs);
-      } catch (error) {
-        console.error("Failed to load customers:", error);
-      }
-    };
-    initCustomers();
+    refreshCustomers();
   }, [api]);
 
   // Search results (apply category filter on top of debounced results)
@@ -530,6 +531,15 @@ const POSPage = ({ api }) => {
       } else {
         const savedSale = await saveSale(api, payload);
         showSuccess("Sale saved successfully");
+
+        // Refresh customers so credit balances are up to date in this session
+        const updatedCustomers = await loadCustomers(api);
+        setCustomers(updatedCustomers);
+        // Keep the selected customer object in sync (updated balance)
+        if (customer) {
+          const fresh = updatedCustomers.find((c) => c._id === customer._id);
+          if (fresh) setCustomer(fresh);
+        }
 
         if (
           finalStatus === "paid" ||

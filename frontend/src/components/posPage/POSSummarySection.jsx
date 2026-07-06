@@ -36,6 +36,7 @@ const POSSummarySection = ({
             className="px-3 py-2 text-sm text-right transition-all bg-white border border-gray-300 rounded-lg w-28 sm:w-32 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             value={discountTotal}
             onChange={(e) => setDiscountTotal(Number(e.target.value || 0))}
+            onWheel={(e) => e.target.blur()}
           />
         </div>
         <div className="pt-3 mt-2 border-t border-gray-300 sm:pt-4">
