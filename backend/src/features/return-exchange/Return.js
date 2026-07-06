@@ -35,9 +35,8 @@ const returnSchema = new mongoose.Schema(
     originalSaleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Sale",
-      required: true,
     },
-    billNumber: { type: String, required: true },
+    billNumber: { type: String },
     reason: { type: String, required: true },
     reasonNote: { type: String },
     returnLines: { type: [returnLineSchema], required: true },

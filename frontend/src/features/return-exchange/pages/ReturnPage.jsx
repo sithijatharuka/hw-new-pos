@@ -3,7 +3,6 @@ import PageHeader from "../../../components/common/PageHeader";
 import ReturnSearchBar from "../components/ReturnSearchBar";
 import ProductDetailsCard from "../components/ProductDetailsCard";
 import ReturnForm from "../components/ReturnForm";
-import ExchangePanel from "../components/ExchangePanel";
 import { mapReturnData } from "../utils/mapReturnData";
 import { showSuccess } from "../../../utils/toastHelper";
 
@@ -69,7 +68,6 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
   const [mode, setMode] = useState("return");
   const [step, setStep] = useState(STEP.SEARCH);
 
-  const [foundSale, setFoundSale] = useState(null);
   const [foundItem, setFoundItem] = useState(null);
   const [notFoundQuery, setNotFoundQuery] = useState("");
 
@@ -86,7 +84,6 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
   const resetAll = useCallback((keepMode = false) => {
     if (!keepMode) setMode("return");
     setStep(STEP.SEARCH);
-    setFoundSale(null);
     setFoundItem(null);
     setNotFoundQuery("");
     setBillingPrice("");
@@ -99,7 +96,6 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
   const handleTabChange = (newMode) => {
     setMode(newMode);
     setStep(STEP.SEARCH);
-    setFoundSale(null);
     setFoundItem(null);
     setNotFoundQuery("");
     setBillingPrice("");
@@ -109,8 +105,7 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
     setErrors({});
   };
 
-  const handleProductFound = useCallback(({ sale, item }) => {
-    setFoundSale(sale);
+  const handleProductFound = useCallback(({ item }) => {
     setFoundItem(item);
     setBillingPrice(String(item.unitPrice));
     setReturnQty(1);
@@ -139,12 +134,9 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
     setIsSubmitting(true);
 
     const payload = mapReturnData({
-      sale: foundSale,
       returnItems: [{ ...foundItem, returnQty, unitPrice: Number(billingPrice) }],
       reason,
       reasonNote,
-      mode: "return",
-      exchangeItems: [],
     });
 
     try {
@@ -166,7 +158,6 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
     setIsSubmitting(true);
 
     const payload = mapReturnData({
-      sale: foundSale,
       returnItems: [{ ...foundItem, returnQty, unitPrice: Number(billingPrice) }],
       reason,
       reasonNote,
@@ -269,7 +260,6 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
             <div className="space-y-5">
               <ProductDetailsCard
                 heading="Returned Product"
-                sale={foundSale}
                 item={foundItem}
                 billingPrice={billingPrice}
                 onBillingPriceChange={(v) => {
