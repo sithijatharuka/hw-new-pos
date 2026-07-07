@@ -150,6 +150,12 @@ const DashboardPage = ({ api }) => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  // Auto-refresh every 30s to reflect processed returns without a page reload
+  useEffect(() => {
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
+
   useEffect(() => {
     const loadSettings = async () => {
       try {

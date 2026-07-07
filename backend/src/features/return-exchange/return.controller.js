@@ -64,12 +64,18 @@ export const createReturn = async (req, res) => {
       return res.status(400).json({ message: "reason and returnLines are required" });
     }
 
+    // Fetch cost prices for all returned items
+    const itemIds = returnLines.map((l) => l.itemId);
+    const itemDocs = await Item.find({ _id: { $in: itemIds }, tenantId }).select("_id costPrice").session(session);
+    const costMap = Object.fromEntries(itemDocs.map((i) => [i._id.toString(), i.costPrice || 0]));
+
     // Build return lines with refund amounts
     const processedLines = returnLines.map((line) => {
       const qty = Number(line.returnQty);
       const price = Number(line.unitPrice);
       if (!qty || qty <= 0) throw new Error(`Invalid returnQty for item ${line.itemId}`);
       if (!price || price < 0) throw new Error(`Invalid unitPrice for item ${line.itemId}`);
+      const costPrice = costMap[line.itemId] ?? 0;
       return {
         item: line.itemId,
         name: line.name,
@@ -77,11 +83,14 @@ export const createReturn = async (req, res) => {
         returnQty: qty,
         unit: line.unit,
         unitPrice: price,
+        costPrice,
         refundAmount: qty * price,
+        profitDeducted: qty * (price - costPrice),
       };
     });
 
     const totalRefund = processedLines.reduce((sum, l) => sum + l.refundAmount, 0);
+    const totalProfitDeducted = processedLines.reduce((sum, l) => sum + l.profitDeducted, 0);
 
     // Restore stock for each returned item
     for (const line of processedLines) {
@@ -106,6 +115,7 @@ export const createReturn = async (req, res) => {
           reasonNote: reasonNote?.trim() || undefined,
           returnLines: processedLines,
           totalRefund,
+          profitDeducted: totalProfitDeducted,
           createdBy: req.user?._id,
         },
       ],

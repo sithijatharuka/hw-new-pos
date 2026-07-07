@@ -19,6 +19,12 @@ const returnLineSchema = new mongoose.Schema(
       set: toDecimal,
       get: decimalGetter,
     },
+    costPrice: {
+      type: mongoose.Schema.Types.Decimal128,
+      default: () => toDecimal(0),
+      set: toDecimal,
+      get: decimalGetter,
+    },
     refundAmount: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
@@ -43,6 +49,12 @@ const returnSchema = new mongoose.Schema(
     totalRefund: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
+      set: toDecimal,
+      get: decimalGetter,
+    },
+    profitDeducted: {
+      type: mongoose.Schema.Types.Decimal128,
+      default: () => toDecimal(0),
       set: toDecimal,
       get: decimalGetter,
     },

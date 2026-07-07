@@ -22,7 +22,7 @@ const hydrateAndCalculateSale = async (payload, tenantId) => {
   const items = await Item.find({
     _id: { $in: itemIds },
     tenantId,
-  }).select("taxApplicable");
+  }).select("taxApplicable costPrice");
   const itemMap = new Map(items.map((it) => [String(it._id), it]));
 
   let subTotal = 0;
@@ -53,6 +53,7 @@ const hydrateAndCalculateSale = async (payload, tenantId) => {
 
     return {
       ...line,
+      costPrice: Number(dbItem.costPrice) || 0,
       discount: discountAmount,
       taxAmount: tax,
       lineTotal,
