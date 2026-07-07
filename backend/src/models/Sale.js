@@ -22,6 +22,12 @@ const saleItemSchema = new mongoose.Schema(
       set: toDecimal,
       get: decimalGetter,
     },
+    costPrice: {
+      type: mongoose.Schema.Types.Decimal128,
+      default: () => toDecimal(0),
+      set: toDecimal,
+      get: decimalGetter,
+    },
     discount: {
       type: mongoose.Schema.Types.Decimal128,
       default: () => toDecimal(0),

@@ -11,38 +11,31 @@ export const protect = async (req, res, next) => {
   }
 
   if (!token) {
-    res.status(401);
-    throw new Error("Not authorized, no token");
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 
   try {
     const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error("JWT_SECRET is missing");
+    if (!secret) return res.status(500).json({ message: "Server misconfiguration" });
     const decoded = jwt.verify(token, secret);
     req.user = await User.findById(decoded.id).select("-password");
     if (!req.user) {
-      res.status(401);
-      throw new Error("User not found");
+      return res.status(401).json({ message: "User not found" });
     }
     if (decoded.tenantId && req.user.tenantId !== decoded.tenantId) {
-      res.status(401);
-      throw new Error("Tenant mismatch");
+      return res.status(401).json({ message: "Tenant mismatch" });
     }
     if (!req.user.tenantId) {
-      res.status(403);
-      throw new Error("Tenant context missing");
+      return res.status(403).json({ message: "Tenant context missing" });
     }
     next();
   } catch (err) {
-    console.error(err);
-    res.status(401);
     if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Access token expired" });
     } else if (err.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Invalid access token" });
-    } else {
-      return res.status(401).json({ message: "Not authorized, token failed" });
     }
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
 
@@ -50,8 +43,7 @@ export const adminOnly = (req, res, next) => {
   if (req.user && (req.user.role === "admin" || req.user.role === "owner")) {
     next();
   } else {
-    res.status(403);
-    throw new Error("Admin or owner access only");
+    return res.status(403).json({ message: "Admin or owner access only" });
   }
 };
 
