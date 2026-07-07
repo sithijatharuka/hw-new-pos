@@ -44,6 +44,7 @@ const ProtectedLayout = ({ user, onLogout, api }) => {
 const App = () => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
+  const accessTokenRef = React.useRef(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   // Initialize cache debug tools on mount
@@ -85,9 +86,9 @@ const App = () => {
    */
   const api = useMemo(() => {
     return createApiClient(
-      () => accessToken, // getter
-      (token) => setAccessToken(token), // setter
-      () => handleLogout(), // logout callback (can be async)
+      () => accessTokenRef.current, // getter always reads latest value
+      (token) => { accessTokenRef.current = token; setAccessToken(token); },
+      () => handleLogout(),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // create once
@@ -111,7 +112,7 @@ const App = () => {
 
         const data = await res.json();
 
-        if (data?.accessToken) setAccessToken(data.accessToken);
+        if (data?.accessToken) { accessTokenRef.current = data.accessToken; setAccessToken(data.accessToken); }
 
         // If your refresh endpoint returns user, this will populate immediately
         if (data?.user) setUser(data.user);
@@ -127,6 +128,7 @@ const App = () => {
   }, []);
 
   const handleLogin = useCallback((userData, token) => {
+    accessTokenRef.current = token;
     setUser(userData);
     setAccessToken(token);
   }, []);

@@ -118,6 +118,7 @@ export const createReturn = async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
+    console.error("[createReturn] error:", err.message);
     res.status(400).json({ message: err.message || "Failed to process return" });
   }
 };
