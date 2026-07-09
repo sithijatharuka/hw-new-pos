@@ -100,6 +100,7 @@ const GRNLineItem = ({
           step="0.01"
           value={line.qty}
           onChange={(e) => onLineChange(lineIndex, e)}
+          onWheel={(e) => e.target.blur()}
           disabled={fieldsDisabled}
           className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
             errors[`line_${lineIndex}_qty`]
@@ -123,6 +124,7 @@ const GRNLineItem = ({
           step="0.01"
           value={line.unitCost}
           onChange={(e) => onLineChange(lineIndex, e)}
+          onWheel={(e) => e.target.blur()}
           disabled={fieldsDisabled}
           className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
             errors[`line_${lineIndex}_unitCost`]

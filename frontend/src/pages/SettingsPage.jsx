@@ -456,6 +456,7 @@ const SettingsPage = ({ user, api }) => {
                       className={inputBase}
                       value={settings.vatRate}
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       disabled={!isAdmin}
                       style={{
                         background: colors.background.secondary,
