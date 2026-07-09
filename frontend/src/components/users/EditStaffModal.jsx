@@ -117,7 +117,7 @@ const EditStaffModal = ({
           fieldErrors.name = "Full name must be at least 2 characters.";
         } else if (!regexValidations.name.test(value)) {
           fieldErrors.name =
-            "Full name must contain at least 2 words (letters only, separated by spaces).";
+            "Full name must contain letters only (spaces allowed between words).";
         }
         break;
 

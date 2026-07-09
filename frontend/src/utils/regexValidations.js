@@ -2,8 +2,8 @@
 // Centralized regex patterns for validation across the app
 
 const regexValidations = {
-  // Full name: at least 2 words, letters only (spaces between)
-  name: /^[A-Za-z]+(?:\s[A-Za-z]+)+$/,
+  // Full name: one or more words, letters only (spaces between)
+  name: /^[A-Za-z]+(?:\s[A-Za-z]+)*$/,
   // Username: starts with letter, 4-20 chars, letters/numbers/_ only
   username: /^[a-zA-Z][a-zA-Z0-9_]{3,19}$/,
   // Sri Lankan mobile without +94: 9 digits starting with 7
