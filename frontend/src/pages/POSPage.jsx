@@ -473,6 +473,7 @@ const POSPage = ({ api }) => {
 
   const handleSave = async (status = "paid", saveAsPending = false) => {
     if (!validateBeforeSave(status)) return;
+    setIsSaving(true);
 
     const validLines = lines.filter((l) => l.item);
 
@@ -565,6 +566,8 @@ const POSPage = ({ api }) => {
       showError(
         err?.response?.data?.message || err?.message || "Failed to save sale.",
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -579,7 +582,10 @@ const POSPage = ({ api }) => {
     (e) => e && Object.keys(e).length > 0,
   );
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const canSavePaid =
+    !isSaving &&
     hasValidLine &&
     !hasLineError &&
     !discountInvalid &&
@@ -587,8 +593,10 @@ const POSPage = ({ api }) => {
     grandTotal > 0 &&
     totalPayments >= grandTotal;
   const canSaveCredit =
+    !isSaving &&
     hasValidLine && !hasLineError && !discountInvalid && !paymentHasError;
   const canSavePending =
+    !isSaving &&
     hasValidLine && !hasLineError && !discountInvalid && !paymentHasError;
 
   return (
