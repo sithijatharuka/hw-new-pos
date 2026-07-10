@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { showSuccess, showError } from "../../../../../utils/toastHelper";
 import InputModal from "../../../../common/InputModal";
 import BarcodeForm from "../../../../../features/barcode/components/BarcodeForm";
@@ -22,6 +22,20 @@ const EssentialInformation = ({
 }) => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showBaseUnitDropdown, setShowBaseUnitDropdown] = useState(false);
+
+  const categoryRef = useRef(null);
+  const baseUnitRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target))
+        setShowCategoryDropdown(false);
+      if (baseUnitRef.current && !baseUnitRef.current.contains(e.target))
+        setShowBaseUnitDropdown(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Barcode feature state – re-sync when the parent form changes (e.g. edit mode)
   const [barcodeFormData, setBarcodeFormData] = useState({
@@ -244,7 +258,7 @@ const EssentialInformation = ({
         </div>
 
         {/* Category */}
-        <div className="relative space-y-2">
+        <div ref={categoryRef} className="relative space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700">
               Category <span className="text-red-500">*</span>
@@ -311,7 +325,7 @@ const EssentialInformation = ({
         </div>
 
         {/* Base Unit */}
-        <div className="relative space-y-2">
+        <div ref={baseUnitRef} className="relative space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700">
               Base Unit <span className="text-red-500">*</span>

@@ -248,6 +248,7 @@ const TextInput = ({
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onWheel={type === "number" ? (e) => e.target.blur() : undefined}
       className={`w-full px-3 py-2 text-sm text-gray-800 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary ${
         error ? "border-red-500" : ""
       }`}

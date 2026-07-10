@@ -207,6 +207,7 @@ const SupplierDetailsSection = ({ form, errors, isEdit, onFormChange }) => {
             ].join(" ")}
             value={form.creditLimit}
             onChange={(e) => onFormChange({ creditLimit: e.target.value })}
+            onWheel={(e) => e.target.blur()}
           />
           {errors.creditLimit && (
             <p className="text-xs font-medium text-red-600">

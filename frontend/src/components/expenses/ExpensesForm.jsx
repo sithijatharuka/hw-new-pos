@@ -188,6 +188,7 @@ const ExpensesForm = ({
                 }`}
                 value={form.amount}
                 onChange={(e) => handleFieldChange("amount", e.target.value)}
+                onWheel={(e) => e.target.blur()}
                 min="0"
                 step="0.01"
                 placeholder="0.00"

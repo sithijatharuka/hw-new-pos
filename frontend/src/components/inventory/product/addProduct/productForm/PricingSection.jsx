@@ -21,6 +21,7 @@ const PricingSection = ({ form, errs, updateField }) => {
             }`}
             value={form.costPrice}
             onChange={(e) => updateField("costPrice", e.target.value)}
+            onWheel={(e) => e.target.blur()}
           />
           {errs.costPrice && (
             <p className="text-xs text-red-600">{errs.costPrice}</p>
@@ -40,6 +41,7 @@ const PricingSection = ({ form, errs, updateField }) => {
             }`}
             value={form.sellingPrice}
             onChange={(e) => updateField("sellingPrice", e.target.value)}
+            onWheel={(e) => e.target.blur()}
           />
           {errs.sellingPrice && (
             <p className="text-xs text-red-600">{errs.sellingPrice}</p>
