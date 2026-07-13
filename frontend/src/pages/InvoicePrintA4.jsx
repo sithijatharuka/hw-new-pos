@@ -112,7 +112,7 @@ const InvoicePrintA4 = ({ api }) => {
               <tr key={index} className="align-top">
                 <td className="py-0.5 pr-1">{index + 1}</td>
                 <td className="py-0.5 pr-1">
-                  {line.description}
+                  {line.description}{line.batchNumber ? ` (${line.batchNumber})` : ""}
                   <span className="block text-[10px] text-gray-500">
                     {line.unit} @{" "}
                     {formatCurrency(
