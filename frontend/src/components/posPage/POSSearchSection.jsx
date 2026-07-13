@@ -28,6 +28,8 @@ const POSSearchSection = ({
   setBarcode,
   barcodeInputRef,
   handleBarcodeSearch,
+  barcodeScannedItem,
+  onBarcodeScannedItemClear,
   isTaxInvoice,
   setIsTaxInvoice,
   recalcLinesForVat,
@@ -36,7 +38,17 @@ const POSSearchSection = ({
 }) => {
   const [batchModal, setBatchModal] = useState(emptyBatchModal);
 
-  const closeBatchModal = () => setBatchModal(emptyBatchModal);
+  // When a barcode scan returns a batch-tracked item, open the batch modal
+  React.useEffect(() => {
+    if (barcodeScannedItem) {
+      handleBatchItemClick(barcodeScannedItem);
+    }
+  }, [barcodeScannedItem]);
+
+  const closeBatchModal = () => {
+    setBatchModal(emptyBatchModal);
+    onBarcodeScannedItemClear?.();
+  };
 
   // Open batch modal and fetch batches
   const handleBatchItemClick = async (item) => {
@@ -74,13 +86,11 @@ const POSSearchSection = ({
     const selected = batchModal.selectedBatch;
     if (!selected || !batchModal.item) return;
 
-    // Use batch.sellingPrice if set (> 0), else fallback to item.sellingPrice
     const batchPrice =
       selected.sellingPrice > 0
         ? Number(selected.sellingPrice)
         : Number(batchModal.item.sellingPrice) || 0;
 
-    // Attach batchNumber and batchId directly for validation
     const itemWithBatch = {
       ...batchModal.item,
       selectedBatch: selected,
@@ -90,7 +100,8 @@ const POSSearchSection = ({
     };
 
     handleSelectItem(null, itemWithBatch);
-    closeBatchModal();
+    setBatchModal(emptyBatchModal);
+    onBarcodeScannedItemClear?.();
   };
 
   return (

@@ -93,7 +93,7 @@ const InvoicePrintThermal = ({ api }) => {
               <div key={idx} className="mb-0.5">
                 <div className="flex justify-between">
                   <span>
-                    {idx + 1}. {line.description}
+                    {idx + 1}. {line.description}{line.batchNumber ? ` (${line.batchNumber})` : ""}
                   </span>
                   <span className="min-w-[60px] text-right">
                     {formatCurrency(

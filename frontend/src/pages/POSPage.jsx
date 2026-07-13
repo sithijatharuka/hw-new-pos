@@ -282,6 +282,8 @@ const POSPage = ({ api }) => {
     setSearchResults([]);
   };
 
+  const [barcodeScannedItem, setBarcodeScannedItem] = useState(null);
+
   const handleBarcodeSearch = async (e) => {
     e.preventDefault();
     const code = barcode.trim();
@@ -292,10 +294,15 @@ const POSPage = ({ api }) => {
 
     try {
       const item = await searchItemByBarcode(api, code);
-      handleSelectItem(null, item);
-      showSuccess(`Item added: ${item.name}`);
-      setBarcode("");
-      barcodeInputRef.current?.focus();
+      if (item.isBatchTracked) {
+        setBarcodeScannedItem(item);
+        setBarcode("");
+      } else {
+        handleSelectItem(null, item);
+        showSuccess(`Item added: ${item.name}`);
+        setBarcode("");
+        barcodeInputRef.current?.focus();
+      }
     } catch (err) {
       showError(
         err?.response?.data?.message || "No item found for this barcode",
@@ -625,6 +632,11 @@ const POSPage = ({ api }) => {
             currencySymbol={currencySymbol}
             currencyPosition={currencyPosition}
             handleBarcodeSearch={handleBarcodeSearch}
+            barcodeScannedItem={barcodeScannedItem}
+            onBarcodeScannedItemClear={() => {
+              setBarcodeScannedItem(null);
+              barcodeInputRef.current?.focus();
+            }}
             isTaxInvoice={isTaxInvoice}
             setIsTaxInvoice={setIsTaxInvoice}
             recalcLinesForVat={recalcLinesForVat}
