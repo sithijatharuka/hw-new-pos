@@ -9,5 +9,7 @@ export const mapReturnData = ({ returnItems, reason, reasonNote }) => ({
     unitPrice: item.unitPrice,
     unit: item.unit,
     vatApplicable: item.vatApplicable,
+    ...(item.batchId && { batchId: item.batchId }),
+    ...(item.batchNumber && { batchNumber: item.batchNumber }),
   })),
 });

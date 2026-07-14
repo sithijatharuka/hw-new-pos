@@ -20,7 +20,7 @@ export const searchProduct = async (req, res) => {
     tenantId,
     [field]: { $regex: new RegExp(`^${q.trim()}$`, "i") },
     isActive: true,
-  }).select("name sku barcode baseUnit sellingPrice taxApplicable currentStock");
+  }).select("name sku barcode baseUnit sellingPrice taxApplicable currentStock isBatchTracked");
 
   if (!item) {
     return res.status(404).json({ message: "Product not found" });
@@ -34,8 +34,10 @@ export const searchProduct = async (req, res) => {
       barcode: item.barcode,
       unit: item.baseUnit,
       unitPrice: item.sellingPrice,
+      sellingPrice: item.sellingPrice,
       vatApplicable: item.taxApplicable,
       currentStock: item.currentStock ?? 0,
+      isBatchTracked: item.isBatchTracked ?? false,
     },
   });
 };
@@ -80,6 +82,8 @@ export const createReturn = async (req, res) => {
         item: line.itemId,
         name: line.name,
         sku: line.sku,
+        batchNumber: line.batchNumber || undefined,
+        batchId: line.batchId || undefined,
         returnQty: qty,
         unit: line.unit,
         unitPrice: price,
@@ -99,6 +103,7 @@ export const createReturn = async (req, res) => {
           itemId: line.item,
           tenantId,
           qty: line.returnQty,
+          batchNumber: line.batchNumber,
           note: `Direct inventory return`,
           type: "return",
           createdBy: req.user?._id,

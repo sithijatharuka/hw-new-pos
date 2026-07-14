@@ -46,6 +46,11 @@ const ProductDetailsCard = ({
               <span className="rounded-lg bg-background-subtle px-2.5 py-0.5 text-xs font-medium text-text-secondary">
                 Unit: {item.unit}
               </span>
+              {item.batchNumber && (
+                <span className="rounded-lg bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                  Batch: {item.batchNumber}
+                </span>
+              )}
               {item.vatApplicable && (
                 <span className="rounded-lg bg-status-pending-bg px-2.5 py-0.5 text-xs font-semibold text-status-pending-text">
                   VAT
@@ -59,7 +64,7 @@ const ProductDetailsCard = ({
         <div className="flex items-center gap-3 rounded-2xl bg-background-subtle px-4 py-3">
           <span className="text-xs text-text-tertiary">Selling Price</span>
           <span className="ml-auto text-sm font-bold text-text-primary">
-            {formatCurrency(item.unitPrice, currencySymbol, currencyPosition)}
+            {formatCurrency(item.sellingPrice ?? item.unitPrice, currencySymbol, currencyPosition)}
           </span>
           <span className="text-xs text-text-tertiary">·</span>
           <span className="text-xs text-text-tertiary">
