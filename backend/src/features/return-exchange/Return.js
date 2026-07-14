@@ -11,6 +11,8 @@ const returnLineSchema = new mongoose.Schema(
     item: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
     name: String,
     sku: String,
+    batchNumber: { type: String },
+    batchId: { type: mongoose.Schema.Types.ObjectId },
     returnQty: { type: Number, required: true, min: 1 },
     unit: String,
     unitPrice: {

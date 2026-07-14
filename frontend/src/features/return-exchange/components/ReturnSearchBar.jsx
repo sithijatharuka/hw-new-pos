@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as returnApi from "../api/returnApi";
+import { getItemBatches } from "../../../api/inventory/items";
+import AppLoader from "../../../components/common/AppLoader";
+import CloseButton from "../../../components/common/CloseButton";
+import { formatCurrency } from "../../../utils/currency";
 
 /**
  * ReturnSearchBar
@@ -10,17 +14,22 @@ import * as returnApi from "../api/returnApi";
  *   onNotFound   – (query) called when no match
  *   autoFocus    – whether to focus input on mount
  */
+const emptyBatchModal = { open: false, item: null, result: null, batches: [], loading: false, error: null, selectedBatch: null };
+
 const ReturnSearchBar = ({
   api,
   label = "Scan Barcode / Enter Product Code",
   onFound,
   onNotFound,
   autoFocus = false,
+  currencySymbol = "Rs.",
+  currencyPosition = "before",
 }) => {
   const [searchType, setSearchType] = useState("barcode");
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
+  const [batchModal, setBatchModal] = useState(emptyBatchModal);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -34,7 +43,18 @@ const ReturnSearchBar = ({
     setIsSearching(true);
     try {
       const result = await returnApi.searchProduct(api, q, searchType);
-      onFound?.(result);
+      if (result?.item?.isBatchTracked) {
+        // Open batch selection before proceeding
+        setBatchModal({ open: true, item: result.item, result, batches: [], loading: true, error: null, selectedBatch: null });
+        try {
+          const data = await getItemBatches(api, result.item._id);
+          setBatchModal((prev) => ({ ...prev, batches: Array.isArray(data?.batches) ? data.batches : [], loading: false }));
+        } catch {
+          setBatchModal((prev) => ({ ...prev, loading: false, error: "Failed to load batches" }));
+        }
+      } else {
+        onFound?.(result);
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || "Product not found";
       if (err?.response?.status === 404) {
@@ -51,6 +71,24 @@ const ReturnSearchBar = ({
     setQuery("");
     setError("");
     inputRef.current?.focus();
+  };
+
+  const closeBatchModal = () => {
+    setBatchModal(emptyBatchModal);
+    inputRef.current?.focus();
+  };
+
+  const handleBatchConfirm = () => {
+    const { selectedBatch, item, result } = batchModal;
+    if (!selectedBatch || !item) return;
+    const batchPrice = selectedBatch.sellingPrice > 0
+      ? Number(selectedBatch.sellingPrice)
+      : Number(item.sellingPrice) || 0;
+    onFound?.({
+      ...result,
+      item: { ...item, selectedBatch, batchNumber: selectedBatch.batchNumber, batchId: selectedBatch._id, sellingPrice: batchPrice },
+    });
+    setBatchModal(emptyBatchModal);
   };
 
   return (
@@ -137,6 +175,60 @@ const ReturnSearchBar = ({
       </div>
 
       {error && <p className="text-xs font-medium text-error">{error}</p>}
+
+      {/* Batch Selection Modal */}
+      {batchModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
+          <button type="button" aria-label="Close" className="absolute inset-0 cursor-default" onClick={closeBatchModal} />
+          <div className="relative z-10 w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <div className="flex items-start justify-between p-5 border-b border-gray-100">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Select Batch</h3>
+                <p className="mt-1 text-sm text-gray-500">{batchModal.item?.name}</p>
+              </div>
+              <CloseButton onClick={closeBatchModal} size="md" ariaLabel="Close batch modal" />
+            </div>
+            <div className="p-5">
+              {batchModal.loading && (
+                <div className="flex justify-center items-center py-4">
+                  <AppLoader open variant="inline" title="Loading batches" subtitle="Checking batch availability" />
+                </div>
+              )}
+              {batchModal.error && <div className="text-sm text-red-600">{batchModal.error}</div>}
+              {!batchModal.loading && !batchModal.error && batchModal.batches.length === 0 && (
+                <div className="text-sm text-gray-500">No batches found for this item.</div>
+              )}
+              {!batchModal.loading && !batchModal.error && batchModal.batches.length > 0 && (
+                <div className="pr-1 space-y-2 overflow-y-auto max-h-56">
+                  {batchModal.batches.map((batch) => {
+                    const selected = batchModal.selectedBatch?._id === batch._id;
+                    const batchOnHand = Number(batch?.qtyOnHand ?? 0);
+                    const disabled = batchOnHand <= 0;
+                    return (
+                      <label key={batch._id} className={["flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition", selected ? "border-primary bg-primary/10" : "border-gray-200 hover:bg-gray-50", disabled ? "opacity-50 cursor-not-allowed" : ""].join(" ")}>
+                        <input type="radio" name="return-batch" value={batch._id} checked={selected} disabled={disabled} onChange={() => setBatchModal((prev) => ({ ...prev, selectedBatch: batch }))} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900">Batch: {batch.batchNumber || "N/A"}</div>
+                          <div className="text-xs text-gray-500">Stock: {batchOnHand}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(batch.sellingPrice > 0 ? Number(batch.sellingPrice) : Number(batchModal.item?.sellingPrice) || 0, currencySymbol, currencyPosition)}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
+              <button type="button" className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 active:scale-95" onClick={closeBatchModal}>Cancel</button>
+              <button type="button" className="px-4 py-2 text-sm font-medium text-white rounded-xl bg-primary hover:bg-primary/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleBatchConfirm} disabled={!batchModal.selectedBatch}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

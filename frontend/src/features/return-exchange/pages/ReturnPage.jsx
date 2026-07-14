@@ -107,7 +107,7 @@ const ReturnPage = ({ api }) => {  // `api` = axios instance from createApiClien
 
   const handleProductFound = useCallback(({ item }) => {
     setFoundItem(item);
-    setBillingPrice(String(item.unitPrice));
+    setBillingPrice(String(item.sellingPrice ?? item.unitPrice));
     setReturnQty(1);
     setNotFoundQuery("");
     setStep(STEP.DETAILS);
