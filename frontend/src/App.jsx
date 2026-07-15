@@ -21,6 +21,7 @@ import BarcodePrintPage from "./pages/BarcodePrintPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ReturnPage from "./features/return-exchange/pages/ReturnPage";
+import { PendingPage } from "./features/pending";
 
 import { createApiClient } from "./api/client";
 import AppLoader from "./components/common/AppLoader";
@@ -254,6 +255,14 @@ const App = () => {
             element={
               <FeatureRoute featureId="return-exchange" user={user}>
                 <ReturnPage api={api} />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/pending"
+            element={
+              <FeatureRoute featureId="pos" user={user}>
+                <PendingPage api={api} />
               </FeatureRoute>
             }
           />

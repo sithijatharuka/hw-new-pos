@@ -7,6 +7,7 @@ import { userHasFeatureAccess } from "../../utils/permissionHelper.js";
 const navItems = [
   { to: "/dashboard", label: "Dashboard", featureId: "dashboard" },
   { to: "/pos", label: "POS Billing", featureId: "pos" },
+  { to: "/pending", label: "Pending Sales", featureId: "pos" },
   { to: "/return-exchange", label: "Return & Exchange", featureId: "return-exchange" },
   { to: "/inventory", label: "Inventory", featureId: "inventory" },
   { to: "/customers", label: "Customers", featureId: "customers" },

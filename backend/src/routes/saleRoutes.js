@@ -286,6 +286,27 @@ router.get("/", protect, requireFeature("pos"), async (req, res) => {
   res.json({ sales: formattedSales });
 });
 
+// List pending sales
+router.get("/pending", protect, requireFeature("pos"), async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) return res.status(403).json({ message: "Tenant context missing" });
+  const sales = await Sale.find({ tenantId, savedAsPending: true })
+    .populate("customer", "name")
+    .sort({ createdAt: -1 })
+    .limit(200);
+  res.json(sales);
+});
+
+// Delete a pending sale
+router.delete("/pending/:id", protect, requireFeature("pos"), async (req, res) => {
+  const tenantId = req.user?.tenantId;
+  if (!tenantId) return res.status(403).json({ message: "Tenant context missing" });
+  const sale = await Sale.findOne({ _id: req.params.id, tenantId, savedAsPending: true });
+  if (!sale) return res.status(404).json({ message: "Pending sale not found" });
+  await sale.deleteOne();
+  res.json({ message: "Deleted" });
+});
+
 // Get sale
 router.get("/:id", protect, async (req, res) => {
   const tenantId = req.user?.tenantId;
