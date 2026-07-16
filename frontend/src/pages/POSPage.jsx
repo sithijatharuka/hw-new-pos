@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useOffline } from "../hooks/useOffline";
 import CustomerFormModal from "../components/customer/CustomerFormModal";
 import { usePrefixSearch } from "../hooks/usePrefixSearch";
@@ -29,6 +29,7 @@ import { showSuccess, showError, errorMessages } from "../utils/toastHelper";
 
 const POSPage = ({ api }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isOffline } = useOffline();
   const barcodeInputRef = useRef(null);
 
@@ -71,6 +72,36 @@ const POSPage = ({ api }) => {
 
   const [payments, setPayments] = useState([emptyPayment()]);
   const [paymentErrors, setPaymentErrors] = useState([{}]);
+
+  // Restore a pending sale loaded from the Pending Sales page
+  useEffect(() => {
+    const pending = location.state?.pendingSale;
+    if (!pending) return;
+    navigate("/pos", { replace: true, state: {} });
+
+    setIsTaxInvoice(pending.isTaxInvoice ?? false);
+    if (pending.customer) setCustomer(pending.customer);
+
+    const restored = (pending.items || []).map((line) => ({
+      item: line.item ? { _id: line.item._id ?? line.item, taxApplicable: line.item.taxApplicable ?? false, isBatchTracked: line.item.isBatchTracked ?? false } : null,
+      itemId: line.item?._id ?? line.item ?? "",
+      name: line.description || "",
+      qty: Number(line.qty) || 1,
+      unit: line.unit || "",
+      unitPrice: Number(line.unitPrice) || 0,
+      discount: Number(line.discount) || 0,
+      taxAmount: Number(line.taxAmount) || 0,
+      lineTotal: Number(line.lineTotal) || 0,
+      batchNumber: line.batchNumber || undefined,
+    }));
+    setLines(restored);
+    setLineErrors(restored.map(() => ({})));
+    setDiscountTotal(Number(pending.discountTotal) || 0);
+    const restoredPayments = (pending.payments || []).filter((p) => Number(p.amount) > 0);
+    setPayments(restoredPayments.length ? restoredPayments : [emptyPayment()]);
+    setPaymentErrors(restoredPayments.length ? restoredPayments.map(() => ({})) : [{}]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load VAT rate and currency settings
   useEffect(() => {
@@ -516,10 +547,7 @@ const POSPage = ({ api }) => {
         discount: Number(l.discount),
         taxAmount: Number(l.taxAmount),
         lineTotal: Number(l.lineTotal),
-        // Ensure batchNumber is sent for batch-tracked items
-        ...(l.item && l.item.isBatchTracked && l.batchNumber
-          ? { batchNumber: l.batchNumber }
-          : {}),
+        ...(l.batchNumber ? { batchNumber: l.batchNumber } : {}),
       })),
       subTotal: baseTotal,
       discountTotal: discountAmount,
@@ -538,6 +566,24 @@ const POSPage = ({ api }) => {
         showSuccess("Saved offline. Will sync when online");
       } else {
         const savedSale = await saveSale(api, payload);
+
+        if (saveAsPending) {
+          showSuccess("Bill saved as pending");
+          setLines([]);
+          setLineErrors([{}]);
+          setDiscountTotal(0);
+          setPayments([emptyPayment()]);
+          setPaymentErrors([{}]);
+          setQuery("");
+          setSearchResults([]);
+          setSelectedCategory("");
+          setBarcode("");
+          setCustomer(null);
+          setIsTaxInvoice(false);
+          barcodeInputRef.current?.focus();
+          return;
+        }
+
         showSuccess("Sale saved successfully");
 
         // Refresh customers so credit balances are up to date in this session
