@@ -79,30 +79,26 @@ export const getLowStockItems = async (req, res) => {
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }
-  const items = await Item.find({ tenantId, isActive: true });
+
+  // Use $expr to filter in MongoDB — avoids loading all items into Node
+  const items = await Item.find(
+    { tenantId, isActive: true, $expr: { $lte: ["$inventory.onHand", "$lowStockLevel"] } },
+    { name: 1, "inventory.onHand": 1, lowStockLevel: 1, category: 1 },
+  ).lean();
 
   const lowStockItems = items
     .map((item) => {
-      let status = "green";
-      let statusMessage = "Good";
-
-      const stockPercentage = (item.currentStock / item.lowStockLevel) * 100;
-
-      if (item.currentStock <= 0) {
-        status = "red";
-        statusMessage = "Empty";
-      } else if (item.currentStock <= item.lowStockLevel * 0.5) {
-        status = "red";
-        statusMessage = "Critical";
-      } else if (item.currentStock <= item.lowStockLevel) {
-        status = "orange";
-        statusMessage = "Low";
-      }
-
+      const currentStock = item.inventory?.onHand || 0;
+      const stockPercentage = item.lowStockLevel > 0
+        ? (currentStock / item.lowStockLevel) * 100
+        : 0;
+      const status =
+        currentStock <= 0 || currentStock <= item.lowStockLevel * 0.5 ? "red" : "orange";
+      const statusMessage = currentStock <= 0 ? "Empty" : status === "red" ? "Critical" : "Low";
       return {
         _id: item._id,
         name: item.name,
-        currentStock: item.currentStock,
+        currentStock,
         lowStockLevel: item.lowStockLevel,
         status,
         statusMessage,
@@ -110,12 +106,9 @@ export const getLowStockItems = async (req, res) => {
         stockPercentage: Math.round(stockPercentage),
       };
     })
-    .filter((item) => item.status !== "green")
     .sort((a, b) => {
-      const statusOrder = { red: 0, orange: 1 };
-      if (statusOrder[a.status] !== statusOrder[b.status]) {
-        return statusOrder[a.status] - statusOrder[b.status];
-      }
+      const order = { red: 0, orange: 1 };
+      if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
       return a.stockPercentage - b.stockPercentage;
     });
 
@@ -130,35 +123,34 @@ export const getOutstandingCredits = async (req, res) => {
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }
-  const customers = await Customer.find({ tenantId });
 
-  const creditData = customers
-    .map((customer) => ({
-      _id: customer._id,
-      name: customer.name,
-      phone: customer.phone,
-      currentBalance: customer.currentBalance,
-      creditLimit: customer.creditLimit,
-      creditPercentage: customer.creditLimit
-        ? Math.round((customer.currentBalance / customer.creditLimit) * 100)
-        : 0,
-      status:
-        customer.currentBalance > (customer.creditLimit * 0.8 || 0)
-          ? "warning"
-          : "normal",
-    }))
-    .filter((c) => c.currentBalance > 0)
-    .sort((a, b) => b.currentBalance - a.currentBalance);
+  // Filter in MongoDB — only fetch customers with a positive balance
+  const customers = await Customer.find(
+    { tenantId, $expr: { $gt: ["$currentBalance", { $toDecimal: "0" }] } },
+    { name: 1, phone: 1, currentBalance: 1, creditLimit: 1 },
+  )
+    .sort({ currentBalance: -1 })
+    .lean();
 
-  const totalCreditGiven = creditData.reduce(
-    (sum, c) => sum + c.currentBalance,
-    0
-  );
-  const topCustomers = creditData.slice(0, 10);
+  const creditData = customers.map((c) => {
+    const balance = parseFloat(c.currentBalance?.toString() ?? "0");
+    const limit = parseFloat(c.creditLimit?.toString() ?? "0");
+    return {
+      _id: c._id,
+      name: c.name,
+      phone: c.phone,
+      currentBalance: balance,
+      creditLimit: limit,
+      creditPercentage: limit ? Math.round((balance / limit) * 100) : 0,
+      status: balance > limit * 0.8 ? "warning" : "normal",
+    };
+  });
+
+  const totalCreditGiven = creditData.reduce((sum, c) => sum + c.currentBalance, 0);
 
   res.json({
     totalCreditGiven,
-    topCustomers,
+    topCustomers: creditData.slice(0, 10),
     warningCount: creditData.filter((c) => c.status === "warning").length,
   });
 };
@@ -171,41 +163,47 @@ export const getSupplierPayables = async (req, res) => {
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
   }
-  const suppliers = await Supplier.find({
-    tenantId,
-    currentBalance: { $gt: 0 },
-    status: "active",
-  }).sort({ currentBalance: -1 });
 
-  const supplierPayables = [];
-
-  for (const supplier of suppliers.slice(0, 10)) {
-    const unpaidPurchases = await Purchase.find({
-      tenantId,
-      supplier: supplier._id,
-      status: { $ne: "paid" },
-    })
+  const [suppliers, unpaidPurchasesRaw] = await Promise.all([
+    Supplier.find(
+      { tenantId, currentBalance: { $gt: 0 }, status: "active" },
+      { name: 1, currentBalance: 1, lastPurchaseDate: 1 },
+    )
+      .sort({ currentBalance: -1 })
+      .limit(10)
+      .lean(),
+    Purchase.find(
+      { tenantId, status: { $ne: "paid" } },
+      { supplier: 1, billNumber: 1, balanceDue: 1, billDate: 1, status: 1 },
+    )
       .sort({ billDate: -1 })
-      .limit(10);
+      .lean(),
+  ]);
 
-    supplierPayables.push({
-      _id: supplier._id,
-      supplierName: supplier.name,
-      totalPayable: supplier.currentBalance,
-      lastPurchaseDate: supplier.lastPurchaseDate,
-      unpaidPurchases: unpaidPurchases.map((p) => ({
+  // Group purchases by supplier in memory (single DB round-trip)
+  const purchasesBySupplier = {};
+  for (const p of unpaidPurchasesRaw) {
+    const sid = p.supplier.toString();
+    if (!purchasesBySupplier[sid]) purchasesBySupplier[sid] = [];
+    if (purchasesBySupplier[sid].length < 10) {
+      purchasesBySupplier[sid].push({
         billNumber: p.billNumber,
-        amount: p.balanceDue,
+        amount: parseFloat(p.balanceDue?.toString() ?? "0"),
         dueDate: p.billDate,
         status: p.status,
-      })),
-    });
+      });
+    }
   }
 
-  const totalOutstanding = suppliers.reduce(
-    (sum, s) => sum + s.currentBalance,
-    0
-  );
+  const supplierPayables = suppliers.map((s) => ({
+    _id: s._id,
+    supplierName: s.name,
+    totalPayable: parseFloat(s.currentBalance?.toString() ?? "0"),
+    lastPurchaseDate: s.lastPurchaseDate,
+    unpaidPurchases: purchasesBySupplier[s._id.toString()] || [],
+  }));
+
+  const totalOutstanding = supplierPayables.reduce((sum, s) => sum + s.totalPayable, 0);
 
   res.json({ totalOutstanding, supplierPayables });
 };
@@ -222,65 +220,91 @@ export const getMonthlySalesTrend = async (req, res) => {
 
   if (range === "days") {
     const daysNum = Math.min(parseInt(days, 10) || 30, 60);
+    const rangeStart = new Date();
+    rangeStart.setDate(rangeStart.getDate() - (daysNum - 1));
+    const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate(), 0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const [salesAgg, returnsAgg] = await Promise.all([
+      Sale.aggregate([
+        { $match: { tenantId, createdAt: { $gte: start, $lte: end } } },
+        { $group: {
+          _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" }, d: { $dayOfMonth: "$createdAt" } },
+          totalSales: { $sum: { $toDouble: "$grandTotal" } },
+          invoiceCount: { $sum: 1 },
+        }},
+      ]),
+      Return.aggregate([
+        { $match: { tenantId, createdAt: { $gte: start, $lte: end } } },
+        { $group: {
+          _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" }, d: { $dayOfMonth: "$createdAt" } },
+          total: { $sum: { $toDouble: "$totalRefund" } },
+        }},
+      ]),
+    ]);
+
+    const salesMap = {};
+    for (const s of salesAgg) salesMap[`${s._id.y}-${s._id.m}-${s._id.d}`] = s;
+    const returnsMap = {};
+    for (const r of returnsAgg) returnsMap[`${r._id.y}-${r._id.m}-${r._id.d}`] = r.total;
+
     const trendData = [];
-
     for (let i = daysNum - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-      const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-
-      const [sales, [refundAgg]] = await Promise.all([
-        Sale.find({ tenantId, createdAt: { $gte: startOfDay, $lte: endOfDay } }),
-        Return.aggregate([
-          { $match: { tenantId, createdAt: { $gte: startOfDay, $lte: endOfDay } } },
-          { $group: { _id: null, total: { $sum: { $toDouble: "$totalRefund" } } } },
-        ]),
-      ]);
-
-      const totalRefunds = refundAgg?.total ?? 0;
-      const totalSales = sales.reduce((sum, s) => sum + s.grandTotal, 0) - totalRefunds;
-      const invoiceCount = sales.length;
-
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      const s = salesMap[key];
+      const refund = returnsMap[key] ?? 0;
       trendData.push({
-        month: startOfDay.toLocaleString("default", { month: "short", day: "numeric" }),
-        totalSales: Math.round(totalSales * 100) / 100,
-        invoiceCount,
+        month: d.toLocaleString("default", { month: "short", day: "numeric" }),
+        totalSales: Math.round(((s?.totalSales ?? 0) - refund) * 100) / 100,
+        invoiceCount: s?.invoiceCount ?? 0,
       });
     }
-
     return res.json({ trendData });
   }
 
   const monthsNum = Math.min(parseInt(months, 10) || 12, 12);
+  const now = new Date();
+  const rangeStart = new Date(now.getFullYear(), now.getMonth() - (monthsNum - 1), 1);
+  const rangeEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const [salesAgg, returnsAgg] = await Promise.all([
+    Sale.aggregate([
+      { $match: { tenantId, createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
+      { $group: {
+        _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" } },
+        totalSales: { $sum: { $toDouble: "$grandTotal" } },
+        invoiceCount: { $sum: 1 },
+      }},
+    ]),
+    Return.aggregate([
+      { $match: { tenantId, createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
+      { $group: {
+        _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" } },
+        total: { $sum: { $toDouble: "$totalRefund" } },
+      }},
+    ]),
+  ]);
+
+  const salesMap = {};
+  for (const s of salesAgg) salesMap[`${s._id.y}-${s._id.m}`] = s;
+  const returnsMap = {};
+  for (const r of returnsAgg) returnsMap[`${r._id.y}-${r._id.m}`] = r.total;
+
   const trendData = [];
-
   for (let i = monthsNum - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-
-    const [sales, [refundAgg]] = await Promise.all([
-      Sale.find({ tenantId, createdAt: { $gte: startOfMonth, $lte: endOfMonth } }),
-      Return.aggregate([
-        { $match: { tenantId, createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
-        { $group: { _id: null, total: { $sum: { $toDouble: "$totalRefund" } } } },
-      ]),
-    ]);
-
-    const totalRefunds = refundAgg?.total ?? 0;
-    const totalSales = sales.reduce((sum, s) => sum + s.grandTotal, 0) - totalRefunds;
-    const invoiceCount = sales.length;
-
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    const s = salesMap[key];
+    const refund = returnsMap[key] ?? 0;
     trendData.push({
-      month: startOfMonth.toLocaleString("default", { month: "short", year: "numeric" }),
-      totalSales: Math.round(totalSales * 100) / 100,
-      invoiceCount,
+      month: d.toLocaleString("default", { month: "short", year: "numeric" }),
+      totalSales: Math.round(((s?.totalSales ?? 0) - refund) * 100) / 100,
+      invoiceCount: s?.invoiceCount ?? 0,
     });
   }
-
   res.json({ trendData });
 };
 
@@ -298,52 +322,57 @@ export const getTopCategories = async (req, res) => {
   if (startDate && endDate) {
     const startD = new Date(startDate);
     const endD = new Date(endDate);
-    const start = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate(), 0, 0, 0, 0);
-    const end = new Date(endD.getFullYear(), endD.getMonth(), endD.getDate(), 23, 59, 59, 999);
-    dateFilter = { createdAt: { $gte: start, $lte: end } };
+    dateFilter = {
+      createdAt: {
+        $gte: new Date(startD.getFullYear(), startD.getMonth(), startD.getDate(), 0, 0, 0, 0),
+        $lte: new Date(endD.getFullYear(), endD.getMonth(), endD.getDate(), 23, 59, 59, 999),
+      },
+    };
   } else if (period === "today") {
     const d = new Date();
-    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-    dateFilter = { createdAt: { $gte: start, $lte: end } };
+    dateFilter = {
+      createdAt: {
+        $gte: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0),
+        $lte: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999),
+      },
+    };
   } else if (period === "month") {
     const d = new Date();
-    const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-    dateFilter = { createdAt: { $gte: start, $lte: end } };
+    dateFilter = {
+      createdAt: {
+        $gte: new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0),
+        $lte: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999),
+      },
+    };
   }
 
-  const sales = await Sale.find({ tenantId, ...dateFilter }).populate("items.item");
-
-  const categoryStats = {};
-
-  sales.forEach((sale) => {
-    sale.items.forEach((item) => {
-      if (!item.item) return;
-      const category = item.item.category || "Uncategorized";
-      if (!categoryStats[category]) {
-        categoryStats[category] = {
-          category,
-          totalQty: 0,
-          totalAmount: 0,
-          invoiceCount: new Set(),
-        };
-      }
-      categoryStats[category].totalQty += item.qty;
-      categoryStats[category].totalAmount += item.lineTotal;
-      categoryStats[category].invoiceCount.add(sale._id.toString());
-    });
-  });
-
-  const topCategories = Object.values(categoryStats)
-    .map((c) => ({
-      category: c.category,
-      totalQty: c.totalQty,
-      totalAmount: Math.round(c.totalAmount * 100) / 100,
-      invoiceCount: c.invoiceCount.size,
-    }))
-    .sort((a, b) => b.totalAmount - a.totalAmount)
-    .slice(0, 10);
+  // Aggregation pipeline: $lookup only the category field from Item — no full populate
+  const topCategories = await Sale.aggregate([
+    { $match: { tenantId, ...dateFilter } },
+    { $unwind: "$items" },
+    { $lookup: {
+      from: "items",
+      localField: "items.item",
+      foreignField: "_id",
+      pipeline: [{ $project: { category: 1 } }],
+      as: "itemDoc",
+    }},
+    { $set: { category: { $ifNull: [{ $arrayElemAt: ["$itemDoc.category", 0] }, "Uncategorized"] } } },
+    { $group: {
+      _id: "$category",
+      totalQty: { $sum: "$items.qty" },
+      totalAmount: { $sum: { $toDouble: "$items.lineTotal" } },
+      invoiceCount: { $addToSet: "$_id" },
+    }},
+    { $project: {
+      category: "$_id",
+      totalQty: 1,
+      totalAmount: { $round: ["$totalAmount", 2] },
+      invoiceCount: { $size: "$invoiceCount" },
+    }},
+    { $sort: { totalAmount: -1 } },
+    { $limit: 10 },
+  ]);
 
   res.json({ topCategories, period });
 };

@@ -83,7 +83,7 @@ const POSPage = ({ api }) => {
     if (pending.customer) setCustomer(pending.customer);
 
     const restored = (pending.items || []).map((line) => ({
-      item: line.item ? { _id: line.item._id ?? line.item, taxApplicable: false } : null,
+      item: line.item ? { _id: line.item._id ?? line.item, taxApplicable: line.item.taxApplicable ?? false, isBatchTracked: line.item.isBatchTracked ?? false } : null,
       itemId: line.item?._id ?? line.item ?? "",
       name: line.description || "",
       qty: Number(line.qty) || 1,
@@ -92,7 +92,7 @@ const POSPage = ({ api }) => {
       discount: Number(line.discount) || 0,
       taxAmount: Number(line.taxAmount) || 0,
       lineTotal: Number(line.lineTotal) || 0,
-      batchNumber: line.batchNumber,
+      batchNumber: line.batchNumber || undefined,
     }));
     setLines(restored);
     setLineErrors(restored.map(() => ({})));
@@ -547,10 +547,7 @@ const POSPage = ({ api }) => {
         discount: Number(l.discount),
         taxAmount: Number(l.taxAmount),
         lineTotal: Number(l.lineTotal),
-        // Ensure batchNumber is sent for batch-tracked items
-        ...(l.item && l.item.isBatchTracked && l.batchNumber
-          ? { batchNumber: l.batchNumber }
-          : {}),
+        ...(l.batchNumber ? { batchNumber: l.batchNumber } : {}),
       })),
       subTotal: baseTotal,
       discountTotal: discountAmount,
