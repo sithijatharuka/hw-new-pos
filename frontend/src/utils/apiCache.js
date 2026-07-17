@@ -212,6 +212,9 @@ export const INVALIDATION_MAP = {
   // GRN post - updates item stock levels and supplier balance
   "POST:/grns/*/post": ["/grns*", "/dashboard/*", "/items*", "/suppliers*"],
 
+  // Pending sale operations
+  "DELETE:/sales/pending/*": ["/sales/pending"],
+
   // Return operations - restore stock and affect dashboard stats
   "POST:/returns": ["/dashboard/*", "/items*"],
 

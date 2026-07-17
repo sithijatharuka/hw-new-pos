@@ -17,7 +17,7 @@ const getOrCreateSettings = async (tenantId) => {
 };
 
 // Get current settings
-router.get("/", protect, requireFeature("settings"), async (req, res) => {
+router.get("/", protect, requireFeature("settings", "pos"), async (req, res) => {
   const tenantId = req.user?.tenantId;
   if (!tenantId) {
     return res.status(403).json({ message: "Tenant context missing" });
