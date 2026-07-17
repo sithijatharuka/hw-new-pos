@@ -110,8 +110,8 @@ router.get("/units/list", protect, async (req, res) => {
   }
 });
 
-// List items (search + lowStock + category + isActive) - requires "inventory" feature
-router.get("/", protect, requireFeature("inventory"), async (req, res) => {
+// List items (search + lowStock + category + isActive) - requires "inventory" or "pos" feature
+router.get("/", protect, requireFeature("inventory", "pos"), async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
     if (!tenantId) {

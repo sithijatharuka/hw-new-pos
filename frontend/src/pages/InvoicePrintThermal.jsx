@@ -9,6 +9,7 @@ const InvoicePrintThermal = ({ api }) => {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [shop, setShop] = useState(null);
   const [currencySymbol, setCurrencySymbol] = useState("Rs.");
   const [currencyPosition, setCurrencyPosition] = useState("before");
@@ -28,12 +29,22 @@ const InvoicePrintThermal = ({ api }) => {
         setTimeout(() => {
           window.print();
         }, 200);
+      } catch (err) {
+        setError(err?.response?.data?.message || err?.message || "Failed to load invoice");
       } finally {
         setLoading(false);
       }
     };
     load();
   }, [id]);
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center py-6">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   if (loading || !sale) {
     return (
