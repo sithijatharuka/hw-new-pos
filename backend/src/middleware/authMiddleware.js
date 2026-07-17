@@ -51,7 +51,7 @@ export const adminOnly = (req, res, next) => {
  * Middleware to check if user has access to a specific feature
  * Usage: router.get("/dashboard", protect, requireFeature("dashboard"), controller)
  */
-export const requireFeature = (featureId) => {
+export const requireFeature = (...featureIds) => {
   return (req, res, next) => {
     if (!req.user) {
       res.status(401);
@@ -63,15 +63,15 @@ export const requireFeature = (featureId) => {
       return next();
     }
 
-    // Check if user has the required feature permission
+    // Check if user has at least one of the required feature permissions
     const hasPermission =
       Array.isArray(req.user.permissions) &&
-      req.user.permissions.includes(featureId);
+      featureIds.some((id) => req.user.permissions.includes(id));
 
     if (!hasPermission) {
       res.status(403);
       return res.json({
-        message: `You do not have access to the "${featureId}" feature`,
+        message: `You do not have access to the "${featureIds[0]}" feature`,
       });
     }
 
